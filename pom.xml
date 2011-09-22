@@ -1,0 +1,177 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.jboss</groupId>
+    <artifactId>jboss-parent</artifactId>
+    <version>6-beta-1</version>
+  </parent>
+
+  <groupId>org.projectodd</groupId>
+  <artifactId>polyglot</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>Polyglot</name>
+  <url>http://github.com/projectodd/polyglot/</url>
+
+  <description>
+    The Polyglot Parent POM
+  </description>
+
+  <developers>
+    <developer>
+      <id>projectodd-team</id>
+      <name>The Project:Odd Team</name>
+      <email>torquebox-dev@torquebox.org</email>
+    </developer>
+  </developers>
+
+  <modules>
+    <module>core</module>
+    <module>web</module>
+  </modules>
+  
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.jboss.as</groupId>
+        <artifactId>jboss-as-parent</artifactId>
+        <version>${version.jbossas}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <properties>
+    <version.jbossas>7.x.incremental.109</version.jbossas>
+  </properties>
+
+  <repositories>
+    <repository>
+      <id>jboss-third-party-releases</id>
+      <name>JBoss 3rd Party Releases</name>
+      <url>https://repository.jboss.org/nexus/content/groups/public-thirdparty-releases/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>jboss-incremental</id>
+      <name>JBoss AS Incremental Builds</name>
+      <url>https://repository-torquebox.forge.cloudbees.com/upstream</url>
+      <layout>default</layout>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <!-- Plugin Repositories -->
+  <pluginRepositories>
+    <pluginRepository>
+      <id>sonatype-snapshots</id>
+      <name>Sonatype Snapshots Repository</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+      <layout>default</layout>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
+
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>2.4</version>
+        <configuration>
+          <encoding>UTF-8</encoding>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.0.2</version>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+          <showDeprecation>true</showDeprecation>
+          <showWarnings>true</showWarnings>
+          <optimize>true</optimize>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>cobertura-maven-plugin</artifactId>
+        <configuration>
+          <instrumentation>
+            <includes>
+              <include>org/torquebox/**/*.class</include>
+            </includes>
+          </instrumentation>
+          <formats>
+            <format>html</format>
+            <format>xml</format>
+          </formats>
+        </configuration>
+      </plugin>
+    </plugins>
+
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>cobertura-maven-plugin</artifactId>
+          <version>2.4</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.sonar</groupId>
+          <artifactId>sonar-maven3-plugin</artifactId>
+          <version>2.2</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>1.2</version>
+        </plugin>
+        <plugin>
+          <groupId>org.jboss.maven.plugins</groupId>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>2.3</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-clean-plugin</artifactId>
+          <version>2.4</version>
+          <configuration>
+            <followSymLinks>false</followSymLinks>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+</project>
