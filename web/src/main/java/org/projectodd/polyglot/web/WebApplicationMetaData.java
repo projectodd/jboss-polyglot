@@ -53,7 +53,7 @@ public class WebApplicationMetaData {
         return this.staticPathPrefix;
     }
     
-    public void attach(DeploymentUnit unit) {
+    public void attachTo(DeploymentUnit unit) {
         unit.putAttachment( ATTACHMENT_KEY, this );
     }
 

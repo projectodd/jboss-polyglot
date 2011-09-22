@@ -76,7 +76,7 @@ public abstract class ApplicationMetaData {
     }
 
     
-    public void attach(DeploymentUnit unit) {
+    public void attachTo(DeploymentUnit unit) {
         unit.putAttachment( ATTACHMENT_KEY, this );
     }
     
