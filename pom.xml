@@ -30,6 +30,7 @@
   <modules>
     <module>core</module>
     <module>web</module>
+    <module>support</module>
   </modules>
   
   <dependencyManagement>
@@ -41,10 +42,18 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>${version.junit}</version>
+      </dependency>
+
     </dependencies>
   </dependencyManagement>
 
   <properties>
+    <version.junit>4.7</version.junit>
     <version.jbossas>7.x.incremental.109</version.jbossas>
   </properties>
 
