@@ -17,7 +17,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.projectodd.polyglot.core.app;
+package org.projectodd.polyglot.core.processors;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -38,6 +38,7 @@ import org.jboss.vfs.VirtualFile;
 import org.jboss.vfs.VirtualFileFilter;
 import org.jboss.vfs.VisitorAttributes;
 import org.jboss.vfs.util.SuffixMatchFilter;
+import org.projectodd.polyglot.core.app.ApplicationMetaData;
 import org.projectodd.polyglot.core.as.KnobDeploymentMarker;
 
 public class BaseAppJarScanningProcessor implements DeploymentUnitProcessor {

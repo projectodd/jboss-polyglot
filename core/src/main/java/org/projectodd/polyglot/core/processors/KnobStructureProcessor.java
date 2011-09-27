@@ -17,13 +17,14 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.projectodd.polyglot.core.as;
+package org.projectodd.polyglot.core.processors;
 
 import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.as.server.deployment.MountExplodedMarker;
+import org.projectodd.polyglot.core.as.KnobDeploymentMarker;
 
 public class KnobStructureProcessor implements DeploymentUnitProcessor {
 

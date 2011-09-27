@@ -17,7 +17,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.projectodd.polyglot.core.app;
+package org.projectodd.polyglot.core.processors;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,6 +30,7 @@ import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.as.server.deployment.module.ResourceRoot;
 import org.jboss.vfs.VFS;
 import org.jboss.vfs.VirtualFile;
+import org.projectodd.polyglot.core.app.ApplicationMetaData;
 
 public class ApplicationExploder implements DeploymentUnitProcessor {
 

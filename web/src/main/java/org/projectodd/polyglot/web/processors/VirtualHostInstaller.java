@@ -17,7 +17,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.projectodd.polyglot.web;
+package org.projectodd.polyglot.web.processors;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +31,7 @@ import org.jboss.as.web.WebServer;
 import org.jboss.as.web.WebSubsystemServices;
 import org.jboss.as.web.WebVirtualHostService;
 import org.jboss.msc.service.ServiceName;
+import org.projectodd.polyglot.web.WebApplicationMetaData;
 
 public class VirtualHostInstaller implements DeploymentUnitProcessor {
     

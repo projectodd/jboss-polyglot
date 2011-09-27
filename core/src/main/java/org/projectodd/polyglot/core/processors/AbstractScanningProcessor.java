@@ -17,7 +17,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.projectodd.polyglot.core;
+package org.projectodd.polyglot.core.processors;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,12 +34,12 @@ import org.jboss.vfs.VirtualFileFilter;
 import org.jboss.vfs.VisitorAttributes;
 import org.jboss.vfs.util.SuffixMatchFilter;
 
-public abstract class AbstractScanningDeployer implements DeploymentUnitProcessor {
+public abstract class AbstractScanningProcessor implements DeploymentUnitProcessor {
 
     private ArrayList<String> paths = new ArrayList<String>();
     private VirtualFileFilter filter;
 
-    public AbstractScanningDeployer() {
+    public AbstractScanningProcessor() {
     }
 
     public void addPath(String path) {
