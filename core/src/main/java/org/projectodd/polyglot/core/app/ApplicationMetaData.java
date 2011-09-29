@@ -19,6 +19,8 @@
 
 package org.projectodd.polyglot.core.app;
 
+import java.util.Map;
+
 import org.jboss.as.server.deployment.AttachmentKey;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.vfs.VFS;
@@ -26,6 +28,7 @@ import org.jboss.vfs.VirtualFile;
 
 public abstract class ApplicationMetaData {
     public static final AttachmentKey<ApplicationMetaData> ATTACHMENT_KEY = AttachmentKey.create( ApplicationMetaData.class );
+    public static final String DEFAULT_ENVIRONMENT_NAME = "development";
     
     public ApplicationMetaData(String applicationName) {
         this.applicationName = sanitize( applicationName );
@@ -96,7 +99,49 @@ public abstract class ApplicationMetaData {
         return name.replaceAll( "\\.", "-" );
     }
     
+    public boolean isDevelopmentMode() {
+        String env = this.environmentName;
+        return env == null || env.trim().equalsIgnoreCase( "development" );
+    }
+
+    public void setEnvironmentName(String environmentName) {
+        this.environmentName = environmentName;
+    }
+
+    public String getEnvironmentName() {
+        return this.environmentName;
+    }
+
+    public void setEnvironmentVariables(Map<String, String> environment) {
+        this.environment = environment;
+    }
+
+    public Map<String, String> getEnvironmentVariables() {
+        return this.environment;
+    }
+
+    public void applyDefaults() {
+        if (this.environmentName == null) {
+            this.environmentName = DEFAULT_ENVIRONMENT_NAME;
+        }
+    }
+
+    public String toString() {
+        return toString( "" );
+    }
+    
+    public String toString(String additional) {
+        return "[" + this.getClass().getSimpleName() + 
+                "\n  root=" + this.root + 
+                "\n  environmentName=" + this.environmentName + 
+                "\n  archive=" + this.archive + 
+                "\n  environment=" + this.environment +
+                additional + "]";
+    }
+
     private VirtualFile root;
     private String applicationName;
     private boolean archive = false;
+    private String environmentName;
+    private Map<String, String> environment;
 }

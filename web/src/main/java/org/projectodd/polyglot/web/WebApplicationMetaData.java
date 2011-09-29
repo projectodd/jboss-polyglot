@@ -46,7 +46,7 @@ public class WebApplicationMetaData {
     }
 
     public void setStaticPathPrefix(String staticPathPrefix) {
-        this.staticPathPrefix = staticPathPrefix;
+        if (staticPathPrefix != null) this.staticPathPrefix = staticPathPrefix;
     }
 
     public String getStaticPathPrefix() {
@@ -58,6 +58,6 @@ public class WebApplicationMetaData {
     }
 
     private List<String> hosts = new ArrayList<String>();
-    private String contextPath = "/";
-    private String staticPathPrefix = "public/";
+    private String contextPath;
+    private String staticPathPrefix;
 }
