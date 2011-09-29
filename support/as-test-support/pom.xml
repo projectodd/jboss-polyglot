@@ -8,7 +8,6 @@
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.projectodd</groupId>
   <artifactId>polyglot-as-test-support</artifactId>
   <packaging>jar</packaging>
   <name>Polyglot JBoss AS Integration Testing Support</name>

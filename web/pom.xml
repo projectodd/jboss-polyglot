@@ -8,7 +8,6 @@
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.projectodd</groupId>
   <artifactId>polyglot-web</artifactId>
   <packaging>jar</packaging>
   <name>Polyglot Web</name>
