@@ -54,7 +54,7 @@
 
   <properties>
     <version.junit>4.7</version.junit>
-    <version.jbossas>7.x.incremental.109</version.jbossas>
+    <version.jbossas>7.0.2.Final</version.jbossas>
   </properties>
 
   <repositories>
