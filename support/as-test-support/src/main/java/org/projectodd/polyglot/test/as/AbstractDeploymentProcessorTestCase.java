@@ -29,10 +29,10 @@ import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.junit.After;
 import org.junit.Before;
-import org.projectodd.polyglot.test.AbstractTorqueBoxTestCase;
+import org.projectodd.polyglot.test.AbstractBoxTestCase;
 
 
-public abstract class AbstractDeploymentProcessorTestCase extends AbstractTorqueBoxTestCase {
+public abstract class AbstractDeploymentProcessorTestCase extends AbstractBoxTestCase {
     
     private List<DeploymentUnitProcessor> deployers = new ArrayList<DeploymentUnitProcessor>();
     
@@ -84,14 +84,15 @@ public abstract class AbstractDeploymentProcessorTestCase extends AbstractTorque
         return context;
     }
 
-    protected MockDeploymentUnit deployResourceAsTorqueboxYml(String resource) throws Exception {
-        MockDeploymentPhaseContext context = setupResourceAsTorqueboxYml( resource );
+    protected MockDeploymentUnit deployResourceAs(String resource, String as) throws Exception {
+        MockDeploymentPhaseContext context = setupResourceAs( resource, as );
         deploy(context);
         return context.getMockDeploymentUnit();
     }
-    protected MockDeploymentPhaseContext setupResourceAsTorqueboxYml(String resource) throws Exception {
-        URL yml = getClass().getResource( resource );
-        return createPhaseContext( "torquebox.yml", yml );
+    
+    protected MockDeploymentPhaseContext setupResourceAs(String resource, String as) throws Exception {
+        URL url = getClass().getResource( resource );
+        return createPhaseContext( as, url );
     }
 
 }

@@ -21,7 +21,7 @@ package org.projectodd.polyglot.test;
 
 import java.io.File;
 
-public class AbstractTorqueBoxTestCase {
+public class AbstractBoxTestCase {
 
     public boolean isWindows() {
         return System.getProperty( "os.name" ).toLowerCase().matches( ".*windows.*" );
