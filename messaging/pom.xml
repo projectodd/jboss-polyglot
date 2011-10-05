@@ -8,20 +8,36 @@
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>polyglot-core</artifactId>
+  <artifactId>polyglot-messaging</artifactId>
   <packaging>jar</packaging>
-  <name>Polyglot Core</name>
+  <name>Polyglot Messaging</name>
   <description />
 
   <dependencies>
     <dependency>
-      <groupId>org.jboss</groupId>
-      <artifactId>jboss-vfs</artifactId>
+      <groupId>org.projectodd</groupId>
+      <artifactId>polyglot-core</artifactId>
+      <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>org.jboss.spec.javax.jms</groupId>
+      <artifactId>jboss-jms-api_1.1_spec</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <!-- <dependency> -->
+    <!--   <groupId>org.jboss</groupId> -->
+    <!--   <artifactId>jboss-vfs</artifactId> -->
+    <!--   <scope>provided</scope> -->
+    <!-- </dependency> -->
+    <dependency>
       <groupId>org.jboss.logging</groupId>
       <artifactId>jboss-logging</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.as</groupId>
+      <artifactId>jboss-as-jmx</artifactId>
       <scope>provided</scope>
     </dependency>
 
@@ -33,22 +49,9 @@
 
     <dependency>
       <groupId>org.jboss.as</groupId>
-      <artifactId>jboss-as-naming</artifactId>
+      <artifactId>jboss-as-messaging</artifactId>
       <scope>provided</scope>
     </dependency>
-
-    <dependency>
-      <groupId>org.jboss.as</groupId>
-      <artifactId>jboss-as-transactions</artifactId>
-      <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jboss.as</groupId>
-      <artifactId>jboss-as-jmx</artifactId>
-      <scope>provided</scope>
-    </dependency>
-
   </dependencies>
 
   <build>

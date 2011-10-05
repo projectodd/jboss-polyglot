@@ -29,8 +29,9 @@
 
   <modules>
     <module>core</module>
-    <module>web</module>
+    <module>messaging</module>
     <module>support</module>
+    <module>web</module>
   </modules>
   
   <dependencyManagement>
