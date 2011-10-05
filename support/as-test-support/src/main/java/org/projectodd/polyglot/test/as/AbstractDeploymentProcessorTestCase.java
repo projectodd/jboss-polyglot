@@ -52,47 +52,57 @@ public abstract class AbstractDeploymentProcessorTestCase extends AbstractBoxTes
         this.contexts.clear();
     }
     
-    protected void prependDeployer(DeploymentUnitProcessor deployer) {
+    public void prependDeployer(DeploymentUnitProcessor deployer) {
         this.deployers.add( 0, deployer );
     }
     
-    protected void appendDeployer(DeploymentUnitProcessor deployer) {
+    public void appendDeployer(DeploymentUnitProcessor deployer) {
         this.deployers.add(  deployer  );
     }
     
-    protected void deploy(DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
+    public void deploy(DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
         for ( DeploymentUnitProcessor each : this.deployers ) {
             each.deploy( phaseContext );
         }
     }
     
-    protected void undeploy(DeploymentUnit unit) {
+    public void undeploy(DeploymentUnit unit) {
         for ( DeploymentUnitProcessor each : this.deployers ) {
             each.undeploy( unit );
         }
     }
     
-    protected MockDeploymentPhaseContext createPhaseContext() throws Exception {
+    public MockDeploymentPhaseContext createPhaseContext() throws Exception {
         MockDeploymentPhaseContext context = new MockDeploymentPhaseContext();
         this.contexts.add(  context  );
         return context;
     }
     
-    protected MockDeploymentPhaseContext createPhaseContext(String name, URL url) throws Exception {
+    public MockDeploymentPhaseContext createPhaseContext(String name, URL url) throws Exception {
         MockDeploymentPhaseContext context = new MockDeploymentPhaseContext( name, url );
         this.contexts.add(  context  );
         return context;
     }
 
-    protected MockDeploymentUnit deployResourceAs(String resource, String as) throws Exception {
+    public MockDeploymentUnit deployResourceAs(URL resource, String as) throws Exception {
         MockDeploymentPhaseContext context = setupResourceAs( resource, as );
         deploy(context);
         return context.getMockDeploymentUnit();
     }
     
-    protected MockDeploymentPhaseContext setupResourceAs(String resource, String as) throws Exception {
+    public MockDeploymentUnit deployResourceAs(String resource, String as) throws Exception {
+        MockDeploymentPhaseContext context = setupResourceAs( resource, as );
+        deploy(context);
+        return context.getMockDeploymentUnit();
+    }
+    
+    public MockDeploymentPhaseContext setupResourceAs(URL resource, String as) throws Exception {
+        return createPhaseContext( as, resource );
+    }
+
+    public MockDeploymentPhaseContext setupResourceAs(String resource, String as) throws Exception {
         URL url = getClass().getResource( resource );
-        return createPhaseContext( as, url );
+        return setupResourceAs( url, as );
     }
 
 }
