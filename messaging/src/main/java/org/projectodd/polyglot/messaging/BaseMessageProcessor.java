@@ -9,24 +9,24 @@ public abstract class BaseMessageProcessor implements MessageListener {
     public BaseMessageProcessorGroup getGroup() {
         return group;
     }
+    
     public void setGroup(BaseMessageProcessorGroup group) {
         this.group = group;
     }
-    public XASession getSession() {
-        return session;
-    }
-    public void setSession(XASession session) {
-        this.session = session;
-    }
-    public MessageConsumer getConsumer() {
-        return consumer;
-    }
-    public void setConsumer(MessageConsumer consumer) {
-        this.consumer = consumer;
+    
+    public void setService(MessageProcessorService service) {
+        this.service = service;
     }
     
+    public XASession getSession() {
+        return this.service.getSession();
+    }
+    
+    public MessageConsumer getConsumer() {
+        return this.service.getConsumer();
+    }
+   
+    
     private BaseMessageProcessorGroup group;
-    private XASession session;
-    private MessageConsumer consumer;
-
+    private MessageProcessorService service;
 }

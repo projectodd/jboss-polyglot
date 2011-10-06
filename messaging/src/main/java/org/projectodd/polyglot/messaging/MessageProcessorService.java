@@ -57,9 +57,8 @@ public class MessageProcessorService implements Service<Void> {
                         }
                         consumer = session.createConsumer( destination, group.getMessageSelector() );
                     }
-                    listener.setConsumer( consumer );
+                    listener.setService( MessageProcessorService.this );
                     listener.setGroup( group );
-                    listener.setSession( session );
                     
                     consumer.setMessageListener( listener );
 
@@ -94,7 +93,17 @@ public class MessageProcessorService implements Service<Void> {
         return null;
     }
 
+    
     // -------
+
+    public XASession getSession() {
+        return this.session;
+    }
+
+    public MessageConsumer getConsumer() {
+        return this.consumer;
+    }
+
 
     public static final Logger log = Logger.getLogger( "org.projectodd.polyglot.messaging" );
 
