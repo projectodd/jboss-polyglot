@@ -117,6 +117,14 @@
 
   
   <build>
+    <extensions> 
+      <extension> 
+        <groupId>org.apache.maven.wagon</groupId> 
+        <artifactId>wagon-webdav-jackrabbit</artifactId> 
+        <version>2.0</version> 
+      </extension> 
+    </extensions> 
+
     <plugins>
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
