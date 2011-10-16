@@ -27,7 +27,6 @@ import org.projectodd.polyglot.web.WebApplicationMetaData;
 
 public class WebApplicationDefaultsProcessor implements DeploymentUnitProcessor {
 
-    public static final String DEFAULT_HOST = "localhost";
     public static final String DEFAULT_CONTEXT_PATH = "/";
     public static final String DEFAULT_STATIC_PATH_PREFIX = "public/";
 
@@ -44,10 +43,6 @@ public class WebApplicationDefaultsProcessor implements DeploymentUnitProcessor 
             return;
         }
         
-        if (metadata.getHosts().isEmpty()) {
-            metadata.addHost( DEFAULT_HOST );
-        }
-
         if ((metadata.getContextPath() == null) || (metadata.getContextPath().trim().equals( "" ))) {
             metadata.setContextPath( DEFAULT_CONTEXT_PATH );
         }
