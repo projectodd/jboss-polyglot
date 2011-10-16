@@ -60,9 +60,10 @@ public class TopicInstaller implements DeploymentUnitProcessor {
 
     protected void deploy(DeploymentPhaseContext phaseContext, TopicMetaData topic) {
         final JMSTopicService service = new JMSTopicService(topic.getName(), new String[] { topic.getBindName() } );
-        final ServiceName serviceName = JMSServices.JMS_TOPIC_BASE.append(topic.getName());
+        final ServiceName hornetQserviceName = MessagingServices.getHornetQServiceName( "default" );
+        final ServiceName serviceName = JMSServices.getJmsTopicBaseServiceName( hornetQserviceName ).append( topic.getName() );
         phaseContext.getServiceTarget().addService(serviceName, service)
-                .addDependency(MessagingServices.JBOSS_MESSAGING.append( "jms", "manager" ), JMSServerManager.class, service.getJmsServer())
+                .addDependency(JMSServices.getJmsManagerBaseServiceName( hornetQserviceName ), JMSServerManager.class, service.getJmsServer() )
                 .setInitialMode(Mode.ACTIVE)
                 .install();
     }

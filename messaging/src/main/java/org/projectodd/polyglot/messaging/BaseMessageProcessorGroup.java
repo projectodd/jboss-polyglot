@@ -9,6 +9,7 @@ import javax.jms.Queue;
 import javax.jms.XAConnection;
 
 import org.hornetq.jms.client.HornetQConnectionFactory;
+import org.jboss.as.messaging.MessagingServices;
 import org.jboss.as.messaging.jms.JMSServices;
 import org.jboss.as.naming.ManagedReference;
 import org.jboss.as.naming.ManagedReferenceFactory;
@@ -69,9 +70,11 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
                 ServiceTarget target = context.getChildTarget();
     
                 if (BaseMessageProcessorGroup.this.destination instanceof Queue) {
-                    target.addDependency( JMSServices.JMS_QUEUE_BASE.append( BaseMessageProcessorGroup.this.destinationName ) );
+                    //target.addDependency( JMSServices.JMS_QUEUE_BASE.append( BaseMessageProcessorGroup.this.destinationName ) );
+                    target.addDependency( JMSServices.getJmsQueueBaseServiceName( MessagingServices.getHornetQServiceName( "default" ) ).append( BaseMessageProcessorGroup.this.destinationName ) );
                 } else {
-                    target.addDependency( JMSServices.JMS_TOPIC_BASE.append( BaseMessageProcessorGroup.this.destinationName ) );
+                    //target.addDependency( JMSServices.JMS_TOPIC_BASE.append( BaseMessageProcessorGroup.this.destinationName ) );
+                    target.addDependency( JMSServices.getJmsTopicBaseServiceName( MessagingServices.getHornetQServiceName( "default" ) ).append( BaseMessageProcessorGroup.this.destinationName ) );
                 }
     
                 for (int i = 0; i < BaseMessageProcessorGroup.this.concurrency; ++i) {
