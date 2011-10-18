@@ -59,7 +59,7 @@ public class QueueInstaller implements DeploymentUnitProcessor {
     }
 
     protected void deploy(DeploymentPhaseContext phaseContext, QueueMetaData queue) {
-        final JMSQueueService service = new JMSQueueService(queue.getName(), null, queue.isDurable(), new String[] { queue.getBindName() } );
+        final JMSQueueService service = new DestroyableJMSQueueService(queue.getName(), null, queue.isDurable(), new String[] { queue.getBindName() } );
         final ServiceName hornetQserviceName = MessagingServices.getHornetQServiceName( "default" );
         final ServiceName serviceName = JMSServices.getJmsQueueBaseServiceName( hornetQserviceName ).append( queue.getName() );
         phaseContext.getServiceTarget().addService(serviceName, service)
