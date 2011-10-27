@@ -21,13 +21,15 @@ package org.projectodd.polyglot.web;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.jboss.as.server.deployment.AttachmentKey;
 import org.jboss.as.server.deployment.DeploymentUnit;
+import org.jgroups.util.ConcurrentLinkedBlockingQueue;
 
 public class WebApplicationMetaData {
     public static final AttachmentKey<WebApplicationMetaData> ATTACHMENT_KEY = AttachmentKey.create( WebApplicationMetaData.class );
-    
+
     public void addHost(String host) {
         if (host != null && !this.hosts.contains( host ))
             this.hosts.add( host );
@@ -38,7 +40,8 @@ public class WebApplicationMetaData {
     }
 
     public void setContextPath(String contextPath) {
-        if (contextPath != null) this.contextPath = contextPath;
+        if (contextPath != null)
+            this.contextPath = contextPath;
     }
 
     public String getContextPath() {
@@ -46,18 +49,56 @@ public class WebApplicationMetaData {
     }
 
     public void setStaticPathPrefix(String staticPathPrefix) {
-        if (staticPathPrefix != null) this.staticPathPrefix = staticPathPrefix;
+        if (staticPathPrefix != null)
+            this.staticPathPrefix = staticPathPrefix;
     }
 
     public String getStaticPathPrefix() {
         return this.staticPathPrefix;
     }
-    
+
     public void attachTo(DeploymentUnit unit) {
         unit.putAttachment( ATTACHMENT_KEY, this );
+    }
+
+    /**
+     * Set the session timeout for inactive web sessions.
+     * 
+     * <p>
+     * Pass a negative number for the timeout value to indicate <b>never</b>.
+     * Not recommended.
+     * </p>
+     * 
+     * @param timeout The quantity of timeout.
+     * @param unit The unit for timeout, ignored if <code>timeout</code> is
+     *            negative.
+     */
+    public void setSessionTimeout(long timeout, TimeUnit unit) {
+        if (timeout < 0) {
+            this.sessionTimeout = -1;
+            return;
+        }
+        long convertedTimeout = TimeUnit.SECONDS.convert( timeout, unit );
+        
+        if (convertedTimeout > Integer.MAX_VALUE) {
+            this.sessionTimeout = Integer.MAX_VALUE;
+        } else {
+            this.sessionTimeout = (int) convertedTimeout;
+        }
+    }
+
+    /**
+     * Retrieve the session timeout for inactive web sessions, as seconds.
+     * 
+     * @return The timeout, as seconds, or <code>-1</code> indicating no
+     *         timeout.
+     */
+    public int getSessionTimeout() {
+        return this.sessionTimeout;
     }
 
     private List<String> hosts = new ArrayList<String>();
     private String contextPath;
     private String staticPathPrefix;
+    private int sessionTimeout = -1;
 }
