@@ -73,7 +73,7 @@
     <repository>
       <id>jboss-incremental</id>
       <name>JBoss AS Incremental Builds</name>
-      <url>https://repository-torquebox.forge.cloudbees.com/upstream</url>
+      <url>https://repository-projectodd.forge.cloudbees.com/upstream</url>
       <layout>default</layout>
       <releases>
         <enabled>true</enabled>
