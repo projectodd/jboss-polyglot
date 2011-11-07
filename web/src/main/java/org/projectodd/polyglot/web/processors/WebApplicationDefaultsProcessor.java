@@ -31,8 +31,14 @@ public class WebApplicationDefaultsProcessor implements DeploymentUnitProcessor 
     public static final String DEFAULT_STATIC_PATH_PREFIX = "public/";
 
     public WebApplicationDefaultsProcessor() {
+        this( true, true );
     }
 
+    public WebApplicationDefaultsProcessor(boolean setContext, boolean setPublic) {
+        this.setDefaultContext = setContext;
+        this.setDefaultPublic = setPublic;
+    }
+    
     @Override
     public void deploy(DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
         DeploymentUnit unit = phaseContext.getDeploymentUnit();
@@ -43,11 +49,13 @@ public class WebApplicationDefaultsProcessor implements DeploymentUnitProcessor 
             return;
         }
         
-        if ((metadata.getContextPath() == null) || (metadata.getContextPath().trim().equals( "" ))) {
+        if (setDefaultContext &&
+                ((metadata.getContextPath() == null) || (metadata.getContextPath().trim().equals( "" )))) {
             metadata.setContextPath( DEFAULT_CONTEXT_PATH );
         }
         
-        if ((metadata.getStaticPathPrefix() == null) || (metadata.getStaticPathPrefix().trim().equals( "" ))) {
+        if (setDefaultPublic && 
+                ((metadata.getStaticPathPrefix() == null) || (metadata.getStaticPathPrefix().trim().equals( "" )))) {
             metadata.setStaticPathPrefix( DEFAULT_STATIC_PATH_PREFIX );
         }
     }
@@ -56,4 +64,6 @@ public class WebApplicationDefaultsProcessor implements DeploymentUnitProcessor 
     public void undeploy(DeploymentUnit context) {
     }
     
+    private boolean setDefaultContext;
+    private boolean setDefaultPublic;
 }
