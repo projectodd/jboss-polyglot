@@ -29,6 +29,13 @@ import org.jboss.modules.ModuleLoader;
 
 public abstract class AbstractBootstrappableExtension implements Extension {
     
+    public AbstractBootstrappableExtension(String bootstrapperClassName) throws ClassNotFoundException {
+        Class.forName( bootstrapperClassName );
+    }
+    
+    public AbstractBootstrappableExtension() {
+    }
+    
     protected void bootstrap() {
         refresh();
         relink();
@@ -36,6 +43,7 @@ public abstract class AbstractBootstrappableExtension implements Extension {
     
     protected void refresh() {
         Module module = Module.forClass( getClass() );
+        log.info( "relink: " + module );
         ModuleLoader moduleLoader = module.getModuleLoader();
 
         try {
@@ -57,6 +65,7 @@ public abstract class AbstractBootstrappableExtension implements Extension {
 
     protected void relink() {
         Module module = Module.forClass( getClass() );
+        log.info( "relink: " + module );
         ModuleLoader moduleLoader = module.getModuleLoader();
 
         try {
