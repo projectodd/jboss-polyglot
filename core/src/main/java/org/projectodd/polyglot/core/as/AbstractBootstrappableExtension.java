@@ -43,7 +43,7 @@ public abstract class AbstractBootstrappableExtension implements Extension {
     
     protected void refresh() {
         Module module = Module.forClass( getClass() );
-        log.info( "relink: " + module );
+        log.debug( "refresh: " + module );
         ModuleLoader moduleLoader = module.getModuleLoader();
 
         try {
@@ -65,7 +65,7 @@ public abstract class AbstractBootstrappableExtension implements Extension {
 
     protected void relink() {
         Module module = Module.forClass( getClass() );
-        log.info( "relink: " + module );
+        log.debug( "relink: " + module );
         ModuleLoader moduleLoader = module.getModuleLoader();
 
         try {
