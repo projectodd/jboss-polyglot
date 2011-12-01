@@ -19,6 +19,12 @@
     The Polyglot Parent POM
   </description>
 
+  <scm>
+    <connection>scm:git:git://github.com/projectodd/jboss-polyglot-release.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/projectodd/jboss-polyglot-release.git</developerConnection>
+    <url>http://github.com/projectodd/jboss-polyglot-release</url>
+  </scm>
+
   <developers>
     <developer>
       <id>projectodd-team</id>
