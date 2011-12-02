@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.projectodd</groupId>
     <artifactId>polyglot-build-support</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -11,6 +11,6 @@
   <artifactId>polyglot-module-support</artifactId>
   <packaging>jar</packaging>
   <name>Polyglot Module Build Support</name>
-  <description></description>
+  <description />
 
 </project>
