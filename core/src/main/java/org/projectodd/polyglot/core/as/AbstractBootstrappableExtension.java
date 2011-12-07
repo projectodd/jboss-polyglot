@@ -50,7 +50,7 @@ public abstract class AbstractBootstrappableExtension implements Extension {
             if (bootstrapperClassName != null) {
                 Class.forName( bootstrapperClassName );
             } else { 
-                log.info(  "No bootstrap properties found, skipping bootstrap" );
+                log.debug(  "No bootstrap properties found, skipping bootstrap" );
             }
         } finally {
             try {
