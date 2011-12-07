@@ -18,7 +18,6 @@
       <groupId>org.projectodd</groupId>
       <artifactId>polyglot-core</artifactId>
       <version>${project.version}</version>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
