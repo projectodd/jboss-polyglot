@@ -20,6 +20,7 @@
 package org.projectodd.polyglot.core.as;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Properties;
@@ -32,17 +33,31 @@ import org.jboss.modules.ModuleLoader;
 public abstract class AbstractBootstrappableExtension implements Extension {
     
     public AbstractBootstrappableExtension()  throws ClassNotFoundException {
-        
-        Properties props = new Properties();
+        InputStream stream = null;
+
         try {
-            props.load( this.getClass().getResourceAsStream( "/org/projectodd/polyglot/core/bootstrap.properties" ) );
-        } catch (IOException e) {
-            log.info(  "No bootstrap properties found, skipping bootstrap" );
-        }
-        String bootstrapperClassName = props.getProperty( "org.projectodd.polyglot.core.bootstrap.class" );
-        
-        if (bootstrapperClassName != null) {
-            Class.forName( bootstrapperClassName );
+            Properties props = new Properties();
+            stream = this.getClass().getResourceAsStream( "/org/projectodd/polyglot/core/bootstrap.properties" );
+            if (stream != null) {
+                try {   
+                    props.load( stream );
+                } catch (IOException e) {
+                  //really?  
+                }
+            } 
+            String bootstrapperClassName = props.getProperty( "org.projectodd.polyglot.core.bootstrap.class" );
+
+            if (bootstrapperClassName != null) {
+                Class.forName( bootstrapperClassName );
+            } else { 
+                log.info(  "No bootstrap properties found, skipping bootstrap" );
+            }
+        } finally {
+            try {
+                if (stream != null) stream.close();
+            } catch (IOException e) {
+                //really?
+            }
         }
     }
     
