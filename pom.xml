@@ -38,6 +38,7 @@
     <module>messaging</module>
     <module>support</module>
     <module>web</module>
+    <module>modules</module>
   </modules>
   
   <dependencyManagement>

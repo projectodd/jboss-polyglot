@@ -19,8 +19,10 @@
 
 package org.projectodd.polyglot.core.as;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Properties;
 
 import org.jboss.as.controller.Extension;
 import org.jboss.logging.Logger;
@@ -29,11 +31,19 @@ import org.jboss.modules.ModuleLoader;
 
 public abstract class AbstractBootstrappableExtension implements Extension {
     
-    public AbstractBootstrappableExtension(String bootstrapperClassName) throws ClassNotFoundException {
-        Class.forName( bootstrapperClassName );
-    }
-    
-    public AbstractBootstrappableExtension() {
+    public AbstractBootstrappableExtension()  throws ClassNotFoundException {
+        
+        Properties props = new Properties();
+        try {
+            props.load( this.getClass().getResourceAsStream( "/org/projectodd/polyglot/core/bootstrap.properties" ) );
+        } catch (IOException e) {
+            log.info(  "No bootstrap properties found, skipping bootstrap" );
+        }
+        String bootstrapperClassName = props.getProperty( "org.projectodd.polyglot.core.bootstrap.class" );
+        
+        if (bootstrapperClassName != null) {
+            Class.forName( bootstrapperClassName );
+        }
     }
     
     protected void bootstrap() {
@@ -85,6 +95,6 @@ public abstract class AbstractBootstrappableExtension implements Extension {
         }
     }
     
-    private static Logger log = Logger.getLogger( "org.torquebox.bootstrap" );
+    private static Logger log = Logger.getLogger( "org.projectodd.polyglot.core" );
 
 }

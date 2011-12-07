@@ -2,38 +2,28 @@
 
   <parent>
     <groupId>org.projectodd</groupId>
-    <artifactId>polyglot</artifactId>
+    <artifactId>polyglot-modules-parent</artifactId>
     <version>1.1.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>polyglot-core</artifactId>
+  <artifactId>polyglot-hasingleton</artifactId>
   <packaging>jar</packaging>
-  <name>Polyglot Core</name>
+  <name>Polyglot HASingleton Module</name>
   <description />
 
   <dependencies>
     <dependency>
-      <groupId>org.jboss</groupId>
-      <artifactId>jboss-vfs</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jboss.logging</groupId>
-      <artifactId>jboss-logging</artifactId>
+      <groupId>org.projectodd</groupId>
+      <artifactId>polyglot-core</artifactId>
+      <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.jboss.as</groupId>
-      <artifactId>jboss-as-ee</artifactId>
-      <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jboss.as</groupId>
-      <artifactId>jboss-as-naming</artifactId>
+      <groupId>org.jgroups</groupId>
+      <artifactId>jgroups</artifactId>
       <scope>provided</scope>
     </dependency>
 
@@ -45,13 +35,13 @@
 
     <dependency>
       <groupId>org.jboss.as</groupId>
-      <artifactId>jboss-as-transactions</artifactId>
+      <artifactId>jboss-as-clustering-impl</artifactId>
       <scope>provided</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.jboss.as</groupId>
-      <artifactId>jboss-as-jmx</artifactId>
+      <groupId>org.jboss.logging</groupId>
+      <artifactId>jboss-logging</artifactId>
       <scope>provided</scope>
     </dependency>
 
