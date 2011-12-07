@@ -32,7 +32,7 @@ import org.jboss.modules.ModuleLoader;
 
 public abstract class AbstractBootstrappableExtension implements Extension {
     
-    public AbstractBootstrappableExtension()  throws ClassNotFoundException {
+    public AbstractBootstrappableExtension() {
         InputStream stream = null;
 
         try {
@@ -48,7 +48,11 @@ public abstract class AbstractBootstrappableExtension implements Extension {
             String bootstrapperClassName = props.getProperty( "org.projectodd.polyglot.core.bootstrap.class" );
 
             if (bootstrapperClassName != null) {
+                try {
                 Class.forName( bootstrapperClassName );
+                } catch (ClassNotFoundException e) {
+                    log.error( "Failed to find boostrap class " + bootstrapperClassName + ": " + e );
+                }
             } else { 
                 log.debug(  "No bootstrap properties found, skipping bootstrap" );
             }
