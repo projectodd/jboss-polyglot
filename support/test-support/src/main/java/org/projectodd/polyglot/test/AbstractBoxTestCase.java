@@ -60,15 +60,8 @@ public class AbstractBoxTestCase {
 
     }
 
-    public String pwd() {
-        String pwd = System.getProperty( "user.dir" );
-
-        if (isWindows()) {
-            pwd = pwd.substring( 0, 1 ).toUpperCase() + pwd.substring( 1 );
-        }
-
-        return pwd;
-
+    public File pwd() {
+        return new File( System.getProperty( "user.dir" ) );
     }
 
 }

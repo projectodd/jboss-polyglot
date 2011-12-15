@@ -22,6 +22,7 @@ package org.projectodd.polyglot.core.processors;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 
 import org.jboss.as.server.deployment.AttachmentKey;
@@ -49,8 +50,9 @@ public class ArchiveDirectoryMountingProcessor implements DeploymentUnitProcesso
 
         if (appMetaData.isArchive()) {
             try {
-                mountDir( unit, appMetaData.getRoot(), "log", System.getProperty( "jboss.server.log.dir" ) + "/" + appMetaData.getApplicationName() );
-                mountDir( unit, appMetaData.getRoot(), "tmp", System.getProperty( "jboss.server.temp.dir" ) + "/app/" + appMetaData.getApplicationName() );
+                VirtualFile root = VFS.getChild( appMetaData.getRoot().toURI() );
+                mountDir( unit, root, "log", System.getProperty( "jboss.server.log.dir" ) + "/" + appMetaData.getApplicationName() );
+                mountDir( unit, root, "tmp", System.getProperty( "jboss.server.temp.dir" ) + "/app/" + appMetaData.getApplicationName() );
             } catch (Exception e) {
                 throw new DeploymentUnitProcessingException( e );
             }

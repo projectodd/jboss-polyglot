@@ -49,7 +49,7 @@ public class ApplicationExploder implements DeploymentUnitProcessor {
         try {
             VirtualFile explodedRoot = getExplodedApplication( root );
             if (!root.equals( explodedRoot )) {
-                appMetaData.explode( explodedRoot );
+                appMetaData.explode( explodedRoot.getPhysicalFile() );
             }
         } catch (IOException e) {
             throw new DeploymentUnitProcessingException( e );
