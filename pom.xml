@@ -35,6 +35,7 @@
 
   <modules>
     <module>core</module>
+    <module>jobs</module>
     <module>messaging</module>
     <module>support</module>
     <module>web</module>
@@ -63,6 +64,8 @@
   <properties>
     <version.junit>4.7</version.junit>
     <version.jbossas>7.1.0.Beta1</version.jbossas>
+    <version.org.quartz-scheduler>1.8.5</version.org.quartz-scheduler>
+    <version.org.slf4j>1.5.10</version.org.slf4j>
   </properties>
 
   <repositories>
