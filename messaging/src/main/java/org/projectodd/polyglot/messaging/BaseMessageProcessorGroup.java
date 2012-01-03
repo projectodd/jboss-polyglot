@@ -6,6 +6,7 @@ import java.util.List;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Queue;
+import javax.jms.Topic;
 import javax.jms.XAConnection;
 
 import org.hornetq.jms.client.HornetQConnectionFactory;
@@ -42,21 +43,6 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
     
             @Override
             public void run() {
-                ManagedReferenceFactory connectionFactoryManagedReferenceFactory = BaseMessageProcessorGroup.this.connectionFactoryInjector.getValue();
-                ManagedReference connectionFactoryManagedReference = connectionFactoryManagedReferenceFactory.getReference();
-                HornetQConnectionFactory connectionFactory = (HornetQConnectionFactory) connectionFactoryManagedReference.getInstance();
-    
-                try {
-                    BaseMessageProcessorGroup.this.connection = connectionFactory.createXAConnection();
-                    BaseMessageProcessorGroup.this.connection.start();
-                } catch (JMSException e) {
-                    context.failed( new StartException( e ) );
-                } finally {
-                    if (connectionFactoryManagedReference != null) {
-                        connectionFactoryManagedReference.release();
-                    }
-                }
-    
                 ManagedReferenceFactory destinationManagedReferenceFactory = BaseMessageProcessorGroup.this.destinationInjector.getValue();
                 ManagedReference destinationManagedReference = destinationManagedReferenceFactory.getReference();
                 try {
@@ -66,7 +52,35 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
                         destinationManagedReference.release();
                     }
                 }
+                
+                ManagedReferenceFactory connectionFactoryManagedReferenceFactory = BaseMessageProcessorGroup.this.connectionFactoryInjector.getValue();
+                ManagedReference connectionFactoryManagedReference = connectionFactoryManagedReferenceFactory.getReference();
+                HornetQConnectionFactory connectionFactory = (HornetQConnectionFactory) connectionFactoryManagedReference.getInstance();
     
+                try {
+                    BaseMessageProcessorGroup.this.connection = connectionFactory.createXAConnection();
+                    String clientID = BaseMessageProcessorGroup.this.clientID;
+                    if (BaseMessageProcessorGroup.this.durable && clientID != null) {
+                        String name = BaseMessageProcessorGroup.this.name;
+                        if (BaseMessageProcessorGroup.this.destination instanceof Topic) {
+                            log.info( "Setting clientID for " + name + " to " + clientID );
+                            BaseMessageProcessorGroup.this.connection.setClientID( clientID );
+                        } else {
+                            log.warn( "ClientID set for processor " + name + ", but " + 
+                                    destination + " is not a topic - ignoring." );
+                        }
+                    } else if (BaseMessageProcessorGroup.this.durable && clientID == null) {
+                        context.failed( new StartException( "Durable topic processors require a client_id. processor: " + name ) );
+                    }
+                    BaseMessageProcessorGroup.this.connection.start();
+                } catch (JMSException e) {
+                    context.failed( new StartException( e ) );
+                } finally {
+                    if (connectionFactoryManagedReference != null) {
+                        connectionFactoryManagedReference.release();
+                    }
+                }
+        
                 ServiceTarget target = context.getChildTarget();
     
                 if (BaseMessageProcessorGroup.this.destination instanceof Queue) {
@@ -178,6 +192,14 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
         return this.durable;
     }
 
+    public void setClientID(String clientID) {
+        this.clientID = clientID;
+    }
+
+    public String getClientID() {
+        return this.clientID;
+    }
+    
     public Injector<ManagedReferenceFactory> getConnectionFactoryInjector() {
         return this.connectionFactoryInjector;
     }
@@ -203,6 +225,7 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
     private String name;
     private String messageSelector;
     private boolean durable;
+    private String clientID;
     private boolean running = false;
     private int concurrency;
     private List<ServiceName> services = new ArrayList<ServiceName>();
