@@ -21,6 +21,7 @@ package org.projectodd.polyglot.messaging.destinations.processors;
 
 import org.jboss.as.messaging.jms.JMSQueueService;
 import org.jboss.msc.service.StopContext;
+import org.jboss.logging.Logger;
 
 public class DestroyableJMSQueueService extends JMSQueueService {
 
@@ -38,10 +39,12 @@ public class DestroyableJMSQueueService extends JMSQueueService {
         if ( shouldDestroy ) {
             try {
                 getJmsServer().getValue().destroyQueue( this.queueName );
-            } catch (IllegalStateException e) {
-                e.printStackTrace();
             } catch (Exception e) {
-                e.printStackTrace();
+                if (null != e.getCause()) {
+                    log.warn(e.getCause().getMessage());
+                } else {
+                    log.error("Can't destroy queue", e);
+                }
             }
         }
     }
@@ -49,6 +52,6 @@ public class DestroyableJMSQueueService extends JMSQueueService {
     private boolean shouldDestroy;
     private String queueName;
 
-
+    static final Logger log = Logger.getLogger( "org.projectodd.polyglot.messaging" );
 
 }
