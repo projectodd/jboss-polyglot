@@ -31,6 +31,9 @@ public interface BaseScheduledJobMBean {
     
     /** Set the cronspec */
     void setCronExpression(String cronspec);
+
+    /** Set the timeout */
+    void setTimeout(long timeout);
     
     /** Is this job currently started? */
     boolean isStarted();

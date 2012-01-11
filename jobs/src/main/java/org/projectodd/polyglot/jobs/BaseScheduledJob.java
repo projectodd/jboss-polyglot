@@ -144,6 +144,9 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
     public Injector<BaseJobScheduler> getJobSchedulerInjector() {
         return this.jobSchedulerInjector;
     }
+    public void setTimeout(long timeout){
+        this.timeout = timeout;
+    }
     
     private InjectedValue<BaseJobScheduler> jobSchedulerInjector = new InjectedValue<BaseJobScheduler>();
     
