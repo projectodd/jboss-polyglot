@@ -78,6 +78,7 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
         jobDetail.setDescription( this.description );
         jobDetail.setJobClass( this.jobClass );
         jobDetail.setRequestsRecovery( true );
+        jobDetail.getJobDataMap().put("timeout", timeout);
         
         CronTrigger trigger = new CronTrigger( getTriggerName(), this.group, this.cronExpression );
         
