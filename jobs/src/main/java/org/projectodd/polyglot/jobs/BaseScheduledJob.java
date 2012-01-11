@@ -84,6 +84,7 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
         
         BaseJobScheduler jobScheduler = this.jobSchedulerInjector.getValue();
         jobScheduler.getScheduler().scheduleJob( jobDetail, trigger );
+        jobScheduler.getScheduler().addGlobalTriggerListener(new BaseTriggerListener());
     }
 
     public synchronized void stop() {
