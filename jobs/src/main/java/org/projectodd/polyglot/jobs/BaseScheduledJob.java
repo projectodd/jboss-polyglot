@@ -34,11 +34,12 @@ import org.quartz.SchedulerException;
 
 public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseScheduledJobMBean {
     
-    public BaseScheduledJob(Class jobClass, String group, String name, String description, String cronExpression, boolean singleton) {
+    public BaseScheduledJob(Class jobClass, String group, String name, String description, String cronExpression, long timeout, boolean singleton) {
         this.group = group;
         this.name = name;
         this.description = description;
         this.cronExpression = cronExpression;
+        this.timeout = timeout;
         this.singleton = singleton;
         this.jobClass = jobClass;
     }
@@ -77,11 +78,13 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
         jobDetail.setDescription( this.description );
         jobDetail.setJobClass( this.jobClass );
         jobDetail.setRequestsRecovery( true );
+        jobDetail.getJobDataMap().put("timeout", timeout);
         
         CronTrigger trigger = new CronTrigger( getTriggerName(), this.group, this.cronExpression );
         
         BaseJobScheduler jobScheduler = this.jobSchedulerInjector.getValue();
         jobScheduler.getScheduler().scheduleJob( jobDetail, trigger );
+        jobScheduler.getScheduler().addGlobalTriggerListener(new BaseTriggerListener());
     }
 
     public synchronized void stop() {
@@ -141,6 +144,9 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
     public Injector<BaseJobScheduler> getJobSchedulerInjector() {
         return this.jobSchedulerInjector;
     }
+    public void setTimeout(long timeout){
+        this.timeout = timeout;
+    }
     
     private InjectedValue<BaseJobScheduler> jobSchedulerInjector = new InjectedValue<BaseJobScheduler>();
     
@@ -151,6 +157,7 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
     private String description;
 
     private String cronExpression;
+    private long timeout;
     
     private JobDetail jobDetail;
     private boolean singleton;
