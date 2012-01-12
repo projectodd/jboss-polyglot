@@ -53,22 +53,24 @@ public class BaseTriggerListener implements TriggerListener {
 
         long delay = (Long) jobExecutionContext.getJobDetail().getJobDataMap().get("timeout");
 
-        //TODO Replace ExecutorService by JBossThreadPool
-        ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
+        if (delay > 0) {
+            //TODO Replace ExecutorService by JBossThreadPool
+            ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
 
-        service.schedule(new Runnable() {
-            public void run() {
+            service.schedule(new Runnable() {
+                public void run() {
 
-                log.info("|||||||||||||||| Trying to interrupt the job |||||||||||||||| ");
-                try {
-                    ((InterruptableJob) jobExecutionContext.getJobInstance()).interrupt();
-                } catch (Exception e) {
-                    log.error("Interruption failed", e);
+                    log.info("|||||||||||||||| Trying to interrupt the job |||||||||||||||| ");
+                    try {
+                        ((InterruptableJob) jobExecutionContext.getJobInstance()).interrupt();
+                    } catch (Exception e) {
+                        log.error("Interruption failed", e);
+                    }
+
+
                 }
-
-
-            }
-        }, delay, TimeUnit.MILLISECONDS);
+            }, delay, TimeUnit.MILLISECONDS);
+        }
     }
 
     @Override
