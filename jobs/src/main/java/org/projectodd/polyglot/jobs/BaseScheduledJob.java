@@ -34,6 +34,11 @@ import org.quartz.SchedulerException;
 
 public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseScheduledJobMBean {
     
+    
+    public BaseScheduledJob(Class jobClass, String group, String name, String description, String cronExpression, boolean singleton) {    
+        this( jobClass, group, name, description, cronExpression, 0, singleton );
+    }
+    
     public BaseScheduledJob(Class jobClass, String group, String name, String description, String cronExpression, long timeout, boolean singleton) {
         this.group = group;
         this.name = name;
