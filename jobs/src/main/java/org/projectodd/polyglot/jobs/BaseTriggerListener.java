@@ -51,10 +51,8 @@ public class BaseTriggerListener implements TriggerListener {
 
     private static void registerWatchDog(final JobExecutionContext jobExecutionContext) {
 
-        String delay2 = (String) jobExecutionContext.getJobDetail().getJobDataMap().get("timeout");
-        log.info("|||||||||||||||| " + delay2 + "|||||||||||||||| ");
+        long delay = (Long) jobExecutionContext.getJobDetail().getJobDataMap().get("timeout");
 
-        int delay = 5000; //will be changed on polyglot
         //TODO Replace ExecutorService by JBossThreadPool
         ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
 
