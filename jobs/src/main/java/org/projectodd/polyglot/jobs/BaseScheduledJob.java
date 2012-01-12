@@ -29,18 +29,18 @@ import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.quartz.CronTrigger;
+import org.quartz.Job;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 
 public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseScheduledJobMBean {
     
-    
-    public BaseScheduledJob(Class jobClass, String group, String name, String description, String cronExpression, boolean singleton) {    
+    public BaseScheduledJob(Class<? extends Job> jobClass, String group, String name, String description, String cronExpression, boolean singleton) {    
         this( jobClass, group, name, description, cronExpression, 0, singleton );
     }
     
-    public BaseScheduledJob(Class jobClass, String group, String name, String description, String cronExpression, long timeout, boolean singleton) {
+    public BaseScheduledJob(Class<? extends Job> jobClass, String group, String name, String description, String cronExpression, long timeout, boolean singleton) {
         this.group = group;
         this.name = name;
         this.description = description;
@@ -99,11 +99,15 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
 
     public synchronized void stop() {
         try {
-            this.jobSchedulerInjector.getValue().getScheduler().unscheduleJob( getTriggerName(), this.group );
+            getScheduler().unscheduleJob( getTriggerName(), this.group );
         } catch (SchedulerException ex) {
             log.warn( "An error occurred stoping job " + this.name, ex );
         } 
         this.jobDetail = null;  
+    }
+    
+    protected Scheduler getScheduler() {
+        return this.jobSchedulerInjector.getValue().getScheduler();
     }
     
 
@@ -160,7 +164,7 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
     
     private InjectedValue<BaseJobScheduler> jobSchedulerInjector = new InjectedValue<BaseJobScheduler>();
     
-    private Class jobClass;
+    private Class<? extends Job> jobClass;
     
     private String group;
     private String name;
