@@ -30,6 +30,7 @@ import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.quartz.CronTrigger;
 import org.quartz.JobDetail;
+import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 
 public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseScheduledJobMBean {
@@ -88,8 +89,12 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
         CronTrigger trigger = new CronTrigger( getTriggerName(), this.group, this.cronExpression );
         
         BaseJobScheduler jobScheduler = this.jobSchedulerInjector.getValue();
-        jobScheduler.getScheduler().scheduleJob( jobDetail, trigger );
-        jobScheduler.getScheduler().addGlobalTriggerListener(new BaseTriggerListener());
+        Scheduler scheduler = jobScheduler.getScheduler();
+        scheduler.scheduleJob( jobDetail, trigger );
+        if (timeout > 0 && 
+                scheduler.getGlobalTriggerListener( BaseTriggerListener.TRIGGER_LISTENER_NAME ) == null) {
+            scheduler.addGlobalTriggerListener(new BaseTriggerListener());
+        }
     }
 
     public synchronized void stop() {

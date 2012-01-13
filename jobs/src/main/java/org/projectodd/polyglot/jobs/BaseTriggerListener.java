@@ -30,10 +30,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class BaseTriggerListener implements TriggerListener {
-
+    public static final String TRIGGER_LISTENER_NAME = BaseTriggerListener.class.getSimpleName(); 
+    
     @Override
     public String getName() {
-        return getClass().getSimpleName();
+        return TRIGGER_LISTENER_NAME;
     }
 
     @Override
