@@ -35,6 +35,7 @@
 
   <modules>
     <module>core</module>
+    <module>core-extensions</module>
     <module>jobs</module>
     <module>messaging</module>
     <module>support</module>
