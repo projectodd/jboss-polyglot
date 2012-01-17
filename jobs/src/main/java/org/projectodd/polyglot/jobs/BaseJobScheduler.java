@@ -95,9 +95,22 @@ public class BaseJobScheduler implements Service<BaseJobScheduler> {
         this.jobFactory = jobFactory;
     }
 
+    
+    public boolean isStarted() {
+        boolean started = false;
+    
+        try {
+            started = this.scheduler != null && this.scheduler.isStarted();
+        } catch (SchedulerException e) {
+            //ignore
+        }
+        
+        return started;        
+    }
+
     private String name;
     private Scheduler scheduler;
     private JobFactory jobFactory;
-    
+        
     private static final Logger log = Logger.getLogger( "org.projectodd.polyglot.jobs" );
 }

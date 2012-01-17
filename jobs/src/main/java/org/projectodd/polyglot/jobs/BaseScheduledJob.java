@@ -78,19 +78,19 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
    
     public synchronized void start() throws ParseException, SchedulerException {
         this.jobDetail = new JobDetail();
-
-        jobDetail.setGroup( this.group );
-        jobDetail.setName( this.name );
-        jobDetail.setDescription( this.description );
-        jobDetail.setJobClass( this.jobClass );
-        jobDetail.setRequestsRecovery( true );
-        jobDetail.getJobDataMap().put("timeout", timeout);
+        this.jobDetail.setGroup( this.group );
+        this.jobDetail.setName( this.name );
+        this.jobDetail.setDescription( this.description );
+        this.jobDetail.setJobClass( this.jobClass );
+        this.jobDetail.setRequestsRecovery( true );
+        this.jobDetail.getJobDataMap().put("timeout", timeout);
         
         CronTrigger trigger = new CronTrigger( getTriggerName(), this.group, this.cronExpression );
-        
-        BaseJobScheduler jobScheduler = this.jobSchedulerInjector.getValue();
-        Scheduler scheduler = jobScheduler.getScheduler();
+
+        Scheduler scheduler = getScheduler();
+
         scheduler.scheduleJob( jobDetail, trigger );
+
         if (timeout > 0 && 
                 scheduler.getGlobalTriggerListener( BaseTriggerListener.TRIGGER_LISTENER_NAME ) == null) {
             scheduler.addGlobalTriggerListener(new BaseTriggerListener());
