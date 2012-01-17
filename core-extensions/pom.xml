@@ -18,48 +18,21 @@
       <groupId>org.projectodd</groupId>
       <artifactId>polyglot-core</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.projectodd</groupId>
       <artifactId>polyglot-hasingleton</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
     </dependency>
-
-    <!-- <dependency> -->
-    <!--   <groupId>org.jboss</groupId> -->
-    <!--   <artifactId>jboss-vfs</artifactId> -->
-    <!--   <scope>provided</scope> -->
-    <!-- </dependency> -->
-    <!-- <dependency> -->
-    <!--   <groupId>org.jboss.logging</groupId> -->
-    <!--   <artifactId>jboss-logging</artifactId> -->
-    <!--   <scope>provided</scope> -->
-    <!-- </dependency> -->
 
     <dependency>
       <groupId>org.jboss.as</groupId>
       <artifactId>jboss-as-ee</artifactId>
       <scope>provided</scope>
     </dependency>
-
-    <!-- <dependency> -->
-    <!--   <groupId>org.jboss.as</groupId> -->
-    <!--   <artifactId>jboss-as-naming</artifactId> -->
-    <!--   <scope>provided</scope> -->
-    <!-- </dependency> -->
-
-    <!-- <dependency> -->
-    <!--   <groupId>org.jboss.as</groupId> -->
-    <!--   <artifactId>jboss-as-clustering-jgroups</artifactId> -->
-    <!--   <scope>provided</scope> -->
-    <!-- </dependency> -->
-
-    <!-- <dependency> -->
-    <!--   <groupId>org.jboss.as</groupId> -->
-    <!--   <artifactId>jboss-as-transactions</artifactId> -->
-    <!--   <scope>provided</scope> -->
-    <!-- </dependency> -->
 
     <dependency>
       <groupId>org.jboss.as</groupId>

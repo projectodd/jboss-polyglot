@@ -17,16 +17,20 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.projectodd.polyglot.core.processors;
+package org.projectodd.polyglot.core.util;
 
 import org.jboss.as.clustering.jgroups.subsystem.ChannelFactoryService;
 import org.jboss.as.server.deployment.DeploymentPhaseContext;
-import org.jboss.as.server.deployment.DeploymentUnitProcessor;
+import org.jboss.msc.service.ServiceRegistry;
 
-public abstract class ClusterAwareProcessor implements DeploymentUnitProcessor {
+public class ClusterUtil {
     
-    protected boolean isClustered(DeploymentPhaseContext context) {
-        return ( context.getServiceRegistry().getService( ChannelFactoryService.getServiceName( null ) ) != null );
+    public static boolean isClustered(DeploymentPhaseContext context) {
+        return isClustered( context.getServiceRegistry() );
     }
-
+ 
+    public static boolean isClustered(ServiceRegistry registry) {
+        return ( registry.getService( ChannelFactoryService.getServiceName( null ) ) != null );
+    }
+ 
 }

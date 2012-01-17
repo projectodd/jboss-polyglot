@@ -24,13 +24,14 @@ import org.jboss.as.clustering.jgroups.subsystem.ChannelFactoryService;
 import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
+import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.logging.Logger;
 import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceController.Mode;
-import org.projectodd.polyglot.core.processors.ClusterAwareProcessor;
+import org.projectodd.polyglot.core.util.ClusterUtil;
 
-public class HASingletonInstaller extends ClusterAwareProcessor {
+public class HASingletonInstaller implements DeploymentUnitProcessor {
 
     @Override
     public void deploy(DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
@@ -38,7 +39,7 @@ public class HASingletonInstaller extends ClusterAwareProcessor {
 
         ServiceBuilder<Void> builder = phaseContext.getServiceTarget().addService( HASingleton.serviceName( unit ), new HASingleton() );
 
-        if (isClustered( phaseContext )) {
+        if (ClusterUtil.isClustered( phaseContext )) {
             builder.setInitialMode( Mode.NEVER );
         } else {
             builder.setInitialMode( Mode.ACTIVE );
@@ -46,7 +47,7 @@ public class HASingletonInstaller extends ClusterAwareProcessor {
 
         ServiceController<Void> singletonController = builder.install();
 
-        if (isClustered( phaseContext )) {
+        if (ClusterUtil.isClustered( phaseContext )) {
             HASingletonCoordinatorService coordinator = new HASingletonCoordinatorService( singletonController, unit.getName() );
 
             phaseContext.getServiceTarget().addService( HASingleton.serviceName( unit ).append( "coordinator" ), coordinator )

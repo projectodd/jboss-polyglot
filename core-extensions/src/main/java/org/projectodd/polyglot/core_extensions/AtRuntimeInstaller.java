@@ -37,6 +37,7 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.projectodd.polyglot.core.app.ApplicationMetaData;
+import org.projectodd.polyglot.core.util.ClusterUtil;
 import org.projectodd.polyglot.hasingleton.HASingleton;
 
 public class AtRuntimeInstaller<T> implements Service<T>  {
@@ -47,7 +48,7 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
     
     protected void deploy(final ServiceName serviceName, Service<?> service, boolean singleton) {
         ServiceBuilder<?> builder = this.serviceTarget.addService(serviceName, service);
-        if (singleton) {
+        if (singleton && ClusterUtil.isClustered( this.unit.getServiceRegistry() )) {
             builder.addDependency(HASingleton.serviceName(unit));
             builder.setInitialMode(Mode.PASSIVE);
         } else {
