@@ -20,18 +20,22 @@
 package org.projectodd.polyglot.jobs;
 
 import org.jboss.logging.Logger;
+import org.jboss.threads.JBossThreadFactory;
 import org.quartz.InterruptableJob;
 import org.quartz.JobExecutionContext;
 import org.quartz.Trigger;
 import org.quartz.TriggerListener;
 
+import java.security.AccessController;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class BaseTriggerListener implements TriggerListener {
-    public static final String TRIGGER_LISTENER_NAME = BaseTriggerListener.class.getSimpleName(); 
-    
+
+    public static final String THREAD_GROUP = "org.projectodd.polyglot.jobs";
+    public static final String TRIGGER_LISTENER_NAME = BaseTriggerListener.class.getSimpleName();
+
     @Override
     public String getName() {
         return TRIGGER_LISTENER_NAME;
@@ -54,9 +58,11 @@ public class BaseTriggerListener implements TriggerListener {
 
         long delay = (Long) jobExecutionContext.getJobDetail().getJobDataMap().get("timeout");
 
+        final JBossThreadFactory threadFactory = new JBossThreadFactory(new ThreadGroup(THREAD_GROUP), Boolean.FALSE, null, "%G - %t", null, null, AccessController.getContext());
+
         if (delay > 0) {
             //TODO Replace ExecutorService by JBossThreadPool
-            ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
+            ScheduledExecutorService service = Executors.newScheduledThreadPool(1, threadFactory);
 
             service.schedule(new Runnable() {
                 public void run() {
