@@ -16,7 +16,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
- 
+
 package org.projectodd.polyglot.core_extensions;
 
 import java.util.Hashtable;
@@ -36,6 +36,7 @@ import org.jboss.msc.service.ServiceTarget;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
+import org.jboss.msc.value.ImmediateValue;
 import org.projectodd.polyglot.core.app.ApplicationMetaData;
 import org.projectodd.polyglot.core.util.ClusterUtil;
 import org.projectodd.polyglot.hasingleton.HASingleton;
@@ -45,7 +46,7 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
     public AtRuntimeInstaller(DeploymentUnit unit) {
         this.unit = unit;
     }
-    
+
     protected void deploy(final ServiceName serviceName, Service<?> service, boolean singleton) {
         ServiceBuilder<?> builder = this.serviceTarget.addService(serviceName, service);
         if (singleton && ClusterUtil.isClustered( this.unit.getServiceRegistry() )) {
@@ -54,18 +55,27 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
         } else {
             builder.setInitialMode(Mode.ACTIVE);
         }
-        
+
         builder.install();  
     }
-    
-    protected void installMBean(final ServiceName name, MBeanRegistrationService<?> mbeanService) {
-        this.serviceTarget.addService( name.append( "mbean" ), mbeanService )
-            .addDependency( DependencyType.OPTIONAL, MBeanServerService.SERVICE_NAME, MBeanServer.class, mbeanService.getMBeanServerInjector() )
-            .setInitialMode( Mode.PASSIVE )
-            .install(); 
+
+    public ServiceName installMBean(final ServiceName name, final String groupName, Object mbean) {
+        return installMBean( name, new MBeanRegistrationService<Object>( mbeanName( groupName, name ),
+                new ImmediateValue<Object>( mbean ) ) );
     }
-    
-    protected String mbeanName(final String domain, final ServiceName name) {
+
+    public ServiceName installMBean(final ServiceName name, MBeanRegistrationService<?> mbeanService) {
+        ServiceName mbeanName = name.append( "mbean" );
+
+        this.serviceTarget.addService( mbeanName, mbeanService ).
+            addDependency( DependencyType.OPTIONAL, MBeanServerService.SERVICE_NAME, MBeanServer.class, mbeanService.getMBeanServerInjector() ).
+            setInitialMode( Mode.PASSIVE ).
+            install(); 
+
+        return mbeanName;
+    }
+
+    public String mbeanName(final String domain, final ServiceName name) {
         final ApplicationMetaData appMetaData = unit.getAttachment( ApplicationMetaData.ATTACHMENT_KEY );
         return ObjectNameFactory.create( domain, new Hashtable<String, String>() {
             {
@@ -74,21 +84,21 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
             }
         } ).toString();    
     }
-    
+
     @Override
     public void start(StartContext context) throws StartException {
         this.serviceTarget = context.getChildTarget();
     }
-    
+
     @Override
     public synchronized void stop(StopContext context) {
     }
-    
+
     @Override
     public T getValue() {
         return (T)this;
     }
-    
+
     public DeploymentUnit getUnit() {
         return unit;
     }
