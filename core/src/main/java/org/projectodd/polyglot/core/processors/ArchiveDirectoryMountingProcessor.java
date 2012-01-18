@@ -22,7 +22,6 @@ package org.projectodd.polyglot.core.processors;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.util.List;
 
 import org.jboss.as.server.deployment.AttachmentKey;

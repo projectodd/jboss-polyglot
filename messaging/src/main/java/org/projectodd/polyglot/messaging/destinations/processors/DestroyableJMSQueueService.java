@@ -20,8 +20,8 @@
 package org.projectodd.polyglot.messaging.destinations.processors;
 
 import org.jboss.as.messaging.jms.JMSQueueService;
-import org.jboss.msc.service.StopContext;
 import org.jboss.logging.Logger;
+import org.jboss.msc.service.StopContext;
 
 public class DestroyableJMSQueueService extends JMSQueueService {
 
