@@ -41,7 +41,7 @@ public class HASingletonExtension extends AbstractBootstrappableExtension {
     public void initialize(ExtensionContext context) {
         bootstrap();
         log.info( "Initializing HA-Singleton Subsystem" );
-        final SubsystemRegistration registration = context.registerSubsystem( SUBSYSTEM_NAME );
+        final SubsystemRegistration registration = context.registerSubsystem( SUBSYSTEM_NAME, 1, 0 );
         final ManagementResourceRegistration subsystem = registration.registerSubsystemModel( HASingletonSubsystemProviders.SUBSYSTEM );
 
         subsystem.registerOperationHandler( ADD,
@@ -60,7 +60,7 @@ public class HASingletonExtension extends AbstractBootstrappableExtension {
 
     @Override
     public void initializeParsers(ExtensionParsingContext context) {
-        context.setSubsystemXmlMapping(Namespace.CURRENT.getUriString(), HASingletonSubsystemParser.getInstance());
+        context.setSubsystemXmlMapping(SUBSYSTEM_NAME, Namespace.CURRENT.getUriString(), HASingletonSubsystemParser.getInstance());
     }
     
     public static final String SUBSYSTEM_NAME = "polyglot-hasingleton";
