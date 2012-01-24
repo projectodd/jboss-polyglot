@@ -39,10 +39,11 @@ import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.ImmediateValue;
 import org.projectodd.polyglot.core.app.ApplicationMetaData;
 import org.projectodd.polyglot.core.util.ClusterUtil;
-import org.projectodd.polyglot.hasingleton.HASingleton;
 
 public class AtRuntimeInstaller<T> implements Service<T>  {
 
+    public static final String HA_SINGLETON_SERVICE_SUFFIX = "ha-singleton";
+    
     public AtRuntimeInstaller(DeploymentUnit unit) {
         this.unit = unit;
     }
@@ -50,7 +51,7 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
     protected void deploy(final ServiceName serviceName, Service<?> service, boolean singleton) {
         ServiceBuilder<?> builder = this.serviceTarget.addService(serviceName, service);
         if (singleton && ClusterUtil.isClustered( this.unit.getServiceRegistry() )) {
-            builder.addDependency(HASingleton.serviceName(unit));
+            builder.addDependency( unit.getServiceName().append( HA_SINGLETON_SERVICE_SUFFIX ) );
             builder.setInitialMode(Mode.PASSIVE);
         } else {
             builder.setInitialMode(Mode.ACTIVE);
@@ -105,5 +106,4 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
 
     private DeploymentUnit unit;
     private ServiceTarget serviceTarget;
-
 }
