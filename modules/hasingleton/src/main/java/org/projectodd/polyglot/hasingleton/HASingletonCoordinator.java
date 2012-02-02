@@ -22,9 +22,9 @@ package org.projectodd.polyglot.hasingleton;
 import java.util.List;
 
 import org.jboss.as.clustering.ClusterNode;
-import org.jboss.as.clustering.CoreGroupCommunicationService;
 import org.jboss.as.clustering.GroupMembershipListener;
 import org.jboss.as.clustering.jgroups.ChannelFactory;
+import org.jboss.as.clustering.impl.CoreGroupCommunicationService;
 import org.jboss.logging.Logger;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceController.Mode;
@@ -42,11 +42,10 @@ public class HASingletonCoordinator implements GroupMembershipListener {
     
     public void start() throws Exception {
         log.info( "Connect to " + this.partitionName );
-        this.service = new CoreGroupCommunicationService();
+        this.service = new CoreGroupCommunicationService( SCOPE_ID );
         this.service.setAllowSynchronousMembershipNotifications( true );
         this.service.setChannelFactory( this.channelFactory );
         this.service.registerGroupMembershipListener( this );
-        this.service.setScopeId( (short) 248 );
         this.service.setChannelStackName( "jgroups-udp" );
         this.service.setGroupName( this.partitionName );
         this.service.start();
@@ -89,4 +88,5 @@ public class HASingletonCoordinator implements GroupMembershipListener {
     private ServiceController<Void> haSingletonController;
     private ChannelFactory channelFactory;
     private String partitionName;
+    public static final short SCOPE_ID = 248; // Must be different from any scopes AS7 uses internally
 }
