@@ -45,13 +45,14 @@ public class TimeIntervalUtil {
             return new IntervalData( Long.parseLong( data.trim() ), timeUnit );
         }
         
-        return null;
+        return new IntervalData();
     }
     
     public static class IntervalData {
         public long interval;
-        public TimeUnit unit;
-        
+        public TimeUnit unit = TimeUnit.MINUTES;
+
+        public IntervalData(){};
         public IntervalData(long interval, TimeUnit unit) {
             this.interval = interval;
             this.unit = unit;
