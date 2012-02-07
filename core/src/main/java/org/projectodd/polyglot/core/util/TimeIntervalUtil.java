@@ -49,7 +49,7 @@ public class TimeIntervalUtil {
     }
     
     public static class IntervalData {
-        public long interval;
+        public long interval = -1;
         public TimeUnit unit = TimeUnit.MINUTES;
 
         public IntervalData(){};
