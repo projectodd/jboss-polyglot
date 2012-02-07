@@ -22,7 +22,7 @@ package org.projectodd.polyglot.core.as;
 import org.jboss.as.server.deployment.AttachmentKey;
 import org.jboss.as.server.deployment.DeploymentUnit;
 
-public class KnobDeploymentMarker {
+public class ArchivedDeploymentMarker {
     
     private static final AttachmentKey<Boolean> MARKER = AttachmentKey.create(Boolean.class);
     

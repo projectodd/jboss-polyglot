@@ -39,7 +39,7 @@ import org.jboss.vfs.VirtualFileFilter;
 import org.jboss.vfs.VisitorAttributes;
 import org.jboss.vfs.util.SuffixMatchFilter;
 import org.projectodd.polyglot.core.app.ApplicationMetaData;
-import org.projectodd.polyglot.core.as.KnobDeploymentMarker;
+import org.projectodd.polyglot.core.as.ArchivedDeploymentMarker;
 
 public class BaseAppJarScanningProcessor implements DeploymentUnitProcessor {
 
@@ -55,7 +55,7 @@ public class BaseAppJarScanningProcessor implements DeploymentUnitProcessor {
         
         ApplicationMetaData appMetaData = unit.getAttachment( ApplicationMetaData.ATTACHMENT_KEY );
         
-        if (appMetaData == null && !KnobDeploymentMarker.isMarked( unit )) {
+        if (appMetaData == null && !ArchivedDeploymentMarker.isMarked( unit )) {
             return;
         }
         

@@ -24,20 +24,24 @@ import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.as.server.deployment.MountExplodedMarker;
-import org.projectodd.polyglot.core.as.KnobDeploymentMarker;
+import org.projectodd.polyglot.core.as.ArchivedDeploymentMarker;
 
-public class KnobStructureProcessor implements DeploymentUnitProcessor {
+public class ArchiveStructureProcessor implements DeploymentUnitProcessor {
 
+    public ArchiveStructureProcessor(String suffix) {
+        this.archiveSuffix = suffix;
+    }
+    
     @Override
     public void deploy(DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
         DeploymentUnit unit = phaseContext.getDeploymentUnit();
         
-        if (!unit.getName().endsWith( ".knob" )) {
+        if (!unit.getName().endsWith( this.archiveSuffix )) {
             return;
         }
         
-        KnobDeploymentMarker.applyMark( unit );
-        // Tell AS to treat .knob files as archives and mount them exploded
+        ArchivedDeploymentMarker.applyMark( unit );
+        // Tell AS to treat it as an archive and mount them exploded
         MountExplodedMarker.setMountExploded( unit );
     }
 
@@ -46,4 +50,5 @@ public class KnobStructureProcessor implements DeploymentUnitProcessor {
 
     }
 
+    private String archiveSuffix;
 }
