@@ -106,7 +106,7 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
         this.jobDetail = null;  
     }
     
-    protected Scheduler getScheduler() {
+    public Scheduler getScheduler() {
         return this.jobSchedulerInjector.getValue().getScheduler();
     }
     
