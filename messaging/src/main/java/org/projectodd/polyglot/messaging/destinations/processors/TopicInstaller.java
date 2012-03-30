@@ -31,6 +31,7 @@ import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceName;
+import org.jboss.logging.Logger;
 import org.projectodd.polyglot.messaging.destinations.TopicMetaData;
 
 /**
@@ -62,10 +63,14 @@ public class TopicInstaller implements DeploymentUnitProcessor {
         final JMSTopicService service = new JMSTopicService(topic.getName(), new String[] { topic.getBindName() } );
         final ServiceName hornetQserviceName = MessagingServices.getHornetQServiceName( "default" );
         final ServiceName serviceName = JMSServices.getJmsTopicBaseServiceName( hornetQserviceName ).append( topic.getName() );
-        phaseContext.getServiceTarget().addService(serviceName, service)
+        try {
+            phaseContext.getServiceTarget().addService(serviceName, service)
                 .addDependency(JMSServices.getJmsManagerBaseServiceName( hornetQserviceName ), JMSServerManager.class, service.getJmsServer() )
                 .setInitialMode(Mode.ACTIVE)
                 .install();
+        } catch (org.jboss.msc.service.DuplicateServiceException ignored) {
+            log.warn("Already started "+serviceName);
+        }
     }
 
     @Override
@@ -73,5 +78,7 @@ public class TopicInstaller implements DeploymentUnitProcessor {
         // TODO Auto-generated method stub
 
     }
+
+    static final Logger log = Logger.getLogger( "org.projectodd.polyglot.messaging" );
 
 }

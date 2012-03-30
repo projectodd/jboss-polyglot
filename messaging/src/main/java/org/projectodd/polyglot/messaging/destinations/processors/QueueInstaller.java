@@ -31,6 +31,7 @@ import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceName;
+import org.jboss.logging.Logger;
 import org.projectodd.polyglot.messaging.destinations.QueueMetaData;
 
 /**
@@ -62,10 +63,14 @@ public class QueueInstaller implements DeploymentUnitProcessor {
         final JMSQueueService service = new DestroyableJMSQueueService(queue.getName(), null, queue.isDurable(), new String[] { queue.getBindName() } );
         final ServiceName hornetQserviceName = MessagingServices.getHornetQServiceName( "default" );
         final ServiceName serviceName = JMSServices.getJmsQueueBaseServiceName( hornetQserviceName ).append( queue.getName() );
-        phaseContext.getServiceTarget().addService(serviceName, service)
+        try {
+            phaseContext.getServiceTarget().addService(serviceName, service)
                 .addDependency(JMSServices.getJmsManagerBaseServiceName( hornetQserviceName ), JMSServerManager.class, service.getJmsServer() )
                 .setInitialMode(Mode.ACTIVE)
                 .install();
+        } catch (org.jboss.msc.service.DuplicateServiceException ignored) {
+            log.warn("Already started "+serviceName);
+        }
     }
 
     @Override
@@ -73,4 +78,5 @@ public class QueueInstaller implements DeploymentUnitProcessor {
 
     }
 
+    static final Logger log = Logger.getLogger( "org.projectodd.polyglot.messaging" );
 }
