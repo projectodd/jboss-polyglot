@@ -49,7 +49,7 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
     }
 
     protected void deploy(final ServiceName serviceName, Service<?> service, boolean singleton) {
-        ServiceBuilder<?> builder = this.serviceTarget.addService(serviceName, service);
+        ServiceBuilder<?> builder = getTarget().addService(serviceName, service);
         if (singleton && ClusterUtil.isClustered( this.unit.getServiceRegistry() )) {
             builder.addDependency( unit.getServiceName().append( HA_SINGLETON_SERVICE_SUFFIX ) );
             builder.setInitialMode(Mode.PASSIVE);
@@ -68,7 +68,7 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
     public ServiceName installMBean(final ServiceName name, MBeanRegistrationService<?> mbeanService) {
         ServiceName mbeanName = name.append( "mbean" );
 
-        this.serviceTarget.addService( mbeanName, mbeanService ).
+        getTarget().addService( mbeanName, mbeanService ).
             addDependency( DependencyType.OPTIONAL, MBeanServerService.SERVICE_NAME, MBeanServer.class, mbeanService.getMBeanServerInjector() ).
             setInitialMode( Mode.PASSIVE ).
             install(); 
@@ -98,6 +98,10 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
     @Override
     public T getValue() {
         return (T)this;
+    }
+
+    public ServiceTarget getTarget() {
+        return this.serviceTarget;
     }
 
     public DeploymentUnit getUnit() {
