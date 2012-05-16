@@ -64,7 +64,6 @@
 
   <properties>
     <version.junit>4.7</version.junit>
-    <version.jbossas>7.1.1.Final</version.jbossas>
     <version.org.quartz-scheduler>1.8.5</version.org.quartz-scheduler>
     <version.org.slf4j>1.5.10</version.org.slf4j>
   </properties>
@@ -131,6 +130,17 @@
       <properties>
         <jboss.releases.repo.url>dav:https://repository-projectodd.forge.cloudbees.com/release</jboss.releases.repo.url>
         <jboss.snapshots.repo.url>dav:https://repository-projectodd.forge.cloudbees.com/release</jboss.snapshots.repo.url>
+      </properties>
+    </profile>
+    <profile>
+      <id>not-wfk</id>
+      <activation>
+        <property>
+          <name>!wfk</name>
+        </property>
+      </activation>
+      <properties>
+        <version.jbossas>7.1.1.Final</version.jbossas>
       </properties>
     </profile>
     <profile>

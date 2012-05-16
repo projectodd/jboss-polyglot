@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.projectodd</groupId>
     <artifactId>polyglot</artifactId>
-    <version>1.5.3</version>
+    <version>1.5.3-redhat-1</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
