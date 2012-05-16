@@ -17,36 +17,40 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.projectodd.polyglot.core.datasource.db;
+package org.projectodd.polyglot.xa.datasource.db;
 
 import java.util.HashMap;
 import java.util.Map;
 
 
-public class PostgresAdapter extends Adapter {
+public class OracleAdapter extends Adapter {
 
-    public PostgresAdapter() {
-        super( "postgresql", "jdbc/postgres", "org.postgresql.Driver", "org.postgresql.xa.PGXADataSource" );
+    public OracleAdapter() {
+        super( "oracle", "ojdbc6.jar", "oracle.jdbc.OracleDriver", "oracle.jdbc.xa.client.OracleXADataSource" );
     }
     
     @Override
     public String[] getNames() {
         return new String[] {
-                "postgresql",
-                "jdbcpostgresql",
+            "oracle",
         };
     }
-
 
     @Override
     public Map<String, String> getPropertiesFor(Map<String, Object> config) {
         Map<String, String> properties = new HashMap<String, String>();
+        
+        String url = (String) config.get( "url" );
+        if (url == null) {
+            String host = config.get( "host" ) == null ? "localhost" : (String) config.get( "host" );
+            int port = config.get( "port" ) == null ? 1521 : (Integer) config.get( "port" );
+            String database = (String) config.get( "database" );
+            url = "jdbc:oracle:thin:@" + host + ":" + port + ":" + database;
+        }
 
-        properties.put( "ServerName"   , null==config.get("host") ? "localhost" : ""+config.get("host") );
-        properties.put( "PortNumber"   , null==config.get("port") ? "5432" : ""+config.get("port") );
-        properties.put( "DatabaseName" , ""+config.get("database") );
-        properties.put( "User"         , ""+config.get("username") );
-        properties.put( "Password"     , ""+config.get("password") );
+        properties.put( "URL"     , url );
+        properties.put( "User"    , ""+config.get("username") );
+        properties.put( "Password", ""+config.get("password") );
 
         return properties;
     }

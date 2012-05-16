@@ -17,44 +17,38 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.projectodd.polyglot.core.datasource.db;
+package org.projectodd.polyglot.xa.datasource.db;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import org.jboss.jca.common.api.metadata.ds.DsSecurity;
-import org.jboss.jca.common.metadata.ds.DsSecurityImpl;
 
+public class PostgresAdapter extends Adapter {
 
-public class H2Adapter extends Adapter {
-
-    public H2Adapter() {
-        super( "h2", "jdbc/h2", "org.h2.Driver", "org.h2.jdbcx.JdbcDataSource" );
+    public PostgresAdapter() {
+        super( "postgresql", "jdbc/postgres", "org.postgresql.Driver", "org.postgresql.xa.PGXADataSource" );
     }
-
+    
     @Override
     public String[] getNames() {
         return new String[] {
-                "h2",
-                "jdbch2",
+                "postgresql",
+                "jdbcpostgresql",
         };
     }
+
 
     @Override
     public Map<String, String> getPropertiesFor(Map<String, Object> config) {
         Map<String, String> properties = new HashMap<String, String>();
 
-        String configUrl = (String) config.get( "url" );
-        if (configUrl == null) {
-            properties.put( "URL", "jdbc:h2:" + config.get( "database" ) );
-        } else {
-            properties.put( "URL", configUrl );
-        }
-        return properties;
-    }
+        properties.put( "ServerName"   , null==config.get("host") ? "localhost" : ""+config.get("host") );
+        properties.put( "PortNumber"   , null==config.get("port") ? "5432" : ""+config.get("port") );
+        properties.put( "DatabaseName" , ""+config.get("database") );
+        properties.put( "User"         , ""+config.get("username") );
+        properties.put( "Password"     , ""+config.get("password") );
 
-    public DsSecurity getSecurityFor(Map<String, Object> config) throws Exception {
-        return new DsSecurityImpl( (String) config.get( "username" ), (String) config.get( "password" ), null, null );
+        return properties;
     }
 
 }

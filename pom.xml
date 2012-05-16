@@ -41,6 +41,7 @@
     <module>support</module>
     <module>web</module>
     <module>modules</module>
+    <module>xa</module>
   </modules>
   
   <dependencyManagement>

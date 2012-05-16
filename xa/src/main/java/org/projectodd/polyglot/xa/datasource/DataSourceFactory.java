@@ -17,7 +17,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.projectodd.polyglot.core.datasource;
+package org.projectodd.polyglot.xa.datasource;
 
 import java.sql.Driver;
 import java.util.HashSet;
@@ -55,7 +55,7 @@ import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceTarget;
-import org.projectodd.polyglot.core.datasource.db.Adapter;
+import org.projectodd.polyglot.xa.datasource.db.Adapter;
 
 
 public class DataSourceFactory {

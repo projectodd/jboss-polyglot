@@ -17,7 +17,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.projectodd.polyglot.core.datasource;
+package org.projectodd.polyglot.xa.datasource;
 
 import java.sql.Driver;
 
@@ -30,7 +30,7 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
-import org.projectodd.polyglot.core.datasource.db.Adapter;
+import org.projectodd.polyglot.xa.datasource.db.Adapter;
 
 
 public class DriverService implements Service<Driver> {

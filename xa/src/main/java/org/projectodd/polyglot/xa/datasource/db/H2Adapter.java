@@ -17,42 +17,44 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.projectodd.polyglot.core.datasource.db;
+package org.projectodd.polyglot.xa.datasource.db;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import org.jboss.jca.common.api.metadata.ds.DsSecurity;
+import org.jboss.jca.common.metadata.ds.DsSecurityImpl;
 
-public class OracleAdapter extends Adapter {
 
-    public OracleAdapter() {
-        super( "oracle", "ojdbc6.jar", "oracle.jdbc.OracleDriver", "oracle.jdbc.xa.client.OracleXADataSource" );
+public class H2Adapter extends Adapter {
+
+    public H2Adapter() {
+        super( "h2", "jdbc/h2", "org.h2.Driver", "org.h2.jdbcx.JdbcDataSource" );
     }
-    
+
     @Override
     public String[] getNames() {
         return new String[] {
-            "oracle",
+                "h2",
+                "jdbch2",
         };
     }
 
     @Override
     public Map<String, String> getPropertiesFor(Map<String, Object> config) {
         Map<String, String> properties = new HashMap<String, String>();
-        
-        String url = (String) config.get( "url" );
-        if (url == null) {
-            String host = config.get( "host" ) == null ? "localhost" : (String) config.get( "host" );
-            int port = config.get( "port" ) == null ? 1521 : (Integer) config.get( "port" );
-            String database = (String) config.get( "database" );
-            url = "jdbc:oracle:thin:@" + host + ":" + port + ":" + database;
+
+        String configUrl = (String) config.get( "url" );
+        if (configUrl == null) {
+            properties.put( "URL", "jdbc:h2:" + config.get( "database" ) );
+        } else {
+            properties.put( "URL", configUrl );
         }
-
-        properties.put( "URL"     , url );
-        properties.put( "User"    , ""+config.get("username") );
-        properties.put( "Password", ""+config.get("password") );
-
         return properties;
+    }
+
+    public DsSecurity getSecurityFor(Map<String, Object> config) throws Exception {
+        return new DsSecurityImpl( (String) config.get( "username" ), (String) config.get( "password" ), null, null );
     }
 
 }

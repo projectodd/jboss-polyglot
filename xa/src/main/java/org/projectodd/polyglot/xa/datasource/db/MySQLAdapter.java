@@ -17,7 +17,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.projectodd.polyglot.core.datasource.db;
+package org.projectodd.polyglot.xa.datasource.db;
 
 import java.util.HashMap;
 import java.util.Map;
