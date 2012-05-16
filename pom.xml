@@ -5,12 +5,12 @@
   <parent>
     <groupId>org.jboss</groupId>
     <artifactId>jboss-parent</artifactId>
-    <version>6-beta-1</version>
+    <version>8-redhat-1</version>
   </parent>
 
   <groupId>org.projectodd</groupId>
   <artifactId>polyglot</artifactId>
-  <version>1.5.3</version>
+  <version>1.5.3-redhat-1</version>
   <packaging>pom</packaging>
   <name>Polyglot</name>
   <url>http://github.com/projectodd/polyglot/</url>
@@ -131,6 +131,17 @@
       <properties>
         <jboss.releases.repo.url>dav:https://repository-projectodd.forge.cloudbees.com/release</jboss.releases.repo.url>
         <jboss.snapshots.repo.url>dav:https://repository-projectodd.forge.cloudbees.com/release</jboss.snapshots.repo.url>
+      </properties>
+    </profile>
+    <profile>
+      <id>wfk</id>
+      <activation>
+        <property>
+          <name>wfk</name>
+        </property>
+      </activation>
+      <properties>
+        <version.jbossas>7.1.1.Final-redhat-1</version.jbossas>
       </properties>
     </profile>
   </profiles>
