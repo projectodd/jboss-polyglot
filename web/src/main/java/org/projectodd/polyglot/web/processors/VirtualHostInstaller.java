@@ -65,10 +65,9 @@ public class VirtualHostInstaller implements DeploymentUnitProcessor {
         
         String[] aliases = hosts.toArray( EMPTY_STRING_ARRAY );
         
-        WebVirtualHostService service = new WebVirtualHostService( name, aliases, false );
+        WebVirtualHostService service = new WebVirtualHostService( name, aliases, false, TEMP_DIR );
         
         phaseContext.getServiceTarget().addService( serviceName, service )
-           .addDependency(AbstractPathService.pathNameOf(TEMP_DIR), String.class, service.getTempPathInjector())
            .addDependency(WebSubsystemServices.JBOSS_WEB, WebServer.class, service.getWebServer())
            .install();
     }
