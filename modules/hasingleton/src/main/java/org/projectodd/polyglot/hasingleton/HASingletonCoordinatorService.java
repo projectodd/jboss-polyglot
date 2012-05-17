@@ -19,8 +19,8 @@
 
 package org.projectodd.polyglot.hasingleton;
 
-import org.jboss.as.clustering.jgroups.ChannelFactory;
 import org.jboss.logging.Logger;
+import org.jboss.modules.ModuleLoader;
 import org.jboss.msc.inject.Injector;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceController;
@@ -28,6 +28,7 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
+import org.jgroups.Channel;
 
 public class HASingletonCoordinatorService implements Service<HASingletonCoordinator> {
 
@@ -45,8 +46,7 @@ public class HASingletonCoordinatorService implements Service<HASingletonCoordin
     public void start(StartContext context) throws StartException {
         log.info(  "Start HASingletonCoordinator"  );
         try {
-            ChannelFactory factory = this.channelFactoryInjector.getValue();
-            this.coordinator = new HASingletonCoordinator( this.haSingletonController, factory, this.partitionName );
+            this.coordinator = new HASingletonCoordinator( this.haSingletonController, channelInjector, moduleLoaderInjector );
             this.coordinator.start();
         } catch (Exception e) {
             throw new StartException( e );
@@ -64,13 +64,18 @@ public class HASingletonCoordinatorService implements Service<HASingletonCoordin
         }
     }
 
-    public Injector<ChannelFactory> getChannelFactoryInjector() {
-        return this.channelFactoryInjector;
+    public Injector<Channel> getChannelInjector() {
+        return this.channelInjector;
+    }
+    
+    public Injector<ModuleLoader> getModuleLoaderInjector() {
+    	return this.moduleLoaderInjector;
     }
     
     private static final Logger log = Logger.getLogger( "org.projectodd.polyglot.hasingleton" );
 
-    private InjectedValue<ChannelFactory> channelFactoryInjector = new InjectedValue<ChannelFactory>();;
+    private InjectedValue<Channel> channelInjector = new InjectedValue<Channel>();;
+    private InjectedValue<ModuleLoader> moduleLoaderInjector = new InjectedValue<ModuleLoader>();;
     private ServiceController<Void> haSingletonController;
     private String partitionName;
     private HASingletonCoordinator coordinator;

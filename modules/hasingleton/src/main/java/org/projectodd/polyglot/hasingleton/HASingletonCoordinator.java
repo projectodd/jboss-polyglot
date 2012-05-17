@@ -23,31 +23,33 @@ import java.util.List;
 
 import org.jboss.as.clustering.ClusterNode;
 import org.jboss.as.clustering.GroupMembershipListener;
-import org.jboss.as.clustering.jgroups.ChannelFactory;
 import org.jboss.as.clustering.impl.CoreGroupCommunicationService;
+import org.jboss.as.clustering.jgroups.ChannelFactory;
 import org.jboss.logging.Logger;
+import org.jboss.modules.ModuleLoader;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceController.Mode;
+import org.jboss.msc.value.ImmediateValue;
+import org.jboss.msc.value.Value;
+import org.jgroups.Channel;
 
 public class HASingletonCoordinator implements GroupMembershipListener {
     
-    private CoreGroupCommunicationService service;
-    public HASingletonCoordinator(ServiceController<Void> haSingletonController, ChannelFactory channelFactory, String partitionName) {
+	
+	public HASingletonCoordinator(ServiceController<Void> haSingletonController, Value<Channel> channelRef, Value<ModuleLoader> moduleLoaderRef) {
         this.haSingletonController = haSingletonController;
-        this.channelFactory = channelFactory;
-        //this.channel.setReceiver(  this );
-        //this.channel.addChannelListener( this );
-        this.partitionName = partitionName;
+        this.channelRef = channelRef;
+        this.moduleLoaderRef = moduleLoaderRef;
     }
     
     public void start() throws Exception {
         log.info( "Connect to " + this.partitionName );
-        this.service = new CoreGroupCommunicationService( SCOPE_ID );
+        this.service = new CoreGroupCommunicationService( SCOPE_ID, channelRef, moduleLoaderRef );
         this.service.setAllowSynchronousMembershipNotifications( true );
-        this.service.setChannelFactory( this.channelFactory );
+        //this.service.setChannelFactory( this.channelFactory );
         this.service.registerGroupMembershipListener( this );
-        this.service.setChannelStackName( "jgroups-udp" );
-        this.service.setGroupName( this.partitionName );
+        //this.service.setChannelStackName( "jgroups-udp" );
+        //this.service.setGroupName( this.partitionName );
         this.service.start();
     }
     
@@ -85,8 +87,10 @@ public class HASingletonCoordinator implements GroupMembershipListener {
     
     private static final Logger log = Logger.getLogger( "org.projectodd.polyglot.hasingleton" );
     
+    private Value<Channel> channelRef;
+	private Value<ModuleLoader> moduleLoaderRef;
+    private CoreGroupCommunicationService service;
     private ServiceController<Void> haSingletonController;
-    private ChannelFactory channelFactory;
     private String partitionName;
     public static final short SCOPE_ID = 248; // Must be different from any scopes AS7 uses internally
 }
