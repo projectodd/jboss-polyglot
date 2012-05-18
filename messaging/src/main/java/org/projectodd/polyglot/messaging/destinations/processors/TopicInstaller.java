@@ -20,6 +20,7 @@
 package org.projectodd.polyglot.messaging.destinations.processors;
 
 import java.util.List;
+import java.util.concurrent.Executor;
 
 import org.hornetq.jms.server.JMSServerManager;
 import org.jboss.as.messaging.MessagingServices;
@@ -29,9 +30,9 @@ import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
+import org.jboss.logging.Logger;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceName;
-import org.jboss.logging.Logger;
 import org.projectodd.polyglot.messaging.destinations.TopicMetaData;
 
 /**
@@ -66,6 +67,7 @@ public class TopicInstaller implements DeploymentUnitProcessor {
         try {
             phaseContext.getServiceTarget().addService(serviceName, service)
                 .addDependency(JMSServices.getJmsManagerBaseServiceName( hornetQserviceName ), JMSServerManager.class, service.getJmsServer() )
+                .addDependency( MessagingServices.getHornetQStartupPoolServiceName( hornetQserviceName ), Executor.class, service.getExecutorInjector() )
                 .setInitialMode(Mode.ACTIVE)
                 .install();
         } catch (org.jboss.msc.service.DuplicateServiceException ignored) {

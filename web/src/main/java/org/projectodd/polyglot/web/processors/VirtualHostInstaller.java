@@ -22,6 +22,8 @@ package org.projectodd.polyglot.web.processors;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jboss.as.controller.services.path.PathManager;
+import org.jboss.as.controller.services.path.PathManagerService;
 import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
@@ -34,49 +36,49 @@ import org.jboss.msc.service.ServiceName;
 import org.projectodd.polyglot.web.WebApplicationMetaData;
 
 public class VirtualHostInstaller implements DeploymentUnitProcessor {
-    
+
     private static final String TEMP_DIR = "jboss.server.temp.dir";
 
-    private static final String[] EMPTY_STRING_ARRAY = new String[]{};
-    
+    private static final String[] EMPTY_STRING_ARRAY = new String[] {};
+
     @Override
     public void deploy(DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
         DeploymentUnit unit = phaseContext.getDeploymentUnit();
         WebApplicationMetaData webMetaData = unit.getAttachment( WebApplicationMetaData.ATTACHMENT_KEY );
-        
-        if ( webMetaData == null ) {
+
+        if (webMetaData == null) {
             return;
         }
-        
+
         List<String> hosts = new ArrayList<String>();
         hosts.addAll( webMetaData.getHosts() );
-        
-        if ( hosts.isEmpty() ) {
+
+        if (hosts.isEmpty()) {
             return;
         }
-        
+
         String name = hosts.remove( 0 );
-        
-        ServiceName serviceName = WebSubsystemServices.JBOSS_WEB_HOST.append(name);
-        
-        if ( phaseContext.getServiceRegistry().getService( serviceName ) != null ) {
+
+        ServiceName serviceName = WebSubsystemServices.JBOSS_WEB_HOST.append( name );
+
+        if (phaseContext.getServiceRegistry().getService( serviceName ) != null) {
             return;
         }
-        
+
         String[] aliases = hosts.toArray( EMPTY_STRING_ARRAY );
-        
+
         WebVirtualHostService service = new WebVirtualHostService( name, aliases, false, TEMP_DIR );
-        
+
         phaseContext.getServiceTarget().addService( serviceName, service )
-           .addDependency(WebSubsystemServices.JBOSS_WEB, WebServer.class, service.getWebServer())
-           .install();
+                .addDependency( WebSubsystemServices.JBOSS_WEB, WebServer.class, service.getWebServer() )
+                .addDependency( PathManagerService.SERVICE_NAME, PathManager.class, service.getPathManagerInjector() )
+                .install();
     }
-    
 
     @Override
     public void undeploy(DeploymentUnit context) {
         // TODO Auto-generated method stub
-        
+
     }
 
 }
