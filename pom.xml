@@ -60,16 +60,23 @@
         <version>${version.junit}</version>
       </dependency>
 
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-all</artifactId>
+        <version>${version.mockito}</version> 
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
   <properties>
     <version.junit>4.7</version.junit>
+    <version.mockito>1.8.4</version.mockito>
     <version.jbossas>7.1.1.Final</version.jbossas>
     <version.org.quartz-scheduler>1.8.5</version.org.quartz-scheduler>
     <version.org.slf4j>1.5.10</version.org.slf4j>
   </properties>
 
+  
   <repositories>
     <repository>
       <id>jboss-third-party-releases</id>
@@ -135,6 +142,20 @@
       </properties>
     </profile>
   </profiles>
+
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
 
 
   <build>
