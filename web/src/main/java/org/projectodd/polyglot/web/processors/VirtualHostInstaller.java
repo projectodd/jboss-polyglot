@@ -22,11 +22,12 @@ package org.projectodd.polyglot.web.processors;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jboss.as.controller.services.path.PathManager;
+import org.jboss.as.controller.services.path.PathManagerService;
 import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
-import org.jboss.as.server.services.path.AbstractPathService;
 import org.jboss.as.web.WebServer;
 import org.jboss.as.web.WebSubsystemServices;
 import org.jboss.as.web.WebVirtualHostService;
@@ -65,10 +66,10 @@ public class VirtualHostInstaller implements DeploymentUnitProcessor {
         
         String[] aliases = hosts.toArray( EMPTY_STRING_ARRAY );
         
-        WebVirtualHostService service = new WebVirtualHostService( name, aliases, false );
+        WebVirtualHostService service = new WebVirtualHostService( name, aliases, false, TEMP_DIR );
         
         phaseContext.getServiceTarget().addService( serviceName, service )
-           .addDependency(AbstractPathService.pathNameOf(TEMP_DIR), String.class, service.getTempPathInjector())
+           .addDependency(PathManagerService.SERVICE_NAME, PathManager.class, service.getPathManagerInjector())
            .addDependency(WebSubsystemServices.JBOSS_WEB, WebServer.class, service.getWebServer())
            .install();
     }
