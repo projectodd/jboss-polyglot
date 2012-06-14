@@ -25,11 +25,11 @@ import java.util.Map;
 import java.util.Set;
 import javax.sql.DataSource;
 
-import org.jboss.as.connector.ConnectorServices;
-import org.jboss.as.connector.registry.DriverRegistry;
+import org.jboss.as.connector.services.driver.registry.DriverRegistry;
 import org.jboss.as.connector.subsystems.datasources.DataSourceReferenceFactoryService;
 import org.jboss.as.connector.subsystems.datasources.ModifiableXaDataSource;
 import org.jboss.as.connector.subsystems.datasources.XaDataSourceService;
+import org.jboss.as.connector.util.ConnectorServices;
 import org.jboss.as.naming.ManagedReferenceFactory;
 import org.jboss.as.naming.ServiceBasedNamingStore;
 import org.jboss.as.naming.deployment.ContextNames;
@@ -37,14 +37,14 @@ import org.jboss.as.naming.service.BinderService;
 import org.jboss.as.naming.service.NamingService;
 import org.jboss.as.server.deployment.Attachments;
 import org.jboss.as.server.deployment.DeploymentUnit;
-import org.jboss.jca.common.api.metadata.common.CommonXaPool;
 import org.jboss.jca.common.api.metadata.common.FlushStrategy;
 import org.jboss.jca.common.api.metadata.common.Recovery;
 import org.jboss.jca.common.api.metadata.ds.Statement;
 import org.jboss.jca.common.api.metadata.ds.TimeOut;
 import org.jboss.jca.common.api.metadata.ds.TransactionIsolation;
 import org.jboss.jca.common.api.metadata.ds.Validation;
-import org.jboss.jca.common.metadata.common.CommonXaPoolImpl;
+import org.jboss.jca.common.api.metadata.ds.v11.DsXaPool;
+import org.jboss.jca.common.metadata.ds.v11.DsXaPoolImpl;
 import org.jboss.jca.core.api.connectionmanager.ccm.CachedConnectionManager;
 import org.jboss.jca.core.api.management.ManagementRepository;
 import org.jboss.jca.core.spi.transaction.TransactionIntegration;
@@ -180,7 +180,7 @@ public class DataSourceFactory {
                                           recovery);
     }
 
-    protected CommonXaPool createPool(Integer maxPoolSize) throws Exception {
+    protected DsXaPool createPool(Integer maxPoolSize) throws Exception {
         Integer minPoolSize = 0;
         Boolean prefill = false;
         Boolean useStrictMin = false;
@@ -190,8 +190,9 @@ public class DataSourceFactory {
         Boolean padXid = false;
         Boolean wrapXaDataSource = false;
         Boolean noTxSeparatePool = false;
+        Boolean allowMultipleUsers = true;
 
-        return new CommonXaPoolImpl(minPoolSize,
+        return new DsXaPoolImpl(minPoolSize,
                                     maxPoolSize,
                                     prefill,
                                     useStrictMin,
@@ -200,7 +201,8 @@ public class DataSourceFactory {
                                     interleaving,
                                     padXid,
                                     wrapXaDataSource,
-                                    noTxSeparatePool);
+                                    noTxSeparatePool,
+                                    allowMultipleUsers);
     }
 
     private static final Logger log = Logger.getLogger( DataSourceFactory.class );

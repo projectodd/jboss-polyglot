@@ -19,16 +19,18 @@
 
 package org.projectodd.polyglot.hasingleton;
 
-import org.jboss.as.clustering.jgroups.ChannelFactory;
-import org.jboss.as.clustering.jgroups.subsystem.ChannelFactoryService;
+import org.jboss.as.clustering.jgroups.subsystem.ChannelService;
+import org.jboss.as.server.Services;
 import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.logging.Logger;
+import org.jboss.modules.ModuleLoader;
 import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceController.Mode;
+import org.jgroups.Channel;
 import org.projectodd.polyglot.core.util.ClusterUtil;
 
 public class HASingletonInstaller implements DeploymentUnitProcessor {
@@ -51,7 +53,8 @@ public class HASingletonInstaller implements DeploymentUnitProcessor {
             HASingletonCoordinatorService coordinator = new HASingletonCoordinatorService( singletonController, unit.getName() );
 
             phaseContext.getServiceTarget().addService( HASingleton.serviceName( unit ).append( "coordinator" ), coordinator )
-                    .addDependency( ChannelFactoryService.getServiceName( null ), ChannelFactory.class, coordinator.getChannelFactoryInjector() )
+                    .addDependency( ChannelService.getServiceName( "hasingleton" ), Channel.class, coordinator.getChannelInjector() )
+                    .addDependency( Services.JBOSS_MODULE_INDEX_SERVICE, ModuleLoader.class, coordinator.getModuleLoaderInjector() )
                     .install();
         }
     }

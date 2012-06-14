@@ -25,13 +25,15 @@ import org.hornetq.jms.server.JMSServerManager;
 import org.jboss.as.messaging.MessagingServices;
 import org.jboss.as.messaging.jms.JMSServices;
 import org.jboss.as.messaging.jms.JMSTopicService;
+import org.jboss.as.server.Services;
 import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
+import org.jboss.logging.Logger;
+import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceName;
-import org.jboss.logging.Logger;
 import org.projectodd.polyglot.messaging.destinations.TopicMetaData;
 
 /**
@@ -64,10 +66,11 @@ public class TopicInstaller implements DeploymentUnitProcessor {
         final ServiceName hornetQserviceName = MessagingServices.getHornetQServiceName( "default" );
         final ServiceName serviceName = JMSServices.getJmsTopicBaseServiceName( hornetQserviceName ).append( topic.getName() );
         try {
-            phaseContext.getServiceTarget().addService(serviceName, service)
+            ServiceBuilder<?> serviceBuilder = phaseContext.getServiceTarget().addService(serviceName, service)
                 .addDependency(JMSServices.getJmsManagerBaseServiceName( hornetQserviceName ), JMSServerManager.class, service.getJmsServer() )
-                .setInitialMode(Mode.ACTIVE)
-                .install();
+                .setInitialMode(Mode.ACTIVE);
+            Services.addServerExecutorDependency( serviceBuilder, service.getExecutorInjector(), false );
+            serviceBuilder.install();
         } catch (org.jboss.msc.service.DuplicateServiceException ignored) {
             log.warn("Already started "+serviceName);
         }
