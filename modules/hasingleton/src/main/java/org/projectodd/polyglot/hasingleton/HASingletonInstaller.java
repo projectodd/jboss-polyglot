@@ -19,6 +19,8 @@
 
 package org.projectodd.polyglot.hasingleton;
 
+import org.jboss.as.clustering.jgroups.ChannelFactory;
+import org.jboss.as.clustering.jgroups.subsystem.ChannelFactoryService;
 import org.jboss.as.clustering.jgroups.subsystem.ChannelService;
 import org.jboss.as.server.Services;
 import org.jboss.as.server.deployment.DeploymentPhaseContext;
@@ -29,7 +31,9 @@ import org.jboss.logging.Logger;
 import org.jboss.modules.ModuleLoader;
 import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceController.Mode;
+import org.jboss.msc.value.InjectedValue;
 import org.jgroups.Channel;
 import org.projectodd.polyglot.core.util.ClusterUtil;
 
@@ -50,11 +54,18 @@ public class HASingletonInstaller implements DeploymentUnitProcessor {
         ServiceController<Void> singletonController = builder.install();
 
         if (ClusterUtil.isClustered( phaseContext )) {
-            HASingletonCoordinatorService coordinator = new HASingletonCoordinatorService( singletonController, unit.getName() );
+            String hasingletonId = unit.getName() + "-hasingleton";
+            ServiceName channelServiceName = ChannelService.getServiceName( hasingletonId );
+            InjectedValue<ChannelFactory> channelFactory = new InjectedValue<ChannelFactory>();
+            phaseContext.getServiceTarget().addService( channelServiceName, new ChannelService( hasingletonId, channelFactory ) )
+                    .addDependency( ChannelFactoryService.getServiceName( null ), ChannelFactory.class, channelFactory )
+                    .setInitialMode( Mode.ON_DEMAND )
+                    .install();
 
+            HASingletonCoordinatorService coordinator = new HASingletonCoordinatorService( singletonController );
             phaseContext.getServiceTarget().addService( HASingleton.serviceName( unit ).append( "coordinator" ), coordinator )
-                    .addDependency( ChannelService.getServiceName( "hasingleton" ), Channel.class, coordinator.getChannelInjector() )
-                    .addDependency( Services.JBOSS_MODULE_INDEX_SERVICE, ModuleLoader.class, coordinator.getModuleLoaderInjector() )
+                    .addDependency( channelServiceName, Channel.class, coordinator.getChannelInjector() )
+                    .addDependency( Services.JBOSS_SERVICE_MODULE_LOADER, ModuleLoader.class, coordinator.getModuleLoaderInjector() )
                     .install();
         }
     }

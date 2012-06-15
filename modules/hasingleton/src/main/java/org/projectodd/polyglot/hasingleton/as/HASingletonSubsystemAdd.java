@@ -58,7 +58,7 @@ public class HASingletonSubsystemAdd extends AbstractBoottimeAddStepHandler {
     }
 
     protected void addDeploymentProcessors(final DeploymentProcessorTarget processorTarget) {
-        processorTarget.addDeploymentProcessor( Phase.INSTALL, 200, rootSafe( new HASingletonInstaller() ) );
+        processorTarget.addDeploymentProcessor( HASingletonExtension.SUBSYSTEM_NAME, Phase.INSTALL, 200, rootSafe( new HASingletonInstaller() ) );
     }
 
     static ModelNode createOperation(ModelNode address) {
