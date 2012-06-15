@@ -65,7 +65,7 @@
   <properties>
     <version.junit>4.7</version.junit>
     <version.mockito>1.8.4</version.mockito>
-    <version.jbossas>7.x.incremental.408</version.jbossas>
+    <version.jbossas>7.1.x.incremental.1</version.jbossas>
     <version.org.quartz-scheduler>1.8.5</version.org.quartz-scheduler>
     <version.org.slf4j>1.5.10</version.org.slf4j>
   </properties>
