@@ -24,12 +24,10 @@ import java.util.List;
 import org.jboss.as.clustering.ClusterNode;
 import org.jboss.as.clustering.GroupMembershipListener;
 import org.jboss.as.clustering.impl.CoreGroupCommunicationService;
-import org.jboss.as.clustering.jgroups.ChannelFactory;
 import org.jboss.logging.Logger;
 import org.jboss.modules.ModuleLoader;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceController.Mode;
-import org.jboss.msc.value.ImmediateValue;
 import org.jboss.msc.value.Value;
 import org.jgroups.Channel;
 
@@ -42,10 +40,12 @@ public class HASingletonCoordinator implements GroupMembershipListener {
     }
     
     public void start() throws Exception {
-        log.info( "Connect to " + this.partitionName );
+        Channel channel = channelRef.getValue();
+        log.info( "Connect to " + channel.getClusterName() );
         this.service = new CoreGroupCommunicationService( SCOPE_ID, channelRef, moduleLoaderRef );
         this.service.setAllowSynchronousMembershipNotifications( true );
         this.service.registerGroupMembershipListener( this );
+        this.service.setChannel( channel );
         this.service.start();
     }
     
@@ -87,6 +87,5 @@ public class HASingletonCoordinator implements GroupMembershipListener {
     private Value<ModuleLoader> moduleLoaderRef;
     private CoreGroupCommunicationService service;
     private ServiceController<Void> haSingletonController;
-    private String partitionName;
     public static final short SCOPE_ID = 248; // Must be different from any scopes AS7 uses internally
 }

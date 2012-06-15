@@ -32,9 +32,8 @@ import org.jgroups.Channel;
 
 public class HASingletonCoordinatorService implements Service<HASingletonCoordinator> {
 
-    public HASingletonCoordinatorService(ServiceController<Void> haSingletonController, String partitionName) {
+    public HASingletonCoordinatorService(ServiceController<Void> haSingletonController) {
         this.haSingletonController = haSingletonController;
-        this.partitionName = partitionName;
     }
 
     @Override
@@ -77,7 +76,6 @@ public class HASingletonCoordinatorService implements Service<HASingletonCoordin
     private InjectedValue<Channel> channelInjector = new InjectedValue<Channel>();
     private InjectedValue<ModuleLoader> moduleLoaderInjector = new InjectedValue<ModuleLoader>();
     private ServiceController<Void> haSingletonController;
-    private String partitionName;
     private HASingletonCoordinator coordinator;
 
 
