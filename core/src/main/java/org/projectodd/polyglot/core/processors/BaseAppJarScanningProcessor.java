@@ -21,6 +21,7 @@ package org.projectodd.polyglot.core.processors;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.jboss.as.server.deployment.Attachments;
@@ -66,6 +67,7 @@ public class BaseAppJarScanningProcessor implements DeploymentUnitProcessor {
 
             for (String scanRoot : this.scanRoots) {
                 for (VirtualFile child : getJarFiles( root.getChild( scanRoot ) )) {
+                    this.mountedJars.add( child );
                     final Closeable closable = child.isFile() ? mount( child, false ) : null;
                     final MountHandle mountHandle = new MountHandle( closable );
                     final ResourceRoot childResource = new ResourceRoot( child, mountHandle );
@@ -94,8 +96,9 @@ public class BaseAppJarScanningProcessor implements DeploymentUnitProcessor {
         
     }
     
+    protected List<VirtualFile> mountedJars = new ArrayList<VirtualFile>();
     private List<String> scanRoots;
     
-    private static final Logger log = Logger.getLogger( "org.torquebox.core.app" );
+    private static final Logger log = Logger.getLogger( "org.projectodd.polyglot.core.app" );
 
 }
