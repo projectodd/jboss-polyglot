@@ -30,8 +30,17 @@ public class WebApplicationMetaData {
     public static final AttachmentKey<WebApplicationMetaData> ATTACHMENT_KEY = AttachmentKey.create( WebApplicationMetaData.class );
 
     public void addHost(String host) {
-        if (host != null && !this.hosts.contains( host ))
+        if (host != null && !this.hosts.contains( host )) {
             this.hosts.add( host );
+        }
+    }
+    
+    public void addHosts(List<String> hosts) {
+        if (hosts != null) {
+            for (String each : hosts) {
+                addHost( each );
+            }
+        }
     }
 
     public List<String> getHosts() {
