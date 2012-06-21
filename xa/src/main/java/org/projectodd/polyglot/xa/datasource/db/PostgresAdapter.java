@@ -32,8 +32,9 @@ public class PostgresAdapter extends Adapter {
     @Override
     public String[] getNames() {
         return new String[] {
-                "postgresql",
-                "jdbcpostgresql",
+            "postgres",
+            "postgresql",
+            "jdbcpostgresql",
         };
     }
 
