@@ -33,6 +33,7 @@ public abstract class Adapter {
         new H2Adapter();
         new PostgresAdapter();
         new MySQLAdapter();
+        new MsSQLAdapter();
         new OracleAdapter();
     }
 
