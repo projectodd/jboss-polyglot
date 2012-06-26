@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.projectodd</groupId>
     <artifactId>polyglot-build-support</artifactId>
-    <version>1.5.3</version>
+    <version>1.5.4-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
