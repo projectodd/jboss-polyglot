@@ -60,5 +60,5 @@ public class CacheService implements Service<CacheService> {
         return this.isClustered() ?  "java:jboss/infinispan/container/web" : "java:jboss/infinispan/container/polyglot";
     }
     
-    static final Logger log = Logger.getLogger( "org.polyglot.cache.as" );
+    static final Logger log = Logger.getLogger( "org.projectodd.polyglot.cache.as" );
 }
