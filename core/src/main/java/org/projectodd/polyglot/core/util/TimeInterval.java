@@ -16,16 +16,43 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-
 package org.projectodd.polyglot.core.util;
 
 import java.util.concurrent.TimeUnit;
 
-public class TimeIntervalUtil {
-
-    public static IntervalData parseInterval(String data, TimeUnit defaultUnit) {
+public class TimeInterval {
+    public long interval;
+    public TimeUnit unit;
+    
+    public TimeInterval() {
+        this( -1, TimeUnit.MILLISECONDS );
+    }
+    
+    public TimeInterval(long interval, TimeUnit unit) {
+        this.interval = interval;
+        this.unit = unit;
+    }
+    
+    public long valueAs(TimeUnit unit) {
+        return unit.convert( this.interval, this.unit );
+    }
+    
+    /** 
+     * This fails if we drop below ms granularity.
+     * @param interval
+     * @return
+     */
+    @Override
+    public boolean equals(Object interval) {
+        return (interval != null) &&
+                (interval instanceof TimeInterval) &&
+                (valueAs( TimeUnit.MILLISECONDS ) == ((TimeInterval)interval).valueAs( TimeUnit.MILLISECONDS ));
+    }
+    
+    public static TimeInterval parseInterval(String data, TimeUnit defaultUnit) {
+        TimeInterval interval;
         TimeUnit timeUnit = defaultUnit;
-        
+                
         if (data != null) {
             data = data.trim(); 
             if (data.endsWith( "ms" )) {
@@ -42,21 +69,11 @@ public class TimeIntervalUtil {
                 data = data.substring( 0, data.length() - 1 );
             } 
             
-            return new IntervalData( Long.parseLong( data.trim() ), timeUnit );
+            interval = new TimeInterval( Long.parseLong( data.trim() ), timeUnit );
+        } else {
+            interval = new TimeInterval();
         }
         
-        return new IntervalData();
-    }
-    
-    public static class IntervalData {
-        public long interval = -1;
-        public TimeUnit unit = TimeUnit.MINUTES;
-
-        public IntervalData(){};
-        public IntervalData(long interval, TimeUnit unit) {
-            this.interval = interval;
-            this.unit = unit;
-        }
-        
+        return interval;
     }
 }

@@ -20,6 +20,7 @@
 package org.projectodd.polyglot.jobs;
 
 import java.text.ParseException;
+import java.util.concurrent.TimeUnit;
 
 import org.jboss.logging.Logger;
 import org.jboss.msc.inject.Injector;
@@ -28,6 +29,7 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
+import org.projectodd.polyglot.core.util.TimeInterval;
 import org.quartz.CronTrigger;
 import org.quartz.Job;
 import org.quartz.JobDetail;
@@ -37,10 +39,10 @@ import org.quartz.SchedulerException;
 public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseScheduledJobMBean {
     
     public BaseScheduledJob(Class<? extends Job> jobClass, String group, String name, String description, String cronExpression, boolean singleton) {    
-        this( jobClass, group, name, description, cronExpression, 0, singleton );
+        this( jobClass, group, name, description, cronExpression, null, singleton );
     }
     
-    public BaseScheduledJob(Class<? extends Job> jobClass, String group, String name, String description, String cronExpression, long timeout, boolean singleton) {
+    public BaseScheduledJob(Class<? extends Job> jobClass, String group, String name, String description, String cronExpression, TimeInterval timeout, boolean singleton) {
         this.group = group;
         this.name = name;
         this.description = description;
@@ -91,7 +93,8 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
 
         scheduler.scheduleJob( jobDetail, trigger );
 
-        if (timeout > 0 && 
+        if (this.timeout != null &&
+                this.timeout.interval > 0 && 
                 scheduler.getGlobalTriggerListener( BaseTriggerListener.TRIGGER_LISTENER_NAME ) == null) {
             scheduler.addGlobalTriggerListener(new BaseTriggerListener());
         }
@@ -158,8 +161,16 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
     public Injector<BaseJobScheduler> getJobSchedulerInjector() {
         return this.jobSchedulerInjector;
     }
-    public void setTimeout(long timeout){
+    
+    public void setTimeout(TimeInterval timeout) {
         this.timeout = timeout;
+    }
+    
+    /**
+     * Sets the timeout in seconds.
+     */
+    public void setTimeout(long timeout) {
+        this.timeout = new TimeInterval( timeout, TimeUnit.SECONDS );
     }
     
     private InjectedValue<BaseJobScheduler> jobSchedulerInjector = new InjectedValue<BaseJobScheduler>();
@@ -171,7 +182,7 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
     private String description;
 
     private String cronExpression;
-    private long timeout;
+    private TimeInterval timeout;
     
     private JobDetail jobDetail;
     private boolean singleton;

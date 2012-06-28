@@ -19,15 +19,15 @@
 
 package org.projectodd.polyglot.jobs;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+
 import org.jboss.logging.Logger;
+import org.projectodd.polyglot.core.util.TimeInterval;
 import org.quartz.InterruptableJob;
 import org.quartz.JobExecutionContext;
 import org.quartz.Trigger;
 import org.quartz.TriggerListener;
-
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class BaseTriggerListener implements TriggerListener {
     public static final String TRIGGER_LISTENER_NAME = BaseTriggerListener.class.getSimpleName(); 
@@ -39,12 +39,11 @@ public class BaseTriggerListener implements TriggerListener {
 
     @Override
     public void triggerFired(Trigger trigger, final JobExecutionContext jobExecutionContext) {
-        // TODO include some action here when trigger starts
+
     }
 
     @Override
     public boolean vetoJobExecution(Trigger trigger, final JobExecutionContext jobExecutionContext) {
-
         BaseTriggerListener.registerWatchDog(jobExecutionContext);
 
         return true;
@@ -52,12 +51,12 @@ public class BaseTriggerListener implements TriggerListener {
 
     private static void registerWatchDog(final JobExecutionContext jobExecutionContext) {
 
-        long delay = (Long) jobExecutionContext.getJobDetail().getJobDataMap().get("timeout");
+        TimeInterval delay = (TimeInterval) jobExecutionContext.getJobDetail().getJobDataMap().get("timeout");
 
-        if (delay > 0) {
+        if (delay.interval > 0) {
             //TODO Replace ExecutorService by JBossThreadPool
             ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
-
+            
             service.schedule(new Runnable() {
                 public void run() {
 
@@ -70,7 +69,7 @@ public class BaseTriggerListener implements TriggerListener {
 
 
                 }
-            }, delay, TimeUnit.MILLISECONDS);
+            }, delay.interval, delay.unit);
         }
     }
 

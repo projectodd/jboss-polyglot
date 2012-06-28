@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.jboss.as.server.deployment.AttachmentKey;
 import org.jboss.as.server.deployment.DeploymentUnit;
+import org.projectodd.polyglot.core.util.TimeInterval;
 
 public class WebApplicationMetaData {
     public static final AttachmentKey<WebApplicationMetaData> ATTACHMENT_KEY = AttachmentKey.create( WebApplicationMetaData.class );
@@ -73,26 +74,13 @@ public class WebApplicationMetaData {
      * Set the session timeout for inactive web sessions.
      * 
      * <p>
-     * Pass a negative number for the timeout value to indicate <b>never</b>.
+     * Pass a negative interval for the timeout value to indicate <b>never</b>.
      * Not recommended.
      * </p>
      * 
-     * @param timeout The quantity of timeout.
-     * @param unit The unit for timeout, ignored if <code>timeout</code> is
-     *            negative.
      */
-    public void setSessionTimeout(long timeout, TimeUnit unit) {
-        if (timeout < 0) {
-            this.sessionTimeout = -1;
-            return;
-        }
-        long convertedTimeout = TimeUnit.SECONDS.convert( timeout, unit );
-        
-        if (convertedTimeout > Integer.MAX_VALUE) {
-            this.sessionTimeout = Integer.MAX_VALUE;
-        } else {
-            this.sessionTimeout = (int) convertedTimeout;
-        }
+    public void setSessionTimeout(TimeInterval timeout) {
+        this.sessionTimeout = timeout;
     }
 
     /**
@@ -102,11 +90,11 @@ public class WebApplicationMetaData {
      *         timeout.
      */
     public int getSessionTimeout() {
-        return this.sessionTimeout;
+        return (int) this.sessionTimeout.valueAs( TimeUnit.SECONDS );
     }
 
     private List<String> hosts = new ArrayList<String>();
     private String contextPath;
     private String staticPathPrefix;
-    private int sessionTimeout = -1;
+    private TimeInterval sessionTimeout = new TimeInterval();
 }
