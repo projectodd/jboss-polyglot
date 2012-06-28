@@ -25,6 +25,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.jboss.logging.Logger;
 import org.projectodd.polyglot.core.util.TimeInterval;
 import org.quartz.InterruptableJob;
+import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.Trigger;
 import org.quartz.TriggerListener;
@@ -49,7 +50,8 @@ public class BaseTriggerListener implements TriggerListener {
 
     private static void registerWatchDog(final JobExecutionContext jobExecutionContext) {
 
-        TimeInterval delay = (TimeInterval) jobExecutionContext.getJobDetail().getJobDataMap().get("timeout");
+        final JobDetail jobDetail = jobExecutionContext.getJobDetail();
+        TimeInterval delay = (TimeInterval) jobDetail.getJobDataMap().get("timeout");
 
         if (delay.interval > 0) {
             //TODO Replace ExecutorService by JBossThreadPool
@@ -58,11 +60,10 @@ public class BaseTriggerListener implements TriggerListener {
             service.schedule(new Runnable() {
                 public void run() {
 
-                    log.info("|||||||||||||||| Trying to interrupt the job |||||||||||||||| ");
                     try {
                         ((InterruptableJob) jobExecutionContext.getJobInstance()).interrupt();
                     } catch (Exception e) {
-                        log.error("Interruption failed", e);
+                        log.error("Failed to interrupt job " + jobDetail.getFullName(), e);
                     }
 
 
