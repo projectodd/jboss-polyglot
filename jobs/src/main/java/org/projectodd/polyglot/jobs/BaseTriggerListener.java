@@ -39,14 +39,12 @@ public class BaseTriggerListener implements TriggerListener {
 
     @Override
     public void triggerFired(Trigger trigger, final JobExecutionContext jobExecutionContext) {
-
+        BaseTriggerListener.registerWatchDog(jobExecutionContext);
     }
 
     @Override
     public boolean vetoJobExecution(Trigger trigger, final JobExecutionContext jobExecutionContext) {
-        BaseTriggerListener.registerWatchDog(jobExecutionContext);
-
-        return true;
+        return false;
     }
 
     private static void registerWatchDog(final JobExecutionContext jobExecutionContext) {
