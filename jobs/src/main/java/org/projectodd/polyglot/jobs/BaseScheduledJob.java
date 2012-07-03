@@ -93,11 +93,6 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
 
         scheduler.scheduleJob( jobDetail, trigger );
 
-        if (this.timeout != null &&
-                this.timeout.interval > 0 && 
-                scheduler.getGlobalTriggerListener( BaseTriggerListener.TRIGGER_LISTENER_NAME ) == null) {
-            scheduler.addGlobalTriggerListener(new BaseTriggerListener());
-        }
     }
 
     public synchronized void stop() {
