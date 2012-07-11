@@ -38,6 +38,11 @@ public class BaseJobScheduler implements Service<BaseJobScheduler> {
         this.name = name;
     }
     
+    public BaseJobScheduler(String name, int threadCount) {
+        this( name );
+        this.threadCount = threadCount;
+    }
+    
     @Override   
     public BaseJobScheduler getValue() throws IllegalStateException, IllegalArgumentException {
         return this;
@@ -72,7 +77,12 @@ public class BaseJobScheduler implements Service<BaseJobScheduler> {
         Properties props = new Properties();
         props.load( BaseJobScheduler.class.getResourceAsStream( "scheduler.properties" ) );
         props.setProperty( StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME, getName() );
-
+        
+        if (this.threadCount > 0) {
+            props.setProperty( StdSchedulerFactory.PROP_THREAD_POOL_PREFIX + ".threadCount", 
+                    ((Integer)this.threadCount).toString() );
+        }
+        
         StdSchedulerFactory factory = new StdSchedulerFactory( props );
         this.scheduler = factory.getScheduler();
         this.scheduler.setJobFactory( this.jobFactory );
@@ -81,6 +91,10 @@ public class BaseJobScheduler implements Service<BaseJobScheduler> {
 
     public String getName() {
         return this.name;
+    }
+
+    public int getThreadCount() {
+        return threadCount;
     }
 
     public Scheduler getScheduler() {
@@ -109,6 +123,7 @@ public class BaseJobScheduler implements Service<BaseJobScheduler> {
     }
 
     private String name;
+    private int threadCount = -1;
     private Scheduler scheduler;
     private JobFactory jobFactory;
         
