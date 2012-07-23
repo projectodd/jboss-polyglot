@@ -18,6 +18,7 @@ public class CacheService implements Service<CacheService> {
 
     private CacheContainer container;
     private StartContext startContext;
+    private String cacheContainerName = "polyglot";
     
     @Override
     public CacheService getValue() throws IllegalStateException, IllegalArgumentException {
@@ -42,6 +43,10 @@ public class CacheService implements Service<CacheService> {
     public boolean isClustered() {
         return (startContext == null) ? false : ClusterUtil.isClustered( startContext.getController().getServiceContainer() );
     }
+
+    public void setCacheContainerName(String cacheContainerName) {
+        this.cacheContainerName = cacheContainerName;
+    }
     
     private void lookupContainerService() {
         try {
@@ -57,7 +62,7 @@ public class CacheService implements Service<CacheService> {
     }
 
     private String infinispanServiceName() {
-        return this.isClustered() ?  "java:jboss/infinispan/container/web" : "java:jboss/infinispan/container/polyglot";
+        return this.isClustered() ?  "java:jboss/infinispan/container/web" : "java:jboss/infinispan/container/" + cacheContainerName;
     }
     
     static final Logger log = Logger.getLogger( "org.projectodd.polyglot.cache.as" );
