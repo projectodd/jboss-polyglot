@@ -40,7 +40,7 @@ import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceName;
 
-class CacheSubsystemAdd extends AbstractBoottimeAddStepHandler {
+public class CacheSubsystemAdd extends AbstractBoottimeAddStepHandler {
 
     @Override
     protected void populateModel(ModelNode operation, ModelNode model) {
@@ -70,7 +70,7 @@ class CacheSubsystemAdd extends AbstractBoottimeAddStepHandler {
         processorTarget.addDeploymentProcessor( Phase.DEPENDENCIES, 10, rootSafe( new CacheDependenciesProcessor() ) );
     }
 
-    static ModelNode createOperation(ModelNode address) {
+    public static ModelNode createOperation(ModelNode address) {
         final ModelNode subsystem = new ModelNode();
         subsystem.get( OP ).set( ADD );
         subsystem.get( OP_ADDR ).set( address );
