@@ -47,6 +47,7 @@ public class HASingletonCoordinator implements GroupMembershipListener {
         this.service.registerGroupMembershipListener( this );
         this.service.setChannel( channel );
         this.service.start();
+        allMembersChanged( this.service.getClusterNodes() );
     }
     
     public void stop() throws Exception {
@@ -64,8 +65,7 @@ public class HASingletonCoordinator implements GroupMembershipListener {
         return this.service.getClusterNode().equals( coordinator );
     }
     
-    @Override
-    public void membershipChanged(List<ClusterNode> deadMembers, List<ClusterNode> newMembers, List<ClusterNode> allMembers) {
+    protected void allMembersChanged(List<ClusterNode> allMembers) {
         if ( shouldBeMaster( allMembers ) ) {
             log.info( "Becoming HASingleton master." );
             haSingletonController.setMode( Mode.ACTIVE );
@@ -73,6 +73,11 @@ public class HASingletonCoordinator implements GroupMembershipListener {
             log.info( "Ensuring NOT HASingleton master." );
             haSingletonController.setMode( Mode.NEVER );
         }
+    }
+    
+    @Override
+    public void membershipChanged(List<ClusterNode> deadMembers, List<ClusterNode> newMembers, List<ClusterNode> allMembers) {
+        allMembersChanged( allMembers );
     }
 
     @Override
