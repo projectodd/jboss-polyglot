@@ -20,6 +20,7 @@
 package org.projectodd.polyglot.messaging.destinations.processors;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 import org.hornetq.jms.server.JMSServerManager;
 import org.jboss.as.messaging.MessagingServices;
@@ -68,8 +69,8 @@ public class TopicInstaller implements DeploymentUnitProcessor {
         try {
             ServiceBuilder<?> serviceBuilder = phaseContext.getServiceTarget().addService(serviceName, service)
                 .addDependency(JMSServices.getJmsManagerBaseServiceName( hornetQserviceName ), JMSServerManager.class, service.getJmsServer() )
-                .setInitialMode(Mode.ACTIVE);
-            Services.addServerExecutorDependency( serviceBuilder, service.getExecutorInjector(), false );
+                .addDependency( HornetQStartupPoolService.getServiceName( hornetQserviceName ), ExecutorService.class, service.getExecutorInjector() )
+                .setInitialMode( Mode.ACTIVE );
             serviceBuilder.install();
         } catch (org.jboss.msc.service.DuplicateServiceException ignored) {
             log.warn("Already started "+serviceName);

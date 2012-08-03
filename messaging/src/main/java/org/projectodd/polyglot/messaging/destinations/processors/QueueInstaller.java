@@ -20,12 +20,12 @@
 package org.projectodd.polyglot.messaging.destinations.processors;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 import org.hornetq.jms.server.JMSServerManager;
 import org.jboss.as.messaging.MessagingServices;
 import org.jboss.as.messaging.jms.JMSQueueService;
 import org.jboss.as.messaging.jms.JMSServices;
-import org.jboss.as.server.Services;
 import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
@@ -67,9 +67,9 @@ public class QueueInstaller implements DeploymentUnitProcessor {
         final ServiceName serviceName = JMSServices.getJmsQueueBaseServiceName( hornetQserviceName ).append( queue.getName() );
         try {
             ServiceBuilder<?> serviceBuilder = phaseContext.getServiceTarget().addService(serviceName, service)
-                .addDependency(JMSServices.getJmsManagerBaseServiceName( hornetQserviceName ), JMSServerManager.class, service.getJmsServer() )
-                .setInitialMode(Mode.ACTIVE);
-            Services.addServerExecutorDependency( serviceBuilder, service.getExecutorInjector(), false );
+                .addDependency( JMSServices.getJmsManagerBaseServiceName( hornetQserviceName ), JMSServerManager.class, service.getJmsServer() )
+                .addDependency( HornetQStartupPoolService.getServiceName( hornetQserviceName ), ExecutorService.class, service.getExecutorInjector() )
+                .setInitialMode( Mode.ACTIVE );
             serviceBuilder.install();
         } catch (org.jboss.msc.service.DuplicateServiceException ignored) {
             log.warn("Already started "+serviceName);
