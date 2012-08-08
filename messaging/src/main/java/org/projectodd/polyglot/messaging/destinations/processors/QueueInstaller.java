@@ -62,13 +62,13 @@ public class QueueInstaller implements DeploymentUnitProcessor {
     }
 
     protected void deploy(DeploymentPhaseContext phaseContext, QueueMetaData queue) {
-        final JMSQueueService service = new DestroyableJMSQueueService(queue.getName(), null, queue.isDurable(), new String[] { queue.getBindName() } );
+        final DestroyableJMSQueueService service = new DestroyableJMSQueueService(queue.getName(), null, queue.isDurable(), new String[] { queue.getBindName() } );
         final ServiceName hornetQserviceName = MessagingServices.getHornetQServiceName( "default" );
         final ServiceName serviceName = JMSServices.getJmsQueueBaseServiceName( hornetQserviceName ).append( queue.getName() );
         try {
             ServiceBuilder<?> serviceBuilder = phaseContext.getServiceTarget().addService(serviceName, service)
                 .addDependency( JMSServices.getJmsManagerBaseServiceName( hornetQserviceName ), JMSServerManager.class, service.getJmsServer() )
-                .addDependency( HornetQStartupPoolService.getServiceName( hornetQserviceName ), ExecutorService.class, service.getExecutorInjector() )
+                .addDependency( HornetQStartupPoolService.getServiceName( hornetQserviceName ), ExecutorService.class, service.getExecutorServiceInjector() )
                 .setInitialMode( Mode.ACTIVE );
             serviceBuilder.install();
         } catch (org.jboss.msc.service.DuplicateServiceException ignored) {
