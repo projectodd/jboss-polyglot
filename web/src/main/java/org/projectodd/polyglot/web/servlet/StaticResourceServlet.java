@@ -31,17 +31,21 @@ public class StaticResourceServlet extends DefaultServlet {
     private static final long serialVersionUID = 7173759925797350928L;
 
     private String resourceRoot;
+    private String cacheDirectory;
+    private String cacheExtension;
 
     @Override
     public void init() throws ServletException {
         super.init();
-        String resourceRoot = getServletConfig().getInitParameter( "resource.root" );
-        this.resourceRoot = resourceRoot;
+        this.resourceRoot = getServletConfig().getInitParameter( "resource.root" );
+        this.cacheDirectory = getServletConfig().getInitParameter( "cache.directory" );
+        this.cacheExtension = getServletConfig().getInitParameter( "cache.extension" );
         ((FileDirContext) this.resources.getDirContext()).setAllowLinking( true );
     }
 
     @Override
     protected String getRelativePath(HttpServletRequest request) {
+        // First look for static files
         String path = resourceRoot + super.getRelativePath( request );
         CacheEntry cacheEntry = resources.lookupCache( path );
 
@@ -51,6 +55,23 @@ public class StaticResourceServlet extends DefaultServlet {
                     path = path + "index.html";
                 } else {
                     path = path + "/index.html";
+                }
+            } else if (!cacheEntry.exists && cacheDirectory != null) {
+                // If page caching is enabled and a static file wasn't found,
+                // look in the page cache
+                path = cacheDirectory + request.getContextPath() + super.getRelativePath( request );
+                // Always check page cache content on disk since the application may
+                // create or expire it at any time
+                resources.getCache().unload( path );
+                cacheEntry = resources.lookupCache( path );
+                if (cacheEntry != null && !cacheEntry.exists) {
+                    // no page cache found - try appending the cache extension to the path
+                    if (path.endsWith( "/" )) {
+                        path = path.substring( 0, path.length() - 1 );
+                    }
+                    path = path + this.cacheExtension;
+                    // ensure this new path isn't cached in memory either
+                    resources.getCache().unload( path );
                 }
             }
         }
