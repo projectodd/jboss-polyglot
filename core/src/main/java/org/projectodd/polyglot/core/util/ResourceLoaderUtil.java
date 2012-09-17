@@ -78,8 +78,12 @@ public class ResourceLoaderUtil {
     
     public static ResourceLoader[] getExistingResourceLoaders(Module module) throws SecurityException, NoSuchMethodException, IllegalArgumentException, 
       IllegalAccessException, InvocationTargetException {
-        ModuleClassLoader cl = module.getClassLoader();
-
+        return getExistingResourceLoaders( module.getClassLoader() );
+    }
+    
+    public static ResourceLoader[] getExistingResourceLoaders(ModuleClassLoader cl) throws SecurityException, NoSuchMethodException, IllegalArgumentException, 
+        IllegalAccessException, InvocationTargetException {
+        
         Method method = ModuleClassLoader.class.getDeclaredMethod( "getResourceLoaders" );
         method.setAccessible( true );
         Object result = method.invoke( cl );
