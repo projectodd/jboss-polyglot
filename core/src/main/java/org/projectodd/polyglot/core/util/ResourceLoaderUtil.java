@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.jar.JarFile;
 
+import org.jboss.as.server.deployment.module.ModuleRootMarker;
 import org.jboss.as.server.deployment.module.ResourceRoot;
 import org.jboss.as.server.deployment.module.VFSResourceLoader;
 import org.jboss.modules.Module;
@@ -43,6 +44,19 @@ import org.jboss.vfs.VirtualFile;
 
 public class ResourceLoaderUtil {
 
+    public static ResourceRoot createResourceRoot(File file, boolean mark) {
+        return createResourceRoot( file.getAbsolutePath(), mark );   
+    }
+    
+    public static ResourceRoot createResourceRoot(String path, boolean mark) {
+        final ResourceRoot resource = new ResourceRoot( VFS.getChild( path ), null );
+        if (mark) {
+          ModuleRootMarker.mark(resource);
+        }
+        
+        return resource;
+    }
+    
     public static ResourceLoaderSpec createLoaderSpec(File file) throws IOException {
         ResourceLoader loader = ResourceLoaders.createJarResourceLoader( file.getName(), new JarFile( file ) );
         return ResourceLoaderSpec.createResourceLoaderSpec( loader );
