@@ -48,7 +48,7 @@ public class TimeoutListener implements JobListener {
                     try {
                         ((InterruptableJob) context.getJobInstance()).interrupt();
                     } catch (Exception e) {
-                        log.error("Failed to interrupt job " + job.getJobName(), e);
+                        log.error("Failed to interrupt job " + job.getJobKey(), e);
                     }
 
 

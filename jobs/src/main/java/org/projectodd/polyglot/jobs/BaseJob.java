@@ -23,10 +23,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.quartz.JobExecutionContext;
+import org.quartz.JobKey;
+
 
 public class BaseJob {
-    public BaseJob(String jobName) {
-        this.jobName = jobName;
+    public BaseJob(JobKey jobKey) {
+        this.jobKey = jobKey;
     }
 
     public void addListener(JobListener listener) {
@@ -57,10 +59,10 @@ public class BaseJob {
         }
     }
     
-    public String getJobName() {
-        return jobName;
+    public JobKey getJobKey() {
+        return jobKey;
     }
 
-    protected String jobName;
+    protected JobKey jobKey;
     private List<JobListener> listeners = new ArrayList<JobListener>();
 }

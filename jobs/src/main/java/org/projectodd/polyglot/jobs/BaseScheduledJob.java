@@ -31,8 +31,11 @@ import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.projectodd.polyglot.core.util.TimeInterval;
 import org.quartz.CronTrigger;
+import org.quartz.impl.triggers.CronTriggerImpl;
+import static org.quartz.TriggerKey.*;
 import org.quartz.Job;
-import org.quartz.JobDetail;
+import org.quartz.JobKey;
+import org.quartz.impl.JobDetailImpl;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 
@@ -79,7 +82,7 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
     }
    
     public synchronized void start() throws ParseException, SchedulerException {
-        this.jobDetail = new JobDetail();
+        this.jobDetail = new JobDetailImpl();
         this.jobDetail.setGroup( this.group );
         this.jobDetail.setName( this.name );
         this.jobDetail.setDescription( this.description );
@@ -87,7 +90,7 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
         this.jobDetail.setRequestsRecovery( true );
         this.jobDetail.getJobDataMap().put("timeout", timeout);
         
-        CronTrigger trigger = new CronTrigger( getTriggerName(), this.group, this.cronExpression );
+        CronTrigger trigger = new CronTriggerImpl( getTriggerName(), this.group, this.cronExpression );
 
         Scheduler scheduler = getScheduler();
 
@@ -97,7 +100,7 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
 
     public synchronized void stop() {
         try {
-            getScheduler().unscheduleJob( getTriggerName(), this.group );
+            getScheduler().unscheduleJob( triggerKey(getTriggerName(), this.group) );
         } catch (SchedulerException ex) {
             log.warn( "An error occurred stoping job " + this.name, ex );
         } 
@@ -141,6 +144,10 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
         return this.name;
     }
 
+    public JobKey getKey() {
+        return this.jobDetail.getKey();
+    }
+
     public String getDescription() {
         return this.description;
     }
@@ -179,7 +186,7 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
     private String cronExpression;
     private TimeInterval timeout;
     
-    private JobDetail jobDetail;
+    private JobDetailImpl jobDetail;
     private boolean singleton;
 
     private static final Logger log = Logger.getLogger( "org.projectodd.polyglot.jobs" );
