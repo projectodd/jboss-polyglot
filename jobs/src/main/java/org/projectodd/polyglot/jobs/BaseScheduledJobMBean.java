@@ -26,20 +26,24 @@ public interface BaseScheduledJobMBean {
     /** Stop this job. */
     void stop() throws Exception;
     
+    /** Restart this job. */
+    void restart() throws Exception;
+    
+    /** reschedule the job with a new cronspec */
+    void reschedule(String cronspec) throws Exception;
+    
+    void reschedule(long timeout) throws Exception;
+
+    void reschedule(String cronspec, long timeout) throws Exception;
+    
     /** Retrieve the cronspec */
     String getCronExpression();
     
-    /** Set the cronspec */
-    void setCronExpression(String cronspec);
-
     /** Set the timeout */
-    void setTimeout(long timeout);
+    long getTimeout();
     
     /** Is this job currently started? */
     boolean isStarted();
-    
-    /** Is this job currently stopped? */
-    boolean isStopped();
     
     /** Get current status. */
     String getStatus();

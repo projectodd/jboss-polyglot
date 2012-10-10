@@ -106,6 +106,27 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
         } 
         this.jobDetail = null;  
     }
+   
+    public void restart() throws Exception {
+        if (isStarted()) {
+            stop();
+        }
+        start();
+    }
+    
+    public void reschedule(String spec) throws Exception {
+        reschedule( spec, getTimeout() );
+    }
+
+    public void reschedule(long timeout) throws Exception {
+        reschedule( getCronExpression(), timeout );
+    }
+    
+    public void reschedule(String spec, long timeout) throws Exception {  
+        setCronExpression( spec );
+        setTimeout( timeout );
+        restart();
+    }
     
     public Scheduler getScheduler() {
         return this.jobSchedulerInjector.getValue().getScheduler();
@@ -118,10 +139,6 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
 
     public synchronized boolean isStarted() {
         return this.jobDetail != null;
-    }
-    
-    public synchronized boolean isStopped() {
-        return this.jobDetail == null;
     }
     
     public synchronized String getStatus() {
