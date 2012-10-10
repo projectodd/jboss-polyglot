@@ -52,7 +52,7 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
     }
 
     @SuppressWarnings("unchecked")
-    protected void removeService(ServiceName name, Runnable actionOnRemove) {
+    protected void replaceService(ServiceName name, Runnable actionOnRemove) {
         ServiceController<?> service = this.unit.getServiceRegistry().getService( name ); 
         
         if (service != null) {
@@ -66,7 +66,7 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
     }
     
     protected void deploy(final ServiceName serviceName, final Service<?> service, final boolean singleton) {
-        removeService( serviceName, new Runnable() {
+        replaceService( serviceName, new Runnable() {
             public void run() {
                 ServiceBuilder<?> builder = getTarget().addService(serviceName, service);
                 if (singleton && ClusterUtil.isClustered( getUnit().getServiceRegistry() )) {
@@ -89,7 +89,7 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
     public ServiceName installMBean(final ServiceName name, final MBeanRegistrationService<?> mbeanService) {
         final ServiceName mbeanName = name.append( "mbean" );
 
-        removeService( mbeanName, new Runnable() {
+        replaceService( mbeanName, new Runnable() {
             public void run() {
                 getTarget().addService( mbeanName, mbeanService ).
                 addDependency( DependencyType.OPTIONAL, MBeanServerService.SERVICE_NAME, MBeanServer.class, mbeanService.getMBeanServerInjector() ).
