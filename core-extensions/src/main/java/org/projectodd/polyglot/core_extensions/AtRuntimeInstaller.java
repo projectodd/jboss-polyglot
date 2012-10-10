@@ -30,7 +30,10 @@ import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
+import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceController.Mode;
+import org.jboss.msc.service.ServiceController.Transition;
+import org.jboss.msc.service.ServiceListener;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceTarget;
 import org.jboss.msc.service.StartContext;
@@ -43,21 +46,39 @@ import org.projectodd.polyglot.core.util.ClusterUtil;
 public class AtRuntimeInstaller<T> implements Service<T>  {
 
     public static final String HA_SINGLETON_SERVICE_SUFFIX = "ha-singleton";
-    
+        
     public AtRuntimeInstaller(DeploymentUnit unit) {
         this.unit = unit;
     }
 
-    protected void deploy(final ServiceName serviceName, Service<?> service, boolean singleton) {
-        ServiceBuilder<?> builder = getTarget().addService(serviceName, service);
-        if (singleton && ClusterUtil.isClustered( this.unit.getServiceRegistry() )) {
-            builder.addDependency( unit.getServiceName().append( HA_SINGLETON_SERVICE_SUFFIX ) );
-            builder.setInitialMode(Mode.PASSIVE);
-        } else {
-            builder.setInitialMode(Mode.ACTIVE);
+    @SuppressWarnings("unchecked")
+    protected void removeService(ServiceName name, Runnable actionOnRemove) {
+        ServiceController<?> service = this.unit.getServiceRegistry().getService( name ); 
+        
+        if (service != null) {
+            if (actionOnRemove != null) {
+                service.addListener( new RemovalListener( actionOnRemove ) );
+            }
+            service.setMode( Mode.REMOVE );
+        } else if (actionOnRemove != null) {
+            actionOnRemove.run();
         }
+    }
+    
+    protected void deploy(final ServiceName serviceName, final Service<?> service, final boolean singleton) {
+        removeService( serviceName, new Runnable() {
+            public void run() {
+                ServiceBuilder<?> builder = getTarget().addService(serviceName, service);
+                if (singleton && ClusterUtil.isClustered( getUnit().getServiceRegistry() )) {
+                    builder.addDependency( unit.getServiceName().append( HA_SINGLETON_SERVICE_SUFFIX ) );
+                    builder.setInitialMode(Mode.PASSIVE);
+                } else {
+                    builder.setInitialMode(Mode.ACTIVE);
+                }
 
-        builder.install();  
+                builder.install();  
+            }
+        });
     }
 
     public ServiceName installMBean(final ServiceName name, final String groupName, Object mbean) {
@@ -65,14 +86,18 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
                 new ImmediateValue<Object>( mbean ) ) );
     }
 
-    public ServiceName installMBean(final ServiceName name, MBeanRegistrationService<?> mbeanService) {
-        ServiceName mbeanName = name.append( "mbean" );
+    public ServiceName installMBean(final ServiceName name, final MBeanRegistrationService<?> mbeanService) {
+        final ServiceName mbeanName = name.append( "mbean" );
 
-        getTarget().addService( mbeanName, mbeanService ).
-            addDependency( DependencyType.OPTIONAL, MBeanServerService.SERVICE_NAME, MBeanServer.class, mbeanService.getMBeanServerInjector() ).
-            setInitialMode( Mode.PASSIVE ).
-            install(); 
-
+        removeService( mbeanName, new Runnable() {
+            public void run() {
+                getTarget().addService( mbeanName, mbeanService ).
+                addDependency( DependencyType.OPTIONAL, MBeanServerService.SERVICE_NAME, MBeanServer.class, mbeanService.getMBeanServerInjector() ).
+                setInitialMode( Mode.PASSIVE ).
+                install(); 
+            }
+        } );
+        
         return mbeanName;
     }
 
@@ -110,4 +135,67 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
 
     private DeploymentUnit unit;
     private ServiceTarget serviceTarget;
+    
+    @SuppressWarnings("rawtypes")
+    public class RemovalListener implements ServiceListener {
+
+        public RemovalListener(Runnable action) {
+            this.action = action;
+        }
+
+        @Override
+        public void transition(ServiceController controller,
+                Transition transition) {
+            if (transition == Transition.REMOVING_to_REMOVED) {
+                this.action.run();
+            }
+        }
+        
+        @Override
+        public void listenerAdded(ServiceController controller) {
+           // not used
+        }
+
+        @Override
+        public void serviceRemoveRequested(ServiceController controller) {
+           // not used
+        }
+
+        @Override
+        public void serviceRemoveRequestCleared(ServiceController controller) {
+           // not used
+        }
+
+        @Override
+        public void dependencyFailed(ServiceController controller) {
+           // not used
+        }
+
+        @Override
+        public void dependencyFailureCleared(ServiceController controller) {
+           // not used
+        }
+
+        @Override
+        public void immediateDependencyUnavailable(ServiceController controller) {
+           // not used
+        }
+
+        @Override
+        public void immediateDependencyAvailable(ServiceController controller) {
+           // not used
+        }
+
+        @Override
+        public void transitiveDependencyUnavailable(ServiceController controller) {
+           // not used
+        }
+
+        @Override
+        public void transitiveDependencyAvailable(ServiceController controller) {
+           // not used
+        }
+     
+        private Runnable action; 
+    }
 }
