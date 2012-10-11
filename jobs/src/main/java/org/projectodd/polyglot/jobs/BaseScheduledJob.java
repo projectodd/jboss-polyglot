@@ -192,6 +192,10 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
         this.timeout = new TimeInterval( timeout, TimeUnit.SECONDS );
     }
     
+    public long getTimeout() {
+        return this.timeout.valueAs( TimeUnit.SECONDS );
+    }
+
     private InjectedValue<BaseJobScheduler> jobSchedulerInjector = new InjectedValue<BaseJobScheduler>();
     
     private Class<? extends Job> jobClass;
