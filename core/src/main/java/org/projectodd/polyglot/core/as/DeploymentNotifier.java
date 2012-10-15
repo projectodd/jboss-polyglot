@@ -62,7 +62,7 @@ public class DeploymentNotifier implements Service<Void> {
         
     }
     
-    private static final Logger log = Logger.getLogger( "org.torquebox.core.as" );
+    private static final Logger log = Logger.getLogger( "org.projectodd.polyglot.core.as" );
     
     private DeploymentUnit unit;
 

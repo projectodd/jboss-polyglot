@@ -17,6 +17,7 @@
   <modules>
     <module>hasingleton</module>
     <module>cache</module>
+    <module>stomp</module>
   </modules>
 
   <build> 
