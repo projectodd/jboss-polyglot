@@ -65,18 +65,26 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
         }
     }
     
+    protected ServiceBuilder<?> build(final ServiceName serviceName, final Service<?> service, final boolean singleton) {
+        ServiceBuilder<?> builder = getTarget().addService(serviceName, service);
+        if (singleton && ClusterUtil.isClustered( getUnit().getServiceRegistry() )) {
+            builder.addDependency( unit.getServiceName().append( HA_SINGLETON_SERVICE_SUFFIX ) );
+            builder.setInitialMode(Mode.PASSIVE);
+        } else {
+            builder.setInitialMode(Mode.ACTIVE);
+        }
+        
+        return builder;
+    }
+    
+    protected void deploy(final ServiceName serviceName, final Service<?> service) {
+        deploy( serviceName, service, false );
+    }
+    
     protected void deploy(final ServiceName serviceName, final Service<?> service, final boolean singleton) {
         replaceService( serviceName, new Runnable() {
             public void run() {
-                ServiceBuilder<?> builder = getTarget().addService(serviceName, service);
-                if (singleton && ClusterUtil.isClustered( getUnit().getServiceRegistry() )) {
-                    builder.addDependency( unit.getServiceName().append( HA_SINGLETON_SERVICE_SUFFIX ) );
-                    builder.setInitialMode(Mode.PASSIVE);
-                } else {
-                    builder.setInitialMode(Mode.ACTIVE);
-                }
-
-                builder.install();  
+                build( serviceName, service, singleton ).install();
             }
         });
     }

@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.jboss.as.server.deployment.AttachmentKey;
+import org.jboss.as.server.deployment.DeploymentUnit;
 
 public class StompApplicationMetaData {
     
@@ -31,8 +32,20 @@ public class StompApplicationMetaData {
         
     }
     
+    public void attachTo(DeploymentUnit unit) {
+        unit.putAttachment( ATTACHMENT_KEY, this );
+    }
+    
     public void addHost(String host) {
         this.hosts.add( host );
+    }
+    
+    public void addHosts(List<String> hosts) {
+        if (hosts != null) {
+            for (String each : hosts) {
+                addHost( each );
+            }
+        }
     }
     
     public void setHosts(List<String> hosts) {
