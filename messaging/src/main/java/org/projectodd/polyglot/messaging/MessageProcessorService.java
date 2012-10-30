@@ -33,7 +33,7 @@ import org.jboss.msc.service.StopContext;
 
 public class MessageProcessorService implements Service<Void> {
 
-    MessageProcessorService(BaseMessageProcessorGroup group, BaseMessageProcessor listener) {
+    public MessageProcessorService(BaseMessageProcessorGroup group, BaseMessageProcessor listener) {
         this.group = group;
         this.listener = listener;
     }
@@ -47,21 +47,13 @@ public class MessageProcessorService implements Service<Void> {
             @Override
             public void run() {
                 try {
-                    session = group.getConnection().createXASession();
-                    Destination destination = group.getDestination();
-                    if (group.isDurable() && destination instanceof Topic) {
-                        consumer = session.createDurableSubscriber( (Topic) destination, group.getName(), group.getMessageSelector(), false );
-                    } else {
-                        if (group.isDurable() && !(destination instanceof Topic)) {
-                            log.warn( "Durable set for processor " + group.getName() + ", but " + destination + " is not a topic - ignoring." );
-                        }
-                        consumer = session.createConsumer( destination, group.getMessageSelector() );
-                    }
+                    setupConsumer();
+
                     listener.setService( MessageProcessorService.this );
                     listener.setGroup( group );
                     
                     consumer.setMessageListener( listener );
-
+                    
                     context.complete();
                 } catch (JMSException e) {
                     context.failed( new StartException( e ) );
@@ -71,6 +63,18 @@ public class MessageProcessorService implements Service<Void> {
 
     }
 
+    protected void setupConsumer() throws JMSException {
+        setSession( group.getConnection().createXASession() );
+        Destination destination = group.getDestination();
+        if (group.isDurable() && destination instanceof Topic) {
+            setConsumer( session.createDurableSubscriber( (Topic) destination, group.getName(), group.getMessageSelector(), false ) );
+        } else {
+            if (group.isDurable() && !(destination instanceof Topic)) {
+                log.warn( "Durable set for processor " + group.getName() + ", but " + destination + " is not a topic - ignoring." );
+            }
+            setConsumer( session.createConsumer( destination, group.getMessageSelector() ) );
+        }
+    }
    
 
     @Override
@@ -100,10 +104,25 @@ public class MessageProcessorService implements Service<Void> {
         return this.session;
     }
 
+    protected void setSession(XASession session) {
+        this.session = session;
+    }
+    
+    public BaseMessageProcessor getListener() {
+        return this.listener;
+    }
+
     public MessageConsumer getConsumer() {
         return this.consumer;
     }
 
+    protected void setConsumer(MessageConsumer consumer) {
+        this.consumer = consumer;
+    }
+    
+    public BaseMessageProcessorGroup getGroup() {
+        return group;
+    }
 
     public static final Logger log = Logger.getLogger( "org.projectodd.polyglot.messaging" );
 

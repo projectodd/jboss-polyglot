@@ -45,6 +45,7 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
+import org.projectodd.polyglot.messaging.destinations.DestinationUtils;
 
 public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGroup> {
 
@@ -71,56 +72,30 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
                         destinationManagedReference.release();
                     }
                 }
+              
+                startConnection( context );
                 
-                ManagedReferenceFactory connectionFactoryManagedReferenceFactory = BaseMessageProcessorGroup.this.connectionFactoryInjector.getValue();
-                ManagedReference connectionFactoryManagedReference = connectionFactoryManagedReferenceFactory.getReference();
-                HornetQConnectionFactory connectionFactory = (HornetQConnectionFactory) connectionFactoryManagedReference.getInstance();
-    
-                try {
-                    BaseMessageProcessorGroup.this.connection = connectionFactory.createXAConnection();
-                    String clientID = BaseMessageProcessorGroup.this.clientID;
-                    if (BaseMessageProcessorGroup.this.durable && clientID != null) {
-                        String name = BaseMessageProcessorGroup.this.name;
-                        if (BaseMessageProcessorGroup.this.destination instanceof Topic) {
-                            log.info( "Setting clientID for " + name + " to " + clientID );
-                            BaseMessageProcessorGroup.this.connection.setClientID( clientID );
-                        } else {
-                            log.warn( "ClientID set for processor " + name + ", but " + 
-                                    destination + " is not a topic - ignoring." );
-                        }
-                    } else if (BaseMessageProcessorGroup.this.durable && clientID == null) {
-                        context.failed( new StartException( "Durable topic processors require a client_id. processor: " + name ) );
-                    }
-                    BaseMessageProcessorGroup.this.connection.start();
-                } catch (JMSException e) {
-                    context.failed( new StartException( e ) );
-                } finally {
-                    if (connectionFactoryManagedReference != null) {
-                        connectionFactoryManagedReference.release();
-                    }
-                }
-        
                 ServiceTarget target = context.getChildTarget();
     
                 if (BaseMessageProcessorGroup.this.destination instanceof Queue) {
-                    //target.addDependency( JMSServices.JMS_QUEUE_BASE.append( BaseMessageProcessorGroup.this.destinationName ) );
-                    target.addDependency( JMSServices.getJmsQueueBaseServiceName( MessagingServices.getHornetQServiceName( "default" ) ).append( BaseMessageProcessorGroup.this.destinationName ) );
+                    target.addDependency( JMSServices.getJmsQueueBaseServiceName( MessagingServices.getHornetQServiceName( "default" ) )
+                            .append( BaseMessageProcessorGroup.this.destinationName ) );
                 } else {
-                    //target.addDependency( JMSServices.JMS_TOPIC_BASE.append( BaseMessageProcessorGroup.this.destinationName ) );
-                    target.addDependency( JMSServices.getJmsTopicBaseServiceName( MessagingServices.getHornetQServiceName( "default" ) ).append( BaseMessageProcessorGroup.this.destinationName ) );
+                    target.addDependency( JMSServices.getJmsTopicBaseServiceName( MessagingServices.getHornetQServiceName( "default" ) )
+                            .append( BaseMessageProcessorGroup.this.destinationName ) );
                 }
     
                 for (int i = 0; i < BaseMessageProcessorGroup.this.concurrency; ++i) {
                     BaseMessageProcessor processor = null;
                     try {
-                        processor = messageProcessorClass.newInstance();
+                        processor = instantiateProcessor();
                     } catch (IllegalAccessException e) {
                         context.failed( new StartException( e ) );
                     } catch (InstantiationException e) {
                         context.failed( new StartException( e ) );
                     }
                     
-                    MessageProcessorService service = new MessageProcessorService( BaseMessageProcessorGroup.this, processor );
+                    MessageProcessorService service = createMessageProcessorService( processor );
                     ServiceName serviceName = baseServiceName.append( "" + i );
                     target.addService( serviceName, service )
                             .install();
@@ -135,6 +110,46 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
     
         } );
     
+    }
+     
+    protected MessageProcessorService createMessageProcessorService(BaseMessageProcessor processor) {
+       return new MessageProcessorService( this, processor );
+    }
+    
+    protected void startConnection(StartContext context) {
+        
+        ManagedReferenceFactory connectionFactoryManagedReferenceFactory = BaseMessageProcessorGroup.this.connectionFactoryInjector.getValue();
+        ManagedReference connectionFactoryManagedReference = connectionFactoryManagedReferenceFactory.getReference();
+        HornetQConnectionFactory connectionFactory = (HornetQConnectionFactory) connectionFactoryManagedReference.getInstance();
+
+        try {
+            this.connection = connectionFactory.createXAConnection();
+            String clientID = this.clientID;
+            if (this.durable && clientID != null) {
+                String name = this.name;
+                if (this.destination instanceof Topic) {
+                    log.info( "Setting clientID for " + name + " to " + clientID );
+                    this.connection.setClientID( clientID );
+                } else {
+                    log.warn( "ClientID set for processor " + name + ", but " + 
+                            destination + " is not a topic - ignoring." );
+                }
+            } else if (this.durable && clientID == null) {
+                context.failed( new StartException( "Durable topic processors require a client_id. processor: " + name ) );
+            }
+            this.connection.start();
+        } catch (JMSException e) {
+            context.failed( new StartException( e ) );
+        } finally {
+            if (connectionFactoryManagedReference != null) {
+                connectionFactoryManagedReference.release();
+            }
+        }
+ 
+    }
+    
+    protected BaseMessageProcessor instantiateProcessor() throws IllegalAccessException, InstantiationException {
+        return this.messageProcessorClass.newInstance();
     }
     
     public synchronized void stop() throws Exception {
@@ -235,10 +250,18 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
         return this.destination;
     }
 
-    private Class<? extends BaseMessageProcessor> messageProcessorClass;
+    public ServiceName getBaseServiceName() {
+        return baseServiceName;
+    }
+
+    protected ServiceRegistry getServiceRegistry() {
+        return serviceRegistry;
+    }
+
+    protected Class<? extends BaseMessageProcessor> messageProcessorClass;
+    protected XAConnection connection;
     private ServiceRegistry serviceRegistry;
     private String destinationName;
-    private XAConnection connection;
     private Destination destination;
     private ServiceName baseServiceName;
     private String name;

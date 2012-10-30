@@ -17,20 +17,29 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.projectodd.polyglot.messaging.destinations;
+package org.projectodd.polyglot.messaging;
 
-import org.jboss.msc.service.ServiceName;
+import javax.jms.Destination;
 
-public class DestinationUtils {
+public interface MessageProcessorGroupMBean {
+
+    void start() throws Exception;
+
+    void stop() throws Exception;
+
+    int getConcurrency();
+
+    String getName();
+
+    Destination getDestination();
+
+    String getDestinationName();
+
+    String getMessageSelector();
+
+    String getStatus();
     
-    public static String cleanServiceName(String destinationName) {
-        return destinationName.replaceAll( "[./]", " " )
-                .trim()
-                .replace( ' ', '.' );
-    }
+    boolean isDurable();
     
-    public static ServiceName getServiceName(String destinationName) {
-        return ServiceName.parse( cleanServiceName( destinationName ) );
-    }
-
+    String getClientID();
 }

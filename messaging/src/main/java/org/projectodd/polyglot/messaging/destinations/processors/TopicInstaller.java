@@ -33,6 +33,7 @@ import org.jboss.logging.Logger;
 import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceName;
+import org.jboss.msc.service.ServiceTarget;
 import org.projectodd.polyglot.messaging.destinations.TopicMetaData;
 
 /**
@@ -55,17 +56,17 @@ public class TopicInstaller implements DeploymentUnitProcessor {
         List<TopicMetaData> allMetaData = unit.getAttachmentList( TopicMetaData.ATTACHMENTS_KEY );
 
         for (TopicMetaData each : allMetaData) {
-            deploy( phaseContext, each );
+            deploy( phaseContext.getServiceTarget(), each );
         }
 
     }
 
-    protected void deploy(DeploymentPhaseContext phaseContext, TopicMetaData topic) {
+    public static ServiceName deploy(ServiceTarget serviceTarget, TopicMetaData topic) {
         final JMSTopicService service = new JMSTopicService(topic.getName(), new String[] { topic.getBindName() } );
         final ServiceName hornetQserviceName = MessagingServices.getHornetQServiceName( "default" );
         final ServiceName serviceName = JMSServices.getJmsTopicBaseServiceName( hornetQserviceName ).append( topic.getName() );
         try {
-            ServiceBuilder<?> serviceBuilder = phaseContext.getServiceTarget().addService(serviceName, service)
+            ServiceBuilder<?> serviceBuilder = serviceTarget.addService(serviceName, service)
                 .addDependency(JMSServices.getJmsManagerBaseServiceName( hornetQserviceName ), JMSServerManager.class, service.getJmsServer() )
                 .addDependency( HornetQStartupPoolService.getServiceName( hornetQserviceName ), ExecutorService.class, service.getExecutorServiceInjector() )
                 .setInitialMode( Mode.ACTIVE );
@@ -73,6 +74,8 @@ public class TopicInstaller implements DeploymentUnitProcessor {
         } catch (org.jboss.msc.service.DuplicateServiceException ignored) {
             log.warn("Already started "+serviceName);
         }
+        
+        return serviceName;
     }
 
     @Override

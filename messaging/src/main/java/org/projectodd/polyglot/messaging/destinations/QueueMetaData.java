@@ -26,8 +26,6 @@ public class QueueMetaData extends AbstractDestinationMetaData {
     
     public static AttachmentKey<AttachmentList<QueueMetaData>> ATTACHMENTS_KEY = AttachmentKey.createList( QueueMetaData.class );
 
-    private boolean durable = true;
-
     public QueueMetaData() {
   
     }
@@ -47,5 +45,16 @@ public class QueueMetaData extends AbstractDestinationMetaData {
     public boolean isDurable() {
         return this.durable;
     }
+
+    public String getSelector() {
+        return selector;
+    }
+
+    public void setSelector(String selector) {
+        this.selector = selector;
+    }
+
+    private boolean durable = true;
+    private String selector;
 
 }
