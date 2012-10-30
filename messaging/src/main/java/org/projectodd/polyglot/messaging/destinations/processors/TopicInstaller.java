@@ -62,7 +62,7 @@ public class TopicInstaller implements DeploymentUnitProcessor {
     }
 
     public static ServiceName deploy(ServiceTarget serviceTarget, TopicMetaData topic) {
-        final JMSTopicService service = new JMSTopicService(topic.getName(), new String[] { topic.getBindName() } );
+        final DestroyableJMSTopicService service = new DestroyableJMSTopicService(topic.getName(), new String[] { topic.getBindName() } );
         final ServiceName hornetQserviceName = MessagingServices.getHornetQServiceName( "default" );
         final ServiceName serviceName = JMSServices.getJmsTopicBaseServiceName( hornetQserviceName ).append( topic.getName() );
         try {

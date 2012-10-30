@@ -25,9 +25,10 @@ import org.jboss.as.messaging.jms.JMSQueueService;
 import org.jboss.logging.Logger;
 import org.jboss.msc.inject.InjectionException;
 import org.jboss.msc.inject.Injector;
+import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StopContext;
 
-public class DestroyableJMSQueueService extends JMSQueueService implements Injector<ExecutorService> {
+public class DestroyableJMSQueueService extends JMSQueueService implements Destroyable, Injector<ExecutorService> {
 
 
     public DestroyableJMSQueueService(String queueName, String selectorString, boolean durable, String[] jndi) {
@@ -71,6 +72,16 @@ public class DestroyableJMSQueueService extends JMSQueueService implements Injec
 
     public void uninject() {
         super.getExecutorInjector().uninject();
+    }
+
+    @Override
+    public boolean willDestroy() {
+        return shouldDestroy;
+    }
+
+    @Override
+    public void setShouldDestroy(boolean shouldDestroy) {
+        this.shouldDestroy = shouldDestroy;
     }
 
     private boolean shouldDestroy;
