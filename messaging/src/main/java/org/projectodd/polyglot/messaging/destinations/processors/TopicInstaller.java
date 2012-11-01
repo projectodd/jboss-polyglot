@@ -34,6 +34,8 @@ import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceTarget;
+import org.projectodd.polyglot.messaging.destinations.DestroyableJMSTopicService;
+import org.projectodd.polyglot.messaging.destinations.HornetQStartupPoolService;
 import org.projectodd.polyglot.messaging.destinations.TopicMetaData;
 
 /**
@@ -61,21 +63,28 @@ public class TopicInstaller implements DeploymentUnitProcessor {
 
     }
 
-    public static ServiceName deploy(ServiceTarget serviceTarget, TopicMetaData topic) {
-        final DestroyableJMSTopicService service = new DestroyableJMSTopicService(topic.getName(), new String[] { topic.getBindName() } );
+    public static ServiceName deploy(ServiceTarget serviceTarget, DestroyableJMSTopicService service, String name) {
         final ServiceName hornetQserviceName = MessagingServices.getHornetQServiceName( "default" );
-        final ServiceName serviceName = JMSServices.getJmsTopicBaseServiceName( hornetQserviceName ).append( topic.getName() );
+        final ServiceName serviceName = JMSServices.getJmsTopicBaseServiceName( hornetQserviceName ).append( name );
+
         try {
             ServiceBuilder<?> serviceBuilder = serviceTarget.addService(serviceName, service)
-                .addDependency(JMSServices.getJmsManagerBaseServiceName( hornetQserviceName ), JMSServerManager.class, service.getJmsServer() )
-                .addDependency( HornetQStartupPoolService.getServiceName( hornetQserviceName ), ExecutorService.class, service.getExecutorServiceInjector() )
-                .setInitialMode( Mode.ACTIVE );
+                    .addDependency(JMSServices.getJmsManagerBaseServiceName( hornetQserviceName ), JMSServerManager.class, service.getJmsServer() )
+                    .addDependency( HornetQStartupPoolService.getServiceName( hornetQserviceName ), ExecutorService.class, service.getExecutorServiceInjector() )
+                    .setInitialMode( Mode.ACTIVE );
             serviceBuilder.install();
         } catch (org.jboss.msc.service.DuplicateServiceException ignored) {
             log.warn("Already started "+serviceName);
         }
-        
+
         return serviceName;
+
+    }
+
+    public static ServiceName deploy(ServiceTarget serviceTarget, TopicMetaData topic) {
+        return deploy( serviceTarget,
+                       new DestroyableJMSTopicService(topic.getName(), new String[] { topic.getBindName() } ),
+                       topic.getName() );
     }
 
     @Override

@@ -1,13 +1,14 @@
-package org.projectodd.polyglot.messaging.destinations.processors;
+package org.projectodd.polyglot.messaging.destinations;
 
 import java.util.concurrent.ExecutorService;
 
+import org.jboss.as.messaging.jms.JMSTopicService;
 import org.jboss.logging.Logger;
 import org.jboss.msc.inject.InjectionException;
 import org.jboss.msc.inject.Injector;
 import org.jboss.msc.service.StopContext;
 
-public class DestroyableJMSTopicService extends org.jboss.as.messaging.jms.JMSTopicService implements Destroyable, Injector<ExecutorService> {
+public class DestroyableJMSTopicService extends JMSTopicService implements Destroyable, Injector<ExecutorService> {
 
     public DestroyableJMSTopicService(String topicName, String[] jndi) {
         super(topicName, jndi);

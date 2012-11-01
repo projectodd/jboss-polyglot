@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutorService;
 
 import org.hornetq.jms.server.JMSServerManager;
 import org.jboss.as.messaging.MessagingServices;
+import org.jboss.as.messaging.jms.JMSQueueService;
 import org.jboss.as.messaging.jms.JMSServices;
 import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
@@ -34,6 +35,8 @@ import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceTarget;
+import org.projectodd.polyglot.messaging.destinations.DestroyableJMSQueueService;
+import org.projectodd.polyglot.messaging.destinations.HornetQStartupPoolService;
 import org.projectodd.polyglot.messaging.destinations.QueueMetaData;
 
 /**
@@ -61,22 +64,27 @@ public class QueueInstaller implements DeploymentUnitProcessor {
 
     }
 
-    public static ServiceName deploy(ServiceTarget serviceTarget, QueueMetaData queue) {
-        final DestroyableJMSQueueService service = new DestroyableJMSQueueService(queue.getName(), queue.getSelector(), 
-                queue.isDurable(), new String[] { queue.getBindName() } );
+    public static ServiceName deploy(ServiceTarget serviceTarget, DestroyableJMSQueueService service, String name) {
         final ServiceName hornetQserviceName = MessagingServices.getHornetQServiceName( "default" );
-        final ServiceName serviceName = JMSServices.getJmsQueueBaseServiceName( hornetQserviceName ).append( queue.getName() );
+        final ServiceName serviceName = JMSServices.getJmsQueueBaseServiceName( hornetQserviceName ).append( name );
         try {
             ServiceBuilder<?> serviceBuilder = serviceTarget.addService(serviceName, service)
-                .addDependency( JMSServices.getJmsManagerBaseServiceName( hornetQserviceName ), JMSServerManager.class, service.getJmsServer() )
-                .addDependency( HornetQStartupPoolService.getServiceName( hornetQserviceName ), ExecutorService.class, service.getExecutorServiceInjector() )
-                .setInitialMode( Mode.ACTIVE );
-                serviceBuilder.install();
+                    .addDependency( JMSServices.getJmsManagerBaseServiceName( hornetQserviceName ), JMSServerManager.class, service.getJmsServer() )
+                    .addDependency( HornetQStartupPoolService.getServiceName( hornetQserviceName ), ExecutorService.class, service.getExecutorServiceInjector() )
+                    .setInitialMode( Mode.ACTIVE );
+            serviceBuilder.install();
         } catch (org.jboss.msc.service.DuplicateServiceException ignored) {
             log.warn("Already started "+serviceName);
         }
-        
+
         return serviceName;
+    }
+
+    public static ServiceName deploy(ServiceTarget serviceTarget, QueueMetaData queue) {
+        return deploy( serviceTarget, 
+                       new DestroyableJMSQueueService( queue.getName(), queue.getSelector(), 
+                                                       queue.isDurable(), new String[] { queue.getBindName() } ),
+                                                       queue.getName() );
     }
 
     @Override

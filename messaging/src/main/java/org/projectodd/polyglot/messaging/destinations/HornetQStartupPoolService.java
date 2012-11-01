@@ -1,4 +1,4 @@
-package org.projectodd.polyglot.messaging.destinations.processors;
+package org.projectodd.polyglot.messaging.destinations;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
