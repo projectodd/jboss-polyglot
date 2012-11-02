@@ -52,6 +52,7 @@ public class StompSubsystemAdd extends AbstractBoottimeAddStepHandler {
 
     @Override
     protected void populateModel(ModelNode operation, ModelNode subModel) {
+        subModel.get( "socket-binding" ).set( operation.get( "socket-binding" ) );
     }
 
     @Override
