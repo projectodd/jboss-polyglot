@@ -58,8 +58,9 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
     
     public void start(final StartContext context) throws StartException {
     
-        context.asynchronous();
-        context.execute( new Runnable() {
+        final boolean async = this.startAsynchronously;
+        
+        Runnable action = new Runnable() {
     
             @Override
             public void run() {
@@ -104,11 +105,19 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
     
                 BaseMessageProcessorGroup.this.running = true;
     
-                context.complete();
-    
+                if (async) {
+                    context.complete();
+                }
             }
     
-        } );
+        };
+        
+        if (async) {
+            context.asynchronous();
+            context.execute( action );
+        } else {
+            action.run();
+        }
     
     }
      
@@ -246,6 +255,10 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
         return this.connection;
     }
 
+    protected void setConnection(XAConnection connection) {
+        this.connection = connection;
+    }
+    
     public Destination getDestination() {
         return this.destination;
     }
@@ -258,8 +271,13 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
         return serviceRegistry;
     }
 
-    protected Class<? extends BaseMessageProcessor> messageProcessorClass;
-    protected XAConnection connection;
+    protected void setStartAsynchronously(boolean startAsynchronously) {
+        this.startAsynchronously = startAsynchronously;
+    }
+
+    private boolean startAsynchronously = true;
+    private Class<? extends BaseMessageProcessor> messageProcessorClass;
+    private XAConnection connection;
     private ServiceRegistry serviceRegistry;
     private String destinationName;
     private Destination destination;
