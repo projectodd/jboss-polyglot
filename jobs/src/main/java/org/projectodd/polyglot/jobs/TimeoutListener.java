@@ -22,6 +22,8 @@ package org.projectodd.polyglot.jobs;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jboss.logging.Logger;
 import org.projectodd.polyglot.core.util.TimeInterval;
@@ -39,16 +41,14 @@ public class TimeoutListener implements JobListener {
     public void started(final JobExecutionContext context, final BaseJob job) {
         
         if (this.timeout.interval > 0) {
-            //TODO Replace ExecutorService by JBossThreadPool
-            ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
             
-            this.timeoutExecutor = service.schedule(new Runnable() {
+            this.timeoutFuture = timeoutExecutor.schedule( new Runnable() {
                 public void run() {
 
                     try {
                         ((InterruptableJob) context.getJobInstance()).interrupt();
                     } catch (Exception e) {
-                        log.error("Failed to interrupt job " + job.getJobKey(), e);
+                        log.error( "Failed to interrupt job " + job.getJobKey(), e );
                     }
 
 
@@ -75,15 +75,25 @@ public class TimeoutListener implements JobListener {
     }
     
     protected void cancel() {
-        if (this.timeoutExecutor != null) {
-            this.timeoutExecutor.cancel( true );
-            this.timeoutExecutor = null;
+        if (this.timeoutFuture != null) {
+            this.timeoutFuture.cancel( true );
+            this.timeoutFuture = null;
         }
     }
     
     private TimeInterval timeout;
     @SuppressWarnings("rawtypes")
-    private Future timeoutExecutor;
+    private Future timeoutFuture;
+    private static ScheduledExecutorService timeoutExecutor = Executors.newScheduledThreadPool( 3, new ThreadFactory() {
+        private final AtomicInteger count = new AtomicInteger( 1 );
+        @Override
+        public Thread newThread(Runnable runnable) {
+            Thread thread = new Thread( runnable );
+            thread.setName( "torquebox-timeout-" + count.getAndIncrement() );
+            return thread;
+        }
+        
+    } );
     
     private static final Logger log = Logger.getLogger( "org.projectodd.polyglot.jobs" );
 }
