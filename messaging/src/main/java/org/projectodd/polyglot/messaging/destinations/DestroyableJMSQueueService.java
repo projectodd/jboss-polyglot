@@ -21,6 +21,7 @@ package org.projectodd.polyglot.messaging.destinations;
 
 import java.util.concurrent.ExecutorService;
 
+import org.hornetq.jms.server.JMSServerManager;
 import org.jboss.as.messaging.jms.JMSQueueService;
 import org.jboss.logging.Logger;
 import org.jboss.msc.inject.InjectionException;
@@ -38,8 +39,6 @@ public class DestroyableJMSQueueService extends JMSQueueService implements Destr
 
     @Override
     public synchronized void stop(StopContext context) {
-        super.stop( context );
-        
         if ( shouldDestroy ) {
             try {
                 getJmsServer().getValue().destroyQueue( this.queueName );
@@ -51,6 +50,8 @@ public class DestroyableJMSQueueService extends JMSQueueService implements Destr
                 }
             }
         }
+        
+        super.stop( context );
     }
 
     /**
