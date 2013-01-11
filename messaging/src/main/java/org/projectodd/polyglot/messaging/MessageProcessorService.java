@@ -23,7 +23,7 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Topic;
-import javax.jms.XASession;
+import javax.jms.Session;
 
 import org.jboss.logging.Logger;
 import org.jboss.msc.service.Service;
@@ -100,11 +100,11 @@ public class MessageProcessorService implements Service<Void> {
     
     // -------
 
-    public XASession getSession() {
+    public Session getSession() {
         return this.session;
     }
 
-    protected void setSession(XASession session) {
+    protected void setSession(Session session) {
         this.session = session;
     }
     
@@ -128,6 +128,6 @@ public class MessageProcessorService implements Service<Void> {
 
     private BaseMessageProcessorGroup group;
     private BaseMessageProcessor listener;
-    private XASession session;
+    private Session session;
     private MessageConsumer consumer;
 }

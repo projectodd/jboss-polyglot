@@ -21,7 +21,7 @@ package org.projectodd.polyglot.messaging;
 
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
-import javax.jms.XASession;
+import javax.jms.Session;
 
 public abstract class BaseMessageProcessor implements MessageListener {
 
@@ -37,7 +37,7 @@ public abstract class BaseMessageProcessor implements MessageListener {
         this.service = service;
     }
     
-    public XASession getSession() {
+    public Session getSession() {
         return this.service.getSession();
     }
     
