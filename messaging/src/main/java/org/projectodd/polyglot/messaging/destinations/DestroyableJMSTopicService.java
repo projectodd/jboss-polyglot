@@ -36,8 +36,6 @@ public class DestroyableJMSTopicService extends JMSTopicService implements Destr
 
     @Override
     public synchronized void stop(StopContext context) {
-        super.stop( context );
-        
         if ( this.shouldDestroy ) {
             try {
                 getJmsServer().getValue().destroyTopic( this.topicName );
@@ -49,6 +47,8 @@ public class DestroyableJMSTopicService extends JMSTopicService implements Destr
                 }
             }
         }
+        
+        super.stop( context );
     }
     
     /**

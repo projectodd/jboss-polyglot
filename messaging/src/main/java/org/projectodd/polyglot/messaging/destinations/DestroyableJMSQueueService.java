@@ -21,7 +21,6 @@ package org.projectodd.polyglot.messaging.destinations;
 
 import java.util.concurrent.ExecutorService;
 
-import org.hornetq.jms.server.JMSServerManager;
 import org.jboss.as.messaging.jms.JMSQueueService;
 import org.jboss.logging.Logger;
 import org.jboss.msc.inject.InjectionException;
