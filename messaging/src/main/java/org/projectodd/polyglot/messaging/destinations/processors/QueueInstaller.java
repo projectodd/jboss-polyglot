@@ -35,6 +35,7 @@ import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceTarget;
+import org.projectodd.polyglot.messaging.destinations.DestinationUtils;
 import org.projectodd.polyglot.messaging.destinations.DestroyableJMSQueueService;
 import org.projectodd.polyglot.messaging.destinations.HornetQStartupPoolService;
 import org.projectodd.polyglot.messaging.destinations.QueueMetaData;
@@ -83,7 +84,7 @@ public class QueueInstaller implements DeploymentUnitProcessor {
     public static ServiceName deploy(ServiceTarget serviceTarget, QueueMetaData queue) {
         return deploy( serviceTarget, 
                        new DestroyableJMSQueueService( queue.getName(), queue.getSelector(), 
-                                                       queue.isDurable(), new String[] { queue.getBindName() } ),
+                                                       queue.isDurable(), new String[] { DestinationUtils.jndiName( queue.getName() ) } ),
                                                        queue.getName() );
     }
 

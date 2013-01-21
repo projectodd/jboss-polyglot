@@ -45,7 +45,6 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
-import org.projectodd.polyglot.messaging.destinations.DestinationUtils;
 
 public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGroup> {
 

@@ -34,6 +34,7 @@ import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceTarget;
+import org.projectodd.polyglot.messaging.destinations.DestinationUtils;
 import org.projectodd.polyglot.messaging.destinations.DestroyableJMSTopicService;
 import org.projectodd.polyglot.messaging.destinations.HornetQStartupPoolService;
 import org.projectodd.polyglot.messaging.destinations.TopicMetaData;
@@ -83,7 +84,7 @@ public class TopicInstaller implements DeploymentUnitProcessor {
 
     public static ServiceName deploy(ServiceTarget serviceTarget, TopicMetaData topic) {
         return deploy( serviceTarget,
-                       new DestroyableJMSTopicService(topic.getName(), new String[] { topic.getBindName() } ),
+                       new DestroyableJMSTopicService(topic.getName(), new String[] { DestinationUtils.jndiName( topic.getName() ) } ),
                        topic.getName() );
     }
 

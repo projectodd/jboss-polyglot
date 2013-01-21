@@ -23,6 +23,11 @@ import org.jboss.msc.service.ServiceName;
 
 public class DestinationUtils {
     
+    public static String jndiName(String destinationName) {
+        return cleanServiceName( destinationName ).
+                replace( '.', '/' );
+    }
+    
     public static String cleanServiceName(String destinationName) {
         return destinationName.replaceAll( "[./]", " " )
                 .trim()

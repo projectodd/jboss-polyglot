@@ -20,9 +20,7 @@
 package org.projectodd.polyglot.messaging.destinations;
 
 public class AbstractDestinationMetaData {
-
-    private String name;
-    private String bindName;
+        
     public AbstractDestinationMetaData() {
 
     }
@@ -38,15 +36,7 @@ public class AbstractDestinationMetaData {
     public void setName(String name) {
         this.name = name;
     }
+    
+    private String name;
 
-    public String getBindName() {
-        if ( this.bindName == null ) {
-            return this.name;
-        }
-        return this.bindName;
-    }
-
-    public void setBindName(String bindName) {
-        this.bindName = bindName;
-    }
 }
