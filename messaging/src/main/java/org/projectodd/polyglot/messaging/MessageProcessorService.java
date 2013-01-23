@@ -22,14 +22,17 @@ package org.projectodd.polyglot.messaging;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
-import javax.jms.Topic;
 import javax.jms.Session;
+import javax.jms.Topic;
+import javax.transaction.TransactionManager;
 
 import org.jboss.logging.Logger;
+import org.jboss.msc.inject.Injector;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
+import org.jboss.msc.value.InjectedValue;
 
 public class MessageProcessorService implements Service<Void> {
 
@@ -49,13 +52,10 @@ public class MessageProcessorService implements Service<Void> {
                 try {
                     setupConsumer();
 
-                    listener.setService( MessageProcessorService.this );
-                    listener.setGroup( group );
-                    
-                    consumer.setMessageListener( listener );
+                    listener.initialize( MessageProcessorService.this, group );
                     
                     context.complete();
-                } catch (JMSException e) {
+                } catch (Exception e) {
                     context.failed( new StartException( e ) );
                 }
             }
@@ -82,7 +82,7 @@ public class MessageProcessorService implements Service<Void> {
         try {
             this.consumer.close();
             this.consumer = null;
-        } catch (JMSException e) {
+        } catch (Exception e) {
             log.error( "Error closing consumer connection", e );
         }
         try {
@@ -124,10 +124,15 @@ public class MessageProcessorService implements Service<Void> {
         return group;
     }
 
+    public InjectedValue<TransactionManager> getTransactionManagerInjector() {
+        return this.transactionManagerInjector;
+    }
+
     public static final Logger log = Logger.getLogger( "org.projectodd.polyglot.messaging" );
 
     private BaseMessageProcessorGroup group;
     private BaseMessageProcessor listener;
     private Session session;
     private MessageConsumer consumer;
+    private InjectedValue<TransactionManager> transactionManagerInjector = new InjectedValue<TransactionManager>();
 }

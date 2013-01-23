@@ -27,12 +27,14 @@ import javax.jms.JMSException;
 import javax.jms.Queue;
 import javax.jms.Topic;
 import javax.jms.XAConnection;
+import javax.transaction.TransactionManager;
 
 import org.hornetq.jms.client.HornetQConnectionFactory;
 import org.jboss.as.messaging.MessagingServices;
 import org.jboss.as.messaging.jms.JMSServices;
 import org.jboss.as.naming.ManagedReference;
 import org.jboss.as.naming.ManagedReferenceFactory;
+import org.jboss.as.txn.service.TxnServices;
 import org.jboss.logging.Logger;
 import org.jboss.msc.inject.Injector;
 import org.jboss.msc.service.Service;
@@ -98,6 +100,7 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
                     MessageProcessorService service = createMessageProcessorService( processor );
                     ServiceName serviceName = baseServiceName.append( "" + i );
                     target.addService( serviceName, service )
+                            .addDependency( TxnServices.JBOSS_TXN_TRANSACTION_MANAGER, TransactionManager.class, service.getTransactionManagerInjector() )
                             .install();
                     services.add( serviceName );
                 }

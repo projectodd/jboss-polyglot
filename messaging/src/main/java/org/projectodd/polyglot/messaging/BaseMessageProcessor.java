@@ -19,22 +19,53 @@
 
 package org.projectodd.polyglot.messaging;
 
+import java.lang.reflect.Field;
+
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.Session;
+import javax.transaction.Transaction;
+import javax.transaction.TransactionManager;
 
-public abstract class BaseMessageProcessor implements MessageListener {
+import org.hornetq.api.core.HornetQException;
+import org.hornetq.api.core.client.ClientConsumer;
+import org.hornetq.api.core.client.ClientMessage;
+import org.hornetq.api.core.client.ClientSession;
+import org.hornetq.api.core.client.MessageHandler;
+import org.hornetq.jms.client.HornetQMessage;
+import org.hornetq.jms.client.HornetQMessageConsumer;
+import org.hornetq.jms.client.HornetQSession;
+import org.jboss.logging.Logger;
+
+public abstract class BaseMessageProcessor implements MessageListener, MessageHandler {
+
+    public void initialize(MessageProcessorService service, BaseMessageProcessorGroup group) throws Exception {
+        this.service = service;
+        this.group = group;
+
+        MessageConsumer consumer = service.getConsumer();
+        // Use HornetQ's Core API for message consumers where possible so we
+        // get proper XA support. Otherwise, fall back to standard JMS.
+        if (consumer instanceof HornetQMessageConsumer) {
+            Field sessionField = consumer.getClass().getDeclaredField( "session" );
+            sessionField.setAccessible( true );
+            this.hornetQSession = (HornetQSession) sessionField.get( consumer );
+
+            Field consumerField = consumer.getClass().getDeclaredField( "consumer" );
+            consumerField.setAccessible( true );
+            this.clientConsumer = (ClientConsumer) consumerField.get( consumer );
+
+            int ackMode = hornetQSession.getAcknowledgeMode();
+            this.transactedOrClientAck = (ackMode == Session.SESSION_TRANSACTED || ackMode == Session.CLIENT_ACKNOWLEDGE);
+
+            this.clientConsumer.setMessageHandler( this );
+        } else {
+            consumer.setMessageListener( this );
+        }
+    }
 
     public BaseMessageProcessorGroup getGroup() {
         return group;
-    }
-    
-    public void setGroup(BaseMessageProcessorGroup group) {
-        this.group = group;
-    }
-    
-    public void setService(MessageProcessorService service) {
-        this.service = service;
     }
     
     public Session getSession() {
@@ -44,8 +75,90 @@ public abstract class BaseMessageProcessor implements MessageListener {
     public MessageConsumer getConsumer() {
         return this.service.getConsumer();
     }
+
+    public boolean isXAEnabled() {
+        return true; // for now all message processors use XA
+    }
+
+    protected HornetQSession getHornetQSession() {
+        return this.hornetQSession;
+    }
+
+    protected ClientSession getCoreSession() {
+        return getHornetQSession().getCoreSession();
+    }
+
+    protected TransactionManager getTransactionManager() {
+        return this.service.getTransactionManagerInjector().getValue();
+    }
+
+    // No-op method that can be overridden in subclasses to do any work
+    // necessary to prepare transactions
+    protected void prepareTransaction() {}
+
+    /**
+     * This entire method is essentially a copy of HornetQ's
+     * JMSMessageListenerWrapper onMessage but with hooks for preparing
+     * transactions before calling MessageListener's onMessage
+     * 
+     */
+    @Override
+    public void onMessage(final ClientMessage message) {
+        HornetQMessage msg = HornetQMessage.createMessage( message, getCoreSession() );
+
+        try {
+            msg.doBeforeReceive();
+        } catch (Exception e) {
+            log.error( "Failed to prepare message for receipt", e );
+            return;
+        }
+
+        if (isXAEnabled()) {
+            prepareTransaction();
+        }
+
+        if (transactedOrClientAck) {
+           try {
+              message.acknowledge();
+           } catch (HornetQException e) {
+              log.error( "Failed to process message", e );
+           }
+        }
+
+        try {
+            onMessage( msg );
+        } catch (RuntimeException e) {
+            log.warn( "Unhandled exception thrown from onMessage", e );
+
+            getHornetQSession().setRecoverCalled( true );
+            if (!transactedOrClientAck) {
+                try {
+                    getCoreSession().rollback( true );
+                } catch (Exception e2) {
+                    log.error( "Failed to recover session", e2 );
+                }
+            }
+         }
+
+        if (!getHornetQSession().isRecoverCalled()) {
+           try {
+              // We don't want to call this if the consumer was closed from inside onMessage
+              if (!clientConsumer.isClosed() && !transactedOrClientAck) {
+                 message.acknowledge();
+              }
+           } catch (Exception e) {
+              log.error( "Failed to process message", e );
+           }
+        }
+
+        getHornetQSession().setRecoverCalled( false );
+    }
    
     
     private BaseMessageProcessorGroup group;
     private MessageProcessorService service;
+    private HornetQSession hornetQSession;
+    private ClientConsumer clientConsumer;
+    private boolean transactedOrClientAck;
+    private final Logger log = Logger.getLogger( this.getClass() );
 }
