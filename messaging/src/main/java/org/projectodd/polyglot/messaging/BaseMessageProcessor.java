@@ -56,7 +56,7 @@ public abstract class BaseMessageProcessor implements MessageListener, MessageHa
             this.clientConsumer = (ClientConsumer) consumerField.get( consumer );
 
             int ackMode = hornetQSession.getAcknowledgeMode();
-            this.transactedOrClientAck = (ackMode == Session.SESSION_TRANSACTED || ackMode == Session.CLIENT_ACKNOWLEDGE);
+            this.transactedOrClientAck = (ackMode == Session.SESSION_TRANSACTED || ackMode == Session.CLIENT_ACKNOWLEDGE) || hornetQSession.isXA();
 
             this.clientConsumer.setMessageHandler( this );
         } else {
@@ -77,7 +77,7 @@ public abstract class BaseMessageProcessor implements MessageListener, MessageHa
     }
 
     public boolean isXAEnabled() {
-        return true; // for now all message processors use XA
+        return this.group.isXAEnabled();
     }
 
     protected HornetQSession getHornetQSession() {
@@ -130,10 +130,10 @@ public abstract class BaseMessageProcessor implements MessageListener, MessageHa
         } catch (RuntimeException e) {
             log.warn( "Unhandled exception thrown from onMessage", e );
 
-            getHornetQSession().setRecoverCalled( true );
             if (!transactedOrClientAck) {
                 try {
                     getCoreSession().rollback( true );
+                    getHornetQSession().setRecoverCalled( true );
                 } catch (Exception e2) {
                     log.error( "Failed to recover session", e2 );
                 }

@@ -27,7 +27,6 @@ import javax.jms.Topic;
 import javax.transaction.TransactionManager;
 
 import org.jboss.logging.Logger;
-import org.jboss.msc.inject.Injector;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
@@ -64,7 +63,12 @@ public class MessageProcessorService implements Service<Void> {
     }
 
     protected void setupConsumer() throws JMSException {
-        setSession( group.getConnection().createXASession() );
+        if (group.isXAEnabled()) {
+            setSession( group.getConnection().createXASession() );
+        } else {
+            // Use local transactions for non-XA message processors
+            setSession( group.getConnection().createSession( true, Session.SESSION_TRANSACTED ) );
+        }
         Destination destination = group.getDestination();
         if (group.isDurable() && destination instanceof Topic) {
             setConsumer( session.createDurableSubscriber( (Topic) destination, group.getName(), group.getMessageSelector(), false ) );

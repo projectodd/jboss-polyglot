@@ -244,6 +244,14 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
     public String getClientID() {
         return this.clientID;
     }
+
+    public void setXAEnabled(boolean  xaEnabled) {
+        this.xaEnabled = xaEnabled;
+    }
+
+    public boolean isXAEnabled() {
+        return this.xaEnabled;
+    }
     
     public Injector<ManagedReferenceFactory> getConnectionFactoryInjector() {
         return this.connectionFactoryInjector;
@@ -288,6 +296,7 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
     private String messageSelector;
     private boolean durable;
     private String clientID;
+    private boolean xaEnabled = true;
     private boolean running = false;
     private int concurrency;
     private List<ServiceName> services = new ArrayList<ServiceName>();
