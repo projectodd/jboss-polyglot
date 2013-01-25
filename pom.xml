@@ -10,7 +10,7 @@
 
   <groupId>org.projectodd</groupId>
   <artifactId>polyglot</artifactId>
-  <version>1.12.0</version>
+  <version>1.13.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Polyglot</name>
   <url>http://github.com/projectodd/polyglot/</url>
