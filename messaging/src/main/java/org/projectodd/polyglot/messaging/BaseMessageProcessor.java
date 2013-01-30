@@ -36,14 +36,15 @@ import org.hornetq.jms.client.HornetQMessage;
 import org.hornetq.jms.client.HornetQMessageConsumer;
 import org.hornetq.jms.client.HornetQSession;
 import org.jboss.logging.Logger;
+import org.jboss.msc.value.InjectedValue;
 
 public abstract class BaseMessageProcessor implements MessageListener, MessageHandler {
 
-    public void initialize(MessageProcessorService service, BaseMessageProcessorGroup group) throws Exception {
-        this.service = service;
+    public void initialize(BaseMessageProcessorGroup group, Session session, MessageConsumer consumer) throws Exception {
+        this.session = session;
+        this.consumer = consumer;
         this.group = group;
 
-        MessageConsumer consumer = service.getConsumer();
         // Use HornetQ's Core API for message consumers where possible so we
         // get proper XA support. Otherwise, fall back to standard JMS.
         if (consumer instanceof HornetQMessageConsumer) {
@@ -69,11 +70,11 @@ public abstract class BaseMessageProcessor implements MessageListener, MessageHa
     }
     
     public Session getSession() {
-        return this.service.getSession();
+        return this.session;
     }
     
     public MessageConsumer getConsumer() {
-        return this.service.getConsumer();
+        return this.consumer;
     }
 
     public boolean isXAEnabled() {
@@ -89,7 +90,7 @@ public abstract class BaseMessageProcessor implements MessageListener, MessageHa
     }
 
     protected TransactionManager getTransactionManager() {
-        return this.service.getTransactionManagerInjector().getValue();
+        return this.transactionManagerInjector.getValue();
     }
 
     // No-op method that can be overridden in subclasses to do any work
@@ -156,9 +157,11 @@ public abstract class BaseMessageProcessor implements MessageListener, MessageHa
    
     
     private BaseMessageProcessorGroup group;
-    private MessageProcessorService service;
     private HornetQSession hornetQSession;
     private ClientConsumer clientConsumer;
+    private Session session;
+    private MessageConsumer consumer;
+    private InjectedValue<TransactionManager> transactionManagerInjector = new InjectedValue<TransactionManager>();
     private boolean transactedOrClientAck;
     private final Logger log = Logger.getLogger( this.getClass() );
 }
