@@ -19,27 +19,27 @@
 
 package org.projectodd.polyglot.messaging;
 
+import java.lang.IllegalStateException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
+import javax.jms.MessageConsumer;
 import javax.jms.Queue;
+import javax.jms.Session;
 import javax.jms.Topic;
 import javax.jms.XAConnection;
-import javax.transaction.TransactionManager;
 
 import org.hornetq.jms.client.HornetQConnectionFactory;
 import org.jboss.as.messaging.MessagingServices;
 import org.jboss.as.messaging.jms.JMSServices;
 import org.jboss.as.naming.ManagedReference;
 import org.jboss.as.naming.ManagedReferenceFactory;
-import org.jboss.as.txn.service.TxnServices;
 import org.jboss.logging.Logger;
 import org.jboss.msc.inject.Injector;
+
 import org.jboss.msc.service.Service;
-import org.jboss.msc.service.ServiceController;
-import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
 import org.jboss.msc.service.ServiceTarget;
@@ -56,7 +56,8 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
         this.destinationName = destinationName;
         this.messageProcessorClass = messageProcessorClass;
     }
-    
+
+    @Override
     public void start(final StartContext context) throws StartException {
     
         final boolean async = this.startAsynchronously;
@@ -86,25 +87,13 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
                     target.addDependency( JMSServices.getJmsTopicBaseServiceName( MessagingServices.getHornetQServiceName( "default" ) )
                             .append( BaseMessageProcessorGroup.this.destinationName ) );
                 }
-    
-                for (int i = 0; i < BaseMessageProcessorGroup.this.concurrency; ++i) {
-                    BaseMessageProcessor processor = null;
-                    try {
-                        processor = instantiateProcessor();
-                    } catch (IllegalAccessException e) {
-                        context.failed( new StartException( e ) );
-                    } catch (InstantiationException e) {
-                        context.failed( new StartException( e ) );
-                    }
-                    
-                    MessageProcessorService service = createMessageProcessorService( processor );
-                    ServiceName serviceName = baseServiceName.append( "" + i );
-                    target.addService( serviceName, service )
-                            .addDependency( TxnServices.JBOSS_TXN_TRANSACTION_MANAGER, TransactionManager.class, service.getTransactionManagerInjector() )
-                            .install();
-                    services.add( serviceName );
+
+                try {
+                    installMessageProcessors();
+                } catch (Exception e) {
+                    context.failed( new StartException( e ) );
                 }
-    
+
                 BaseMessageProcessorGroup.this.running = true;
     
                 if (async) {
@@ -122,11 +111,84 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
         }
     
     }
-     
-    protected MessageProcessorService createMessageProcessorService(BaseMessageProcessor processor) {
-       return new MessageProcessorService( this, processor );
+
+    @Override
+    public void stop(StopContext context) {
+        try {
+            this.connection.close();
+        } catch (JMSException e) {
+            log.error( "Error stopping consumer connection", e );
+        }
+
     }
-    
+
+    @Override
+    public BaseMessageProcessorGroup getValue() throws IllegalStateException, IllegalArgumentException {
+        return this;
+    }
+
+    public synchronized void start() throws Exception {
+        if (this.running) {
+            return;
+        }
+
+        installMessageProcessors();
+        this.running = true;
+    }
+
+    public synchronized void stop() throws Exception {
+        if (!this.running) {
+            return;
+        }
+
+        for (BaseMessageProcessor processor : messageProcessors) {
+            stopConsumer(processor);
+        }
+        this.running = false;
+    }
+
+    protected void installMessageProcessors() throws Exception {
+        for (int i = 0; i < this.concurrency; ++i) {
+            startConsumer(instantiateProcessor());
+        }
+    }
+
+    protected void startConsumer(BaseMessageProcessor processor) throws Exception {
+        Session session;
+        MessageConsumer consumer;
+
+        log.trace("Adding new consumer");
+
+        if (isXAEnabled()) {
+            session = getConnection().createXASession();
+        } else {
+            // Use local transactions for non-XA message processors
+            session = getConnection().createSession( true, Session.SESSION_TRANSACTED );
+        }
+
+        Destination destination = getDestination();
+
+        if (isDurable() && destination instanceof Topic) {
+            consumer =  session.createDurableSubscriber( (Topic) destination, getName(), getMessageSelector(), false );
+        } else {
+            if (isDurable() && !(destination instanceof Topic)) {
+                log.warn( "Durable set for processor " + getName() + ", but " + destination + " is not a topic - ignoring." );
+            }
+            consumer = session.createConsumer( destination, getMessageSelector());
+        }
+
+        processor.initialize(this, session, consumer);
+
+        messageProcessors.add(processor);
+
+        log.trace("Consumer added");
+    }
+
+    protected void stopConsumer(BaseMessageProcessor processor) throws Exception {
+        processor.getConsumer().close();
+        processor.getSession().close();
+    }
+
     protected void startConnection(StartContext context) {
         
         ManagedReferenceFactory connectionFactoryManagedReferenceFactory = BaseMessageProcessorGroup.this.connectionFactoryInjector.getValue();
@@ -163,14 +225,6 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
         return this.messageProcessorClass.newInstance();
     }
     
-    public synchronized void stop() throws Exception {
-        for (ServiceName eachName : this.services) {
-            ServiceController<?> each = this.serviceRegistry.getService( eachName );
-            each.setMode( Mode.NEVER );
-        }
-        this.running = false;
-    }
-
     public String getDestinationName() {
         return this.destinationName;
     }
@@ -182,27 +236,42 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
         return "STOPPED";
     }
 
-    @Override
-    public BaseMessageProcessorGroup getValue() throws IllegalStateException, IllegalArgumentException {
-        return this;    
-    }
-
-    public synchronized void start() throws Exception {
-        for (ServiceName eachName : this.services) {
-            ServiceController<?> each = this.serviceRegistry.getService( eachName );
-            each.setMode( Mode.ACTIVE );
+    public void updateConcurrency(int concurrency) throws Exception {
+        if (this.concurrency == concurrency) {
+            return;
         }
-        this.running = true;
-    }
 
-    @Override
-    public void stop(StopContext context) {
-        try {
-            this.connection.close();
-        } catch (JMSException e) {
-            log.error( "Error stopping consumer connection", e );
+        if (concurrency < 1) {
+            log.warn( "Cannot set concurrency of '" + getName() + "' message processor to < 1; requested: " + concurrency );
+            return;
         }
-    
+
+        log.debug( "Changing '" + getName() + "' message processor concurrency (from " + this.concurrency + " to " + concurrency + ")" );
+
+        if (messageProcessors.size() < concurrency) {
+            log.trace( "Adding " + (concurrency - this.concurrency) + " new message processors" );
+
+            while (messageProcessors.size() < concurrency) {
+                // Create new processor
+                BaseMessageProcessor processor = instantiateProcessor();
+                // And start it
+                startConsumer(processor);
+            }
+        } else {
+            log.trace( "Removing " + (this.concurrency - concurrency) + " message processors" );
+
+            while (messageProcessors.size() > concurrency) {
+                // Get first processor
+                BaseMessageProcessor processor = messageProcessors.get(0);
+                // Stop the consumer and close the session
+                stopConsumer(processor);
+                // Remove the processor from the list
+                messageProcessors.remove(processor);
+            }
+        }
+
+        // Update the concurrency info after all
+        setConcurrency(concurrency);
     }
 
     public void setName(String name) {
@@ -299,7 +368,7 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
     private boolean xaEnabled = true;
     private boolean running = false;
     private int concurrency;
-    private List<ServiceName> services = new ArrayList<ServiceName>();
+    private List<BaseMessageProcessor> messageProcessors = new ArrayList<BaseMessageProcessor>();
     private final InjectedValue<ManagedReferenceFactory> connectionFactoryInjector = new InjectedValue<ManagedReferenceFactory>();
     private final InjectedValue<ManagedReferenceFactory> destinationInjector = new InjectedValue<ManagedReferenceFactory>();
 
