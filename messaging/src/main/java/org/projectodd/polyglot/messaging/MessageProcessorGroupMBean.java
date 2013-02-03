@@ -27,6 +27,8 @@ public interface MessageProcessorGroupMBean {
 
     void stop() throws Exception;
 
+    void updateConcurrency(int concurrency) throws Exception;
+
     int getConcurrency();
 
     String getName();
