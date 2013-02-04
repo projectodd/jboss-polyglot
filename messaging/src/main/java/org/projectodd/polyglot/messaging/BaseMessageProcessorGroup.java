@@ -229,6 +229,10 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
         return this.destinationName;
     }
 
+    public Class<? extends BaseMessageProcessor> getMessageProcessorClass() {
+        return messageProcessorClass;
+    }
+
     public String getStatus() {
         if (this.running) {
             return "STARTED";
