@@ -157,7 +157,7 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
         Session session;
         MessageConsumer consumer;
 
-        log.trace("Adding new consumer");
+        log.trace("Adding new consumer for '" + getName() + "' message processor (current count: " + messageProcessors.size() + ")");
 
         if (isXAEnabled()) {
             session = getConnection().createXASession();
@@ -181,7 +181,7 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
 
         messageProcessors.add(processor);
 
-        log.trace("Consumer added");
+        log.trace("Consumer added to '" + getName() + "' message processor (current count: " + messageProcessors.size() + ")");
     }
 
     protected void stopConsumer(BaseMessageProcessor processor) throws Exception {
