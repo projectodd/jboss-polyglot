@@ -245,8 +245,8 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
             return;
         }
 
-        if (concurrency < 1) {
-            log.warn( "Cannot set concurrency of '" + getName() + "' message processor to < 1; requested: " + concurrency );
+        if (concurrency < 0) {
+            log.warn( "Cannot set concurrency of '" + getName() + "' message processor to < 0; requested: " + concurrency );
             return;
         }
 
