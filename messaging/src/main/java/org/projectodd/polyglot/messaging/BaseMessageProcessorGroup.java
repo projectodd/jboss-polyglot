@@ -153,31 +153,35 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
         }
     }
 
-    protected void startConsumer(BaseMessageProcessor processor) throws Exception {
-        Session session;
-        MessageConsumer consumer;
-
-        log.trace("Adding new consumer for '" + getName() + "' message processor (current count: " + messageProcessors.size() + ")");
-
+    protected Session createSession() throws JMSException {
         if (isXAEnabled()) {
-            session = getConnection().createXASession();
+            return getConnection().createXASession();
         } else {
             // Use local transactions for non-XA message processors
-            session = getConnection().createSession( true, Session.SESSION_TRANSACTED );
+            return getConnection().createSession( true, Session.SESSION_TRANSACTED );
         }
-
+    }
+    
+    protected MessageConsumer createConsumer(Session session) throws JMSException {
         Destination destination = getDestination();
 
         if (isDurable() && destination instanceof Topic) {
-            consumer =  session.createDurableSubscriber( (Topic) destination, getName(), getMessageSelector(), false );
+            return session.createDurableSubscriber( (Topic) destination, getName(), getMessageSelector(), false );
         } else {
             if (isDurable() && !(destination instanceof Topic)) {
                 log.warn( "Durable set for processor " + getName() + ", but " + destination + " is not a topic - ignoring." );
             }
-            consumer = session.createConsumer( destination, getMessageSelector());
+            return session.createConsumer( destination, getMessageSelector());
         }
 
-        processor.initialize(this, session, consumer);
+    }
+    
+    protected void startConsumer(BaseMessageProcessor processor) throws Exception {
+        log.trace("Adding new consumer for '" + getName() + "' message processor (current count: " + messageProcessors.size() + ")");
+
+        Session session = createSession();
+            
+        processor.initialize(this, session, createConsumer( session ) );
 
         messageProcessors.add(processor);
 
