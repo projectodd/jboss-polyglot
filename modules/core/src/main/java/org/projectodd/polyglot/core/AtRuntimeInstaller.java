@@ -91,6 +91,7 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
 
     public ServiceName installMBean(final ServiceName name, final String groupName, Object mbean) {
         return installMBean( name, new MBeanRegistrationService<Object>( mbeanName( groupName, name ),
+                name,
                 new ImmediateValue<Object>( mbean ) ) );
     }
 

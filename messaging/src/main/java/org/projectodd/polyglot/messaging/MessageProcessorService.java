@@ -24,6 +24,7 @@ import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import javax.jms.Topic;
+import javax.jms.XAConnection;
 import javax.transaction.TransactionManager;
 
 import org.jboss.logging.Logger;
@@ -64,7 +65,7 @@ public class MessageProcessorService implements Service<Void> {
 
     protected void setupConsumer() throws JMSException {
         if (group.isXAEnabled()) {
-            setSession( group.getConnection().createXASession() );
+            setSession( ((XAConnection) group.getConnection()).createXASession() );
         } else {
             // Use local transactions for non-XA message processors
             setSession( group.getConnection().createSession( true, Session.SESSION_TRANSACTED ) );

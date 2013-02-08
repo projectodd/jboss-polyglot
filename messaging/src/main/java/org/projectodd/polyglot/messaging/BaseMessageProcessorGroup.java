@@ -22,6 +22,7 @@ package org.projectodd.polyglot.messaging;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Queue;
@@ -134,7 +135,11 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
         HornetQConnectionFactory connectionFactory = (HornetQConnectionFactory) connectionFactoryManagedReference.getInstance();
 
         try {
-            this.connection = connectionFactory.createXAConnection();
+            if (isXAEnabled()) {
+                this.connection = connectionFactory.createXAConnection();
+            } else {
+                this.connection = connectionFactory.createConnection();
+            }
             String clientID = this.clientID;
             if (this.durable && clientID != null) {
                 String name = this.name;
@@ -261,11 +266,11 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
         return this.destinationInjector;
     }
 
-    public XAConnection getConnection() {
+    public Connection getConnection() {
         return this.connection;
     }
 
-    protected void setConnection(XAConnection connection) {
+    protected void setConnection(Connection connection) {
         this.connection = connection;
     }
     
@@ -287,7 +292,7 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
 
     private boolean startAsynchronously = true;
     private Class<? extends BaseMessageProcessor> messageProcessorClass;
-    private XAConnection connection;
+    private Connection connection;
     private ServiceRegistry serviceRegistry;
     private String destinationName;
     private Destination destination;

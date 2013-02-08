@@ -62,7 +62,7 @@ public class HASingletonInstaller implements DeploymentUnitProcessor {
                     .setInitialMode( Mode.ON_DEMAND )
                     .install();
 
-            HASingletonCoordinatorService coordinator = new HASingletonCoordinatorService( singletonController );
+            HASingletonCoordinatorService coordinator = new HASingletonCoordinatorService( singletonController, hasingletonId );
             phaseContext.getServiceTarget().addService( HASingleton.serviceName( unit ).append( "coordinator" ), coordinator )
                     .addDependency( channelServiceName, Channel.class, coordinator.getChannelInjector() )
                     .addDependency( Services.JBOSS_SERVICE_MODULE_LOADER, ModuleLoader.class, coordinator.getModuleLoaderInjector() )
