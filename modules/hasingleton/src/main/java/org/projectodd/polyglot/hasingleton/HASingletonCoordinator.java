@@ -33,15 +33,17 @@ import org.jgroups.Channel;
 
 public class HASingletonCoordinator implements GroupMembershipListener {
     
-    public HASingletonCoordinator(ServiceController<Void> haSingletonController, Value<Channel> channelRef, Value<ModuleLoader> moduleLoaderRef) {
+    public HASingletonCoordinator(ServiceController<Void> haSingletonController, Value<Channel> channelRef, Value<ModuleLoader> moduleLoaderRef, String clusterName) {
         this.haSingletonController = haSingletonController;
         this.channelRef = channelRef;
         this.moduleLoaderRef = moduleLoaderRef;
+        this.clusterName = clusterName;
     }
     
     public void start() throws Exception {
         Channel channel = channelRef.getValue();
-        log.info( "Connect to " + channel.getClusterName() );
+        log.info( "Connect to " + clusterName );
+        channel.connect( clusterName );
         this.service = new CoreGroupCommunicationService( SCOPE_ID, channelRef, moduleLoaderRef );
         this.service.setAllowSynchronousMembershipNotifications( true );
         this.service.registerGroupMembershipListener( this );
@@ -52,6 +54,8 @@ public class HASingletonCoordinator implements GroupMembershipListener {
     
     public void stop() throws Exception {
         this.service.stop();
+        log.info( "Disconnect from " + clusterName );
+        channelRef.getValue().disconnect();
     }
     
     protected boolean shouldBeMaster(List<ClusterNode> members) {
@@ -90,6 +94,7 @@ public class HASingletonCoordinator implements GroupMembershipListener {
     
     private Value<Channel> channelRef;
     private Value<ModuleLoader> moduleLoaderRef;
+    private String clusterName;
     private CoreGroupCommunicationService service;
     private ServiceController<Void> haSingletonController;
     public static final short SCOPE_ID = 248; // Must be different from any scopes AS7 uses internally

@@ -32,8 +32,9 @@ import org.jgroups.Channel;
 
 public class HASingletonCoordinatorService implements Service<HASingletonCoordinator> {
 
-    public HASingletonCoordinatorService(ServiceController<Void> haSingletonController) {
+    public HASingletonCoordinatorService(ServiceController<Void> haSingletonController, String clusterName) {
         this.haSingletonController = haSingletonController;
+        this.clusterName = clusterName;
     }
 
     @Override
@@ -45,7 +46,7 @@ public class HASingletonCoordinatorService implements Service<HASingletonCoordin
     public void start(StartContext context) throws StartException {
         log.info(  "Start HASingletonCoordinator"  );
         try {
-            this.coordinator = new HASingletonCoordinator( this.haSingletonController, channelInjector, moduleLoaderInjector );
+            this.coordinator = new HASingletonCoordinator( this.haSingletonController, channelInjector, moduleLoaderInjector, clusterName );
             this.coordinator.start();
         } catch (Exception e) {
             throw new StartException( e );
@@ -76,6 +77,7 @@ public class HASingletonCoordinatorService implements Service<HASingletonCoordin
     private InjectedValue<Channel> channelInjector = new InjectedValue<Channel>();
     private InjectedValue<ModuleLoader> moduleLoaderInjector = new InjectedValue<ModuleLoader>();
     private ServiceController<Void> haSingletonController;
+    private String clusterName;
     private HASingletonCoordinator coordinator;
 
 

@@ -24,7 +24,6 @@ import java.lang.reflect.Field;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.Session;
-import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
 import org.hornetq.api.core.HornetQException;
@@ -48,6 +47,7 @@ public abstract class BaseMessageProcessor implements MessageListener, MessageHa
         // Use HornetQ's Core API for message consumers where possible so we
         // get proper XA support. Otherwise, fall back to standard JMS.
         if (consumer instanceof HornetQMessageConsumer) {
+            log.trace( "Using HornetQ Core API for Message Processor " + getGroup().getName() );
             Field sessionField = consumer.getClass().getDeclaredField( "session" );
             sessionField.setAccessible( true );
             this.hornetQSession = (HornetQSession) sessionField.get( consumer );
@@ -106,6 +106,7 @@ public abstract class BaseMessageProcessor implements MessageListener, MessageHa
     @Override
     public void onMessage(final ClientMessage message) {
         HornetQMessage msg = HornetQMessage.createMessage( message, getCoreSession() );
+        log.trace( "MessageHandler.onMessage called for " + getGroup().getName() + " with messageId " + msg.getJMSMessageID() );
 
         try {
             msg.doBeforeReceive();
@@ -115,12 +116,14 @@ public abstract class BaseMessageProcessor implements MessageListener, MessageHa
         }
 
         if (isXAEnabled()) {
+            log.trace( "Preparing transaction for messageId " + msg.getJMSMessageID() );
             prepareTransaction();
         }
 
         if (transactedOrClientAck) {
            try {
               message.acknowledge();
+              log.trace( "Acknowledging messageId " + msg.getJMSMessageID() + " before calling onMessage" );
            } catch (HornetQException e) {
               log.error( "Failed to process message", e );
            }
@@ -133,6 +136,7 @@ public abstract class BaseMessageProcessor implements MessageListener, MessageHa
 
             if (!transactedOrClientAck) {
                 try {
+                    log.trace( "Rolling back messageId " + msg.getJMSMessageID() );
                     getCoreSession().rollback( true );
                     getHornetQSession().setRecoverCalled( true );
                 } catch (Exception e2) {
@@ -145,6 +149,7 @@ public abstract class BaseMessageProcessor implements MessageListener, MessageHa
            try {
               // We don't want to call this if the consumer was closed from inside onMessage
               if (!clientConsumer.isClosed() && !transactedOrClientAck) {
+                  log.trace( "Acknowledging messageId " + msg.getJMSMessageID() + " after calling onMessage" );
                  message.acknowledge();
               }
            } catch (Exception e) {

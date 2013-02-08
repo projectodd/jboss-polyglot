@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jboss</groupId>
     <artifactId>jboss-parent</artifactId>
-    <version>6-beta-1</version>
+    <version>10</version>
   </parent>
 
   <groupId>org.projectodd</groupId>
@@ -160,7 +160,7 @@
         </property>
       </activation>
       <properties>
-        <version.jbossas>7.1.x.incremental.129</version.jbossas>
+        <version.jbossas>7.x.incremental.668</version.jbossas>
       </properties>
     </profile>
     <profile>
