@@ -314,6 +314,14 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
         return this.durable;
     }
 
+    public boolean isSynchronous() {
+        return synchronous;
+    }
+
+    public void setSynchronous(boolean synchronous) {
+        this.synchronous = synchronous;
+    }
+
     public void setClientID(String clientID) {
         this.clientID = clientID;
     }
@@ -372,6 +380,7 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
     private String name;
     private String messageSelector;
     private boolean durable;
+    private boolean synchronous;
     private String clientID;
     private boolean xaEnabled = true;
     private boolean running = false;

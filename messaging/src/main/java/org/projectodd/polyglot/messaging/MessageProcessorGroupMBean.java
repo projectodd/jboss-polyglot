@@ -42,6 +42,8 @@ public interface MessageProcessorGroupMBean {
     String getStatus();
     
     boolean isDurable();
+
+    boolean isSynchronous();
     
     String getClientID();
 
