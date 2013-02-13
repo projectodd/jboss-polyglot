@@ -19,6 +19,8 @@
 
 package org.projectodd.polyglot.jobs;
 
+import static org.quartz.TriggerKey.triggerKey;
+
 import java.text.ParseException;
 import java.util.concurrent.TimeUnit;
 
@@ -30,14 +32,15 @@ import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.projectodd.polyglot.core.util.TimeInterval;
+import org.quartz.CronScheduleBuilder;
 import org.quartz.CronTrigger;
-import org.quartz.impl.triggers.CronTriggerImpl;
-import static org.quartz.TriggerKey.*;
 import org.quartz.Job;
+import org.quartz.JobBuilder;
+import org.quartz.JobDetail;
 import org.quartz.JobKey;
-import org.quartz.impl.JobDetailImpl;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
+import org.quartz.TriggerBuilder;
 
 public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseScheduledJobMBean {
     
@@ -82,20 +85,23 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
     }
    
     public synchronized void start() throws ParseException, SchedulerException {
-        this.jobDetail = new JobDetailImpl();
-        this.jobDetail.setGroup( this.group );
-        this.jobDetail.setName( this.name );
-        this.jobDetail.setDescription( this.description );
-        this.jobDetail.setJobClass( this.jobClass );
-        this.jobDetail.setRequestsRecovery( true );
+        this.jobDetail = JobBuilder.newJob(this.jobClass)
+                .withIdentity( this.name, this.group )
+                .withDescription( this.description )
+                .requestRecovery()
+                .build();
+                
         this.jobDetail.getJobDataMap().put("timeout", timeout);
         
-        CronTrigger trigger = new CronTriggerImpl( getTriggerName(), this.group, this.cronExpression );
-
+        CronTrigger trigger = TriggerBuilder.newTrigger()
+                .withIdentity( getTriggerName(), this.group )
+                .withSchedule( CronScheduleBuilder.cronSchedule( this.cronExpression ) )
+                .forJob( this.name, this.group )
+                .build();   
+        
         Scheduler scheduler = getScheduler();
 
         scheduler.scheduleJob( jobDetail, trigger );
-
     }
 
     public synchronized void stop() {
@@ -207,7 +213,7 @@ public class BaseScheduledJob implements Service<BaseScheduledJob>, BaseSchedule
     private String cronExpression;
     private TimeInterval timeout;
     
-    private JobDetailImpl jobDetail;
+    private JobDetail jobDetail;
     private boolean singleton;
 
     private static final Logger log = Logger.getLogger( "org.projectodd.polyglot.jobs" );
