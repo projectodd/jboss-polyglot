@@ -38,7 +38,7 @@ public class TimeoutListener implements JobListener {
     }
     
     @Override
-    public void started(final JobExecutionContext context, final BaseJob job) {
+    public void started(final JobExecutionContext context, final NotifiableJob job) {
         
         if (this.timeout.interval > 0) {
             
@@ -59,19 +59,19 @@ public class TimeoutListener implements JobListener {
     }
 
     @Override
-    public void finished(JobExecutionContext context, BaseJob job) {
+    public void finished(JobExecutionContext context, NotifiableJob job) {
         cancel();
 
     }
 
     @Override
-    public void error(JobExecutionContext context, BaseJob job,
+    public void error(JobExecutionContext context, NotifiableJob job,
             Exception exception) {
         cancel();
     }
 
     @Override
-    public void interrupted(BaseJob job) {
+    public void interrupted(NotifiableJob job) {
     }
     
     protected void cancel() {

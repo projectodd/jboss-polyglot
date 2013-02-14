@@ -19,12 +19,22 @@
 
 package org.projectodd.polyglot.jobs;
 
-import org.quartz.JobExecutionContext;
-
-public interface JobListener {
-
-    public void started(JobExecutionContext context, NotifiableJob job);
-    public void finished(JobExecutionContext context, NotifiableJob job);
-    public void error(JobExecutionContext context, NotifiableJob job, Exception exception);
-    public void interrupted(NotifiableJob job);
+public interface BaseJobMBean {
+    /** Start this job. */
+    void start() throws Exception;
+    
+    /** Stop this job. */
+    void stop() throws Exception;
+    
+    /** Restart this job. */
+    void restart() throws Exception;
+    
+    /** Get the timeout */
+    long getTimeout();
+    
+    /** Is this job currently started? */
+    boolean isStarted();
+    
+    /** Get current status. */
+    String getStatus();
 }

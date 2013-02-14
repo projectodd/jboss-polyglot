@@ -19,16 +19,7 @@
 
 package org.projectodd.polyglot.jobs;
 
-public interface BaseScheduledJobMBean {
-    /** Start this job. */
-    void start() throws Exception;
-    
-    /** Stop this job. */
-    void stop() throws Exception;
-    
-    /** Restart this job. */
-    void restart() throws Exception;
-    
+public interface BaseScheduledJobMBean extends BaseJobMBean {   
     /** reschedule the job with a new cronspec */
     void reschedule(String cronspec) throws Exception;
     
@@ -38,13 +29,4 @@ public interface BaseScheduledJobMBean {
     
     /** Retrieve the cronspec */
     String getCronExpression();
-    
-    /** Set the timeout */
-    long getTimeout();
-    
-    /** Is this job currently started? */
-    boolean isStarted();
-    
-    /** Get current status. */
-    String getStatus();
 }
