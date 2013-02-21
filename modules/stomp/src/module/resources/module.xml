@@ -26,8 +26,6 @@
 
     <resources>
         <resource-root path="${project.artifactId}.jar"/>
-        <resource-root path="polyglot-core.jar"/>
-        <resource-root path="polyglot-web.jar"/>
 
         <resource-root path="stilts-stomp-api.jar"/>
         <resource-root path="stilts-stomp-common.jar"/>
@@ -57,6 +55,8 @@
         <module name="org.jboss.logging"/>
         <module name="org.jboss.vfs"/>
         <module name="org.jboss.netty"/>
+        <module name="org.projectodd.polyglot.core"/>
+        <module name="org.projectodd.polyglot.web"/>
     </dependencies>
 </module>
 

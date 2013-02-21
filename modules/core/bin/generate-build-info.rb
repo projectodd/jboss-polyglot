@@ -4,7 +4,7 @@ require 'java'
 require 'rexml/document'
 
 class BuildInfo
-  PARENT_POM = File.dirname( __FILE__ ) + '/../../pom.xml'
+  PARENT_POM = File.dirname( __FILE__ ) + '/../../../pom.xml'
   PROPS_FILE = File.dirname( __FILE__ ) + '/../target/classes/org/projectodd/polyglot/polyglot.properties'
     
   def initialize()

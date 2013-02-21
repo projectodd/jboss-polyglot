@@ -29,8 +29,8 @@ import java.util.Map;
 import java.util.Properties;
 
 public class BuildInfo {
-    public BuildInfo(String propertiesPath) throws IOException {
-        InputStream buildInfoStream = getClass().getClassLoader().getResourceAsStream( propertiesPath );
+    public BuildInfo(ClassLoader classLoader, String propertiesPath) throws IOException {
+        InputStream buildInfoStream = classLoader.getResourceAsStream( propertiesPath );
         Properties props = new Properties();
 
         props.load( buildInfoStream );

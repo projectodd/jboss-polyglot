@@ -26,7 +26,6 @@
 
     <resources>
         <resource-root path="${project.artifactId}.jar"/>
-        <resource-root path="polyglot-core.jar"/>
     </resources>
 
     <dependencies>
@@ -42,6 +41,7 @@
         <module name="org.jboss.logging"/>
         <module name="org.jboss.vfs"/>
         <module name="org.jgroups"/>
+        <module name="org.projectodd.polyglot.core"/>
     </dependencies>
 </module>
 

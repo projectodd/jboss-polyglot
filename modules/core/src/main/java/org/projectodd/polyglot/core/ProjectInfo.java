@@ -34,7 +34,7 @@ public class ProjectInfo {
 
     public ProjectInfo(String projectName, String propertiesPath) throws IOException {
         this.projectName = projectName;
-        this.buildInfo = new BuildInfo( propertiesPath );
+        this.buildInfo = new BuildInfo( getClass().getClassLoader(), propertiesPath );
     }
     
     /**
