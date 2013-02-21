@@ -46,10 +46,10 @@ public abstract class AbstractBootstrappableExtension implements Extension {
                 }
             } 
             String bootstrapperClassName = props.getProperty( "org.projectodd.polyglot.core.bootstrap.class" );
-
+            
             if (bootstrapperClassName != null) {
                 try {
-                    Class.forName( bootstrapperClassName );
+                    Class.forName( bootstrapperClassName, true, this.getClass().getClassLoader() );
                 } catch (ClassNotFoundException e) {
                     // this is ignorable in most cases
                     log.debug( "Failed to find boostrap class " + bootstrapperClassName + ": " + e );
