@@ -38,16 +38,21 @@ public class ApplicationNamingContextBindingProcessor implements DeploymentUnitP
             return;
         }
 
-        NamingStoreService contextService = new NamingStoreService();
         ServiceName contextServiceName = ContextNames.JAVA_CONTEXT_SERVICE_NAME.append( "queue" ).append( appMetaData.getApplicationName() );
+        
+        if (phaseContext.getServiceRegistry().getService( contextServiceName ) != null) {
+            return;
+        }
+        
+        NamingStoreService contextService = new NamingStoreService();
         phaseContext.getServiceTarget().addService( contextServiceName, contextService )
                 .install();
         
         NamingStoreService tasksService = new NamingStoreService();
-        ServiceName tasksServiceName = contextServiceName.append(  "tasks"  );
+        ServiceName tasksServiceName = contextServiceName.append( "tasks" );
         
         phaseContext.getServiceTarget().addService( tasksServiceName, tasksService )
-            .addDependency(  contextServiceName )
+            .addDependency( contextServiceName )
             .install();
 
     }
