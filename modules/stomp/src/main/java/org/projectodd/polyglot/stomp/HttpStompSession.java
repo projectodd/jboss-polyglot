@@ -74,6 +74,10 @@ public class HttpStompSession implements StompSession {
     public void endAccess() {
         ((Session)this.webSession).endAccess();
     }
+    
+    public HttpSession getHttpSession() {
+        return this.webSession;
+    }
 
     private HttpSession webSession;
 
