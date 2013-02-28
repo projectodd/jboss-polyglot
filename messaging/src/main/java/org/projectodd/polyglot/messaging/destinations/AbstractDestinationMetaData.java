@@ -36,7 +36,41 @@ public class AbstractDestinationMetaData {
     public void setName(String name) {
         this.name = name;
     }
-    
+
+    public String getRemoteHost() {
+        return remoteHost;
+    }
+
+    public void setRemoteHost(String remoteHost) {
+        this.remoteHost = remoteHost;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public boolean isRemote() {
+        if (remoteHost != null && !remoteHost.isEmpty())
+            return true;
+
+        return false;
+    }
+
     private String name;
+    private String remoteHost;
+    private String username;
+    private String password;
 
 }

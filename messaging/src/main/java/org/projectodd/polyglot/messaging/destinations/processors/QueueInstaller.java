@@ -24,7 +24,6 @@ import java.util.concurrent.ExecutorService;
 
 import org.hornetq.jms.server.JMSServerManager;
 import org.jboss.as.messaging.MessagingServices;
-import org.jboss.as.messaging.jms.JMSQueueService;
 import org.jboss.as.messaging.jms.JMSServices;
 import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
@@ -60,7 +59,8 @@ public class QueueInstaller implements DeploymentUnitProcessor {
         List<QueueMetaData> allMetaData = unit.getAttachmentList( QueueMetaData.ATTACHMENTS_KEY );
 
         for (QueueMetaData each : allMetaData) {
-            deploy( phaseContext.getServiceTarget(), each );
+            if (!each.isRemote())
+                deploy( phaseContext.getServiceTarget(), each );
         }
 
     }
@@ -82,7 +82,7 @@ public class QueueInstaller implements DeploymentUnitProcessor {
     }
 
     public static ServiceName deploy(ServiceTarget serviceTarget, QueueMetaData queue) {
-        return deploy( serviceTarget, 
+        return deploy( serviceTarget,
                        new DestroyableJMSQueueService( queue.getName(), queue.getSelector(), 
                                                        queue.isDurable(), new String[] { DestinationUtils.jndiName( queue.getName() ) } ),
                                                        queue.getName() );

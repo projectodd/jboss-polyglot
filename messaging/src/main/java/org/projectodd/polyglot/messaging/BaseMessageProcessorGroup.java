@@ -88,13 +88,11 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
                 }
 
                 try {
-                    installMessageProcessors();
+                    start();
                 } catch (Exception e) {
                     context.failed( new StartException( e ) );
                 }
 
-                BaseMessageProcessorGroup.this.running = true;
-    
                 if (async) {
                     context.complete();
                 }
@@ -114,11 +112,11 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
     @Override
     public void stop(StopContext context) {
         try {
+            stop();
             this.connection.close();
-        } catch (JMSException e) {
+        } catch (Exception e) {
             log.error( "Error stopping consumer connection", e );
         }
-
     }
 
     @Override
@@ -132,6 +130,7 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
         }
 
         installMessageProcessors();
+
         this.running = true;
     }
 
@@ -143,6 +142,7 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
         for (BaseMessageProcessor processor : messageProcessors) {
             stopConsumer(processor);
         }
+
         this.running = false;
     }
 
@@ -373,12 +373,12 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
         this.startAsynchronously = startAsynchronously;
     }
 
-    private boolean startAsynchronously = true;
+    protected boolean startAsynchronously = true;
     private Class<? extends BaseMessageProcessor> messageProcessorClass;
-    private Connection connection;
+    protected Connection connection;
     private ServiceRegistry serviceRegistry;
-    private String destinationName;
-    private Destination destination;
+    protected String destinationName;
+    protected Destination destination;
     private ServiceName baseServiceName;
     private String name;
     private String messageSelector;
@@ -386,7 +386,7 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
     private boolean synchronous;
     private String clientID;
     private boolean xaEnabled = true;
-    private boolean running = false;
+    protected boolean running = false;
     private int concurrency;
     private List<BaseMessageProcessor> messageProcessors = new ArrayList<BaseMessageProcessor>();
     private final InjectedValue<ManagedReferenceFactory> connectionFactoryInjector = new InjectedValue<ManagedReferenceFactory>();

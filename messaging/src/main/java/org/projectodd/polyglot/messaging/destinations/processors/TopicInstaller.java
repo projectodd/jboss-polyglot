@@ -59,7 +59,8 @@ public class TopicInstaller implements DeploymentUnitProcessor {
         List<TopicMetaData> allMetaData = unit.getAttachmentList( TopicMetaData.ATTACHMENTS_KEY );
 
         for (TopicMetaData each : allMetaData) {
-            deploy( phaseContext.getServiceTarget(), each );
+            if (!each.isRemote())
+                deploy( phaseContext.getServiceTarget(), each );
         }
 
     }
