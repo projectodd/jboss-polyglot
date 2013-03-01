@@ -61,6 +61,7 @@ public class StompSubsystemParser implements XMLStreamConstants, XMLElementReade
         ModelNode subsystem = StompSubsystemAdd.createOperation( address );
 
         String bindingRef = null;
+        String secureBindingRef = null;
 
         final int count = reader.getAttributeCount();
         for (int i = 0; i < count; i++) {
@@ -69,6 +70,8 @@ public class StompSubsystemParser implements XMLStreamConstants, XMLElementReade
             final String name = reader.getAttributeLocalName( i );
             if (name.equals( "socket-binding" )) {
                 bindingRef = value;
+            } else if (name.equals( "secure-socket-binding" )) {
+                secureBindingRef = value;
             } else {
                 throw unexpectedAttribute( reader, i );
             }
@@ -79,6 +82,9 @@ public class StompSubsystemParser implements XMLStreamConstants, XMLElementReade
         }
 
         subsystem.get( "socket-binding" ).set( bindingRef );
+        if (secureBindingRef != null) {
+            subsystem.get( "secure-socket-binding" ).set( secureBindingRef );
+        }
 
         requireNoContent( reader );
 
@@ -89,6 +95,9 @@ public class StompSubsystemParser implements XMLStreamConstants, XMLElementReade
     public void writeContent(final XMLExtendedStreamWriter writer, final SubsystemMarshallingContext context) throws XMLStreamException {
         context.startSubsystemElement( Namespace.CURRENT.getUriString(), false );
         writer.writeAttribute( "socket-binding", context.getModelNode().get( "socket-binding" ).asString() );
+        if (context.getModelNode().has( "secure-socket-binding" )) {
+            writer.writeAttribute( "secure-socket-binding", context.getModelNode().get( "secure-socket-binding" ).asString() );
+        }
         writer.writeEndElement();
     }
 

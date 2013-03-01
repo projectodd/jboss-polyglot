@@ -21,7 +21,7 @@ package org.projectodd.polyglot.stomp;
 
 import javax.transaction.TransactionManager;
 
-import org.jboss.as.network.SocketBinding;
+import org.jboss.logging.Logger;
 import org.jboss.msc.inject.Injector;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
@@ -32,26 +32,26 @@ import org.projectodd.stilts.stomplet.server.StompletServer;
 
 public class StompletServerService implements Service<StompletServer> {
 
-    public StompletServerService(StompletServer server) {
-        this.server = server;
+    public StompletServerService() {
     }
 
     @Override
     public StompletServer getValue() throws IllegalStateException, IllegalArgumentException {
+        log.info( "GET_VALUE: "+ this.server);
         return this.server;
     }
 
     @Override
     public void start(StartContext context) throws StartException {
-        SocketBinding binding = this.bindingInjector.getValue();
+        log.info( "START STOMPLET SERVICE" );
+        this.server = new StompletServer();
         try {
-        	this.server.setBindAddress( binding.getSocketAddress().getAddress() );
-        	this.server.setPort( binding.getSocketAddress().getPort() );
             this.server.setTransactionManager( this.transactionManagerInjector.getValue() );
             this.server.start();
         } catch (Exception e) {
-            context.failed( new StartException( e ) );
+            throw new StartException( e );
         }
+        log.info( "STARTED STOMPLET SERVICE" );
     }
 
     @Override
@@ -67,13 +67,8 @@ public class StompletServerService implements Service<StompletServer> {
         return this.transactionManagerInjector;
     }
     
-    public Injector<SocketBinding> getBindingInjector() {
-        return this.bindingInjector;
-    }
-
-
     private StompletServer server;
     private InjectedValue<TransactionManager> transactionManagerInjector = new InjectedValue<TransactionManager>();
-    private InjectedValue<SocketBinding> bindingInjector = new InjectedValue<SocketBinding>();
     
+    static final Logger log = Logger.getLogger( "org.projectodd.polyglot.stomp.as" );
 }

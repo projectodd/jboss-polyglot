@@ -19,15 +19,15 @@
 
 package org.projectodd.polyglot.stomp.as;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
-import static org.projectodd.polyglot.core.processors.RootedDeploymentProcessor.rootSafe;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.projectodd.polyglot.core.processors.RootedDeploymentProcessor.*;
 
 import java.util.List;
 
+import javax.net.ssl.SSLContext;
 import javax.transaction.TransactionManager;
 
+import org.apache.catalina.connector.Connector;
 import org.jboss.as.controller.AbstractBoottimeAddStepHandler;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
@@ -37,14 +37,18 @@ import org.jboss.as.server.AbstractDeploymentChainStep;
 import org.jboss.as.server.DeploymentProcessorTarget;
 import org.jboss.as.server.deployment.Phase;
 import org.jboss.as.txn.service.TxnServices;
+import org.jboss.as.web.WebSubsystemServices;
 import org.jboss.dmr.ModelNode;
 import org.jboss.logging.Logger;
 import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceController.Mode;
+import org.projectodd.polyglot.stomp.InsecureStompConnectorService;
+import org.projectodd.polyglot.stomp.SSLContextService;
+import org.projectodd.polyglot.stomp.SecureStompConnectorService;
 import org.projectodd.polyglot.stomp.StompWebAdjuster;
 import org.projectodd.polyglot.stomp.StompletServerService;
 import org.projectodd.polyglot.stomp.processors.SessionManagerInstaller;
-import org.projectodd.polyglot.stomp.processors.StompApplicationDefaultsProcessor;
 import org.projectodd.polyglot.stomp.processors.StompletContainerInstaller;
 import org.projectodd.stilts.stomplet.server.StompletServer;
 
@@ -52,7 +56,14 @@ public class StompSubsystemAdd extends AbstractBoottimeAddStepHandler {
 
     @Override
     protected void populateModel(ModelNode operation, ModelNode subModel) {
+        log.info( "STOMP socket binding: " + operation.get( "socket-binding" ) );
+        log.info( "STOMP secure socket binding: " + operation.get( "secure-socket-binding" ) );
+
         subModel.get( "socket-binding" ).set( operation.get( "socket-binding" ) );
+        if (operation.has( "secure-socket-binding" )) {
+            log.info( "has a secure socket binding" );
+            subModel.get( "secure-socket-binding" ).set( operation.get( "secure-socket-binding" ) );
+        }
     }
 
     @Override
@@ -62,41 +73,102 @@ public class StompSubsystemAdd extends AbstractBoottimeAddStepHandler {
         context.addStep( new AbstractDeploymentChainStep() {
             @Override
             protected void execute(DeploymentProcessorTarget processorTarget) {
+                log.info( "START STEP" );
                 final String bindingRef = operation.require( "socket-binding" ).asString();
                 addDeploymentProcessors( processorTarget, bindingRef );
+                log.info( "COMPLETED STEP" );
             }
         }, OperationContext.Stage.RUNTIME );
-        
+
         try {
             addCoreServices( context, operation, model, verificationHandler, newControllers );
         } catch (Exception e) {
-            throw new OperationFailedException( e, null );
+            throw new OperationFailedException( e.getMessage(), e );
         }
     }
 
     protected void addCoreServices(OperationContext context, ModelNode operation, ModelNode model, ServiceVerificationHandler verificationHandler,
             List<ServiceController<?>> newControllers) {
+        addSSLContextService( context, operation, model, verificationHandler, newControllers );
         addStompletServer( context, operation, model, verificationHandler, newControllers );
+        addInsecureConnector( context, operation, model, verificationHandler, newControllers );
+        addSecureConnector( context, operation, model, verificationHandler, newControllers );
     }
 
-    private void addStompletServer(OperationContext context, ModelNode operation, ModelNode model, ServiceVerificationHandler verificationHandler,
+    private void addSSLContextService(OperationContext context, ModelNode operation, ModelNode model, ServiceVerificationHandler verificationHandler,
             List<ServiceController<?>> newControllers) {
-        StompletServer server = new StompletServer();
-        StompletServerService service = new StompletServerService( server );
 
-        final String bindingRef = operation.require( "socket-binding" ).asString();
+        SSLContextService service = new SSLContextService();
 
-        ServiceController<StompletServer> controller = context.getServiceTarget().addService( StompServices.SERVER, service )
-                .addDependency( TxnServices.JBOSS_TXN_TRANSACTION_MANAGER, TransactionManager.class, service.getTransactionManagerInjector() )
-                .addDependency( SocketBinding.JBOSS_BINDING_NAME.append( bindingRef ), SocketBinding.class, service.getBindingInjector() )
-                .setInitialMode( Mode.ON_DEMAND )
+        ServiceController<SSLContext> controller = context.getServiceTarget().addService( StompServices.SSL_CONTEXT, service )
+                .addDependency( WebSubsystemServices.JBOSS_WEB_CONNECTOR.append( "https" ), Connector.class, service.getWebConnectorInjector() )
+                .setInitialMode( Mode.PASSIVE )
                 .addListener( verificationHandler )
                 .install();
 
         newControllers.add( controller );
 
     }
-    
+
+    private void addStompletServer(OperationContext context, ModelNode operation, ModelNode model, ServiceVerificationHandler verificationHandler,
+            List<ServiceController<?>> newControllers) {
+        StompletServerService service = new StompletServerService();
+
+        ServiceController<StompletServer> controller = context.getServiceTarget().addService( StompServices.SERVER, service )
+                .addDependency( TxnServices.JBOSS_TXN_TRANSACTION_MANAGER, TransactionManager.class, service.getTransactionManagerInjector() )
+                .setInitialMode( Mode.ON_DEMAND )
+                .addListener( verificationHandler )
+                .install();
+
+        newControllers.add( controller );
+    }
+
+    private void addInsecureConnector(OperationContext context, ModelNode operation, ModelNode model, ServiceVerificationHandler verificationHandler,
+            List<ServiceController<?>> newControllers) {
+        final String bindingRef = operation.require( "socket-binding" ).asString();
+
+        InsecureStompConnectorService service = new InsecureStompConnectorService();
+        ServiceController<org.projectodd.stilts.stomp.server.Connector> controller = context.getServiceTarget()
+                .addService( StompServices.CONNECTOR.append( "insecure" ), service )
+                .addDependency( SocketBinding.JBOSS_BINDING_NAME.append( bindingRef ), SocketBinding.class, service.getSocketBindingInjector() )
+                .addDependency( StompServices.SERVER, StompletServer.class, service.getStompletServerInjector() )
+                .setInitialMode( Mode.PASSIVE )
+                .addListener( verificationHandler )
+                .install();
+
+        newControllers.add( controller );
+    }
+
+    private void addSecureConnector(OperationContext context, ModelNode operation, ModelNode model, ServiceVerificationHandler verificationHandler,
+            List<ServiceController<?>> newControllers) {
+        final String bindingRef = operation.get( "secure-socket-binding" ).asString();
+
+        if (!operation.has( "secure-socket-binding" )) {
+            return;
+        }
+        
+        log.info( "SECURE STOMP ON: " + bindingRef );
+        
+        ServiceController<?> bindingService = context.getServiceRegistry( true  ).getService( SocketBinding.JBOSS_BINDING_NAME.append( bindingRef ) );
+        if ( bindingService != null ) {
+            log.info( "activating secure stomp binding" );
+            bindingService.setMode( Mode.ACTIVE );
+        }
+
+        SecureStompConnectorService service = new SecureStompConnectorService();
+        ServiceController<org.projectodd.stilts.stomp.server.Connector> controller = context.getServiceTarget()
+                .addService( StompServices.CONNECTOR.append( "secure" ), service )
+                .addDependency( SocketBinding.JBOSS_BINDING_NAME.append( bindingRef ), SocketBinding.class, service.getSocketBindingInjector() )
+                .addDependency( StompServices.SERVER, StompletServer.class, service.getStompletServerInjector() )
+                .addDependency( StompServices.SSL_CONTEXT, SSLContext.class, service.getSSLContextInjector() )
+                .setInitialMode( Mode.PASSIVE )
+                .addListener( verificationHandler )
+                .install();
+        
+
+        newControllers.add( controller );
+    }
+
     protected void addDeploymentProcessors(final DeploymentProcessorTarget processorTarget, String socketBindingRef) {
         processorTarget.addDeploymentProcessor( StompExtension.SUBSYSTEM_NAME, Phase.PARSE, 1031, rootSafe( new StompWebAdjuster() ) );
         processorTarget.addDeploymentProcessor( StompExtension.SUBSYSTEM_NAME, Phase.DEPENDENCIES, 5, rootSafe( new StompDependenciesProcessor() ) );

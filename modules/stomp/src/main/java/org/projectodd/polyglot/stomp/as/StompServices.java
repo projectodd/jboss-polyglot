@@ -29,6 +29,9 @@ public class StompServices {
     public static final ServiceName POLYGLOT = ServiceName.of( "polyglot" );
     public static final ServiceName STOMP = POLYGLOT.append( "stomp" );
     public static final ServiceName SERVER = STOMP.append( "server" );
+    public static final ServiceName CONNECTOR = SERVER.append( "connector" );
+    
+    public static final ServiceName SSL_CONTEXT = STOMP.append( "ssl-context" );
     
     public static ServiceName container(DeploymentUnit unit) {
         return unit.getServiceName().append( "stomp", "container" );
