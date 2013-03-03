@@ -68,6 +68,19 @@ public class AbstractDestinationMetaData {
         return false;
     }
 
+    public boolean isExported() {
+        return exported;
+    }
+
+    public void setExported(boolean exported) {
+        this.exported = exported;
+    }
+
+    /**
+     * If the destination should be available via the 'jboss/exported' JNDI context
+     * for remote lookups
+     */
+    private boolean exported = false;
     private String name;
     private String remoteHost;
     private String username;

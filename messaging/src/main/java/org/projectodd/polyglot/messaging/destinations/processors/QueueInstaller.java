@@ -19,6 +19,7 @@
 
 package org.projectodd.polyglot.messaging.destinations.processors;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -82,9 +83,13 @@ public class QueueInstaller implements DeploymentUnitProcessor {
     }
 
     public static ServiceName deploy(ServiceTarget serviceTarget, QueueMetaData queue) {
+        String[] jndis = DestinationUtils.jndiNames(queue.getName(), queue.isExported());
+
+        log.debugf("JNDI names to bind the '%s' queue to: %s", queue.getName(), Arrays.toString(jndis));
+
         return deploy( serviceTarget,
                        new DestroyableJMSQueueService( queue.getName(), queue.getSelector(), 
-                                                       queue.isDurable(), new String[] { DestinationUtils.jndiName( queue.getName() ) } ),
+                                                       queue.isDurable(), jndis ),
                                                        queue.getName() );
     }
 

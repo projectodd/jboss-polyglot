@@ -19,6 +19,7 @@
 
 package org.projectodd.polyglot.messaging;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.util.HashMap;
@@ -55,5 +56,10 @@ public class DestinationUtilsTest {
             assert(false);
         }
         
+    }
+
+    @Test
+    public void testJndiNames() throws Exception {
+        assertArrayEquals(DestinationUtils.jndiNames("/queue/test", true), new String[]{"queue/test", "jboss/exported/queue/test"});
     }
 }

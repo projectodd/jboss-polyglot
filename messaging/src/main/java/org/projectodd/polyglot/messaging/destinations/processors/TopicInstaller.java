@@ -19,6 +19,7 @@
 
 package org.projectodd.polyglot.messaging.destinations.processors;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -84,8 +85,12 @@ public class TopicInstaller implements DeploymentUnitProcessor {
     }
 
     public static ServiceName deploy(ServiceTarget serviceTarget, TopicMetaData topic) {
+        String[] jndis = DestinationUtils.jndiNames(topic.getName(), topic.isExported());
+
+        log.debugf("JNDI names to bind the '%s' topic to: %s", topic.getName(), Arrays.toString(jndis));
+
         return deploy( serviceTarget,
-                       new DestroyableJMSTopicService(topic.getName(), new String[] { DestinationUtils.jndiName( topic.getName() ) } ),
+                       new DestroyableJMSTopicService(topic.getName(), jndis ),
                        topic.getName() );
     }
 
