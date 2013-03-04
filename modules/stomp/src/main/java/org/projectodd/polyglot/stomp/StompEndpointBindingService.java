@@ -31,9 +31,10 @@ import org.jboss.msc.value.InjectedValue;
 
 public class StompEndpointBindingService implements Service<String> {
 
-    public StompEndpointBindingService(String hostName, String context) {
+    public StompEndpointBindingService(String hostName, String context, boolean secure) {
         this.hostName = hostName;
         this.context = context;
+        this.secure = secure;
     }
 
     @Override
@@ -70,9 +71,9 @@ public class StompEndpointBindingService implements Service<String> {
             host = socketBindingInjector.getValue().getAddress().getHostAddress();
         }
         
-        this.binding = new StompEndpointBinding( host, port, this.context );
+        this.binding = new StompEndpointBinding( host, port, this.context, this.secure );
 
-        log.info( "Advertising STOMP binding: " + this.binding );
+        log.info( "Advertising STOMP binding: " + this.binding + ( this.secure ? " (SSL)" : "" ));
     }
 
     @Override
@@ -83,7 +84,7 @@ public class StompEndpointBindingService implements Service<String> {
     public Injector<SocketBinding> getSocketBindingInjector() {
         return this.socketBindingInjector;
     }
-
+    
     public Injector<VirtualHost> getVirtualHostInjector() {
         return this.virtualHostInjector;
     }
@@ -96,5 +97,6 @@ public class StompEndpointBindingService implements Service<String> {
     private StompEndpointBinding binding;
     private String hostName;
     private String context;
+    private boolean secure;
 
 }

@@ -25,22 +25,26 @@ import org.jboss.msc.service.ServiceName;
 
 public class StompServices {
     public static final ModuleIdentifier MODULE_IDENTIFIER = ModuleIdentifier.create( "org.projectodd.polyglot.stomp" );
-    
+
     public static final ServiceName POLYGLOT = ServiceName.of( "polyglot" );
     public static final ServiceName STOMP = POLYGLOT.append( "stomp" );
     public static final ServiceName SERVER = STOMP.append( "server" );
     public static final ServiceName CONNECTOR = SERVER.append( "connector" );
-    
+
     public static final ServiceName SSL_CONTEXT = STOMP.append( "ssl-context" );
-    
+
     public static ServiceName container(DeploymentUnit unit) {
         return unit.getServiceName().append( "stomp", "container" );
     }
-    
-    public static ServiceName endpointBinding(DeploymentUnit unit) {
-        return container( unit ).append( "endpoint-binding" );
+
+    public static ServiceName endpointBinding(DeploymentUnit unit, boolean secure) {
+        if (secure) {
+            return container( unit ).append( "endpoint-binding" ).append( "secure" );
+        } else {
+            return container( unit ).append( "endpoint-binding" );
+        }
     }
-    
+
     public static ServiceName stomplet(DeploymentUnit unit, String name) {
         return container( unit ).append( name );
     }

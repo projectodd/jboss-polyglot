@@ -22,20 +22,22 @@ package org.projectodd.polyglot.stomp;
 
 public class StompEndpointBinding {
     
-    public StompEndpointBinding(String host, int port, String context) {
+    public StompEndpointBinding(String host, int port, String context, boolean secure) {
         this.host = host;
         this.port = port;
         this.context = context;
+        this.secure = secure;
     }
 
     public String getEndpointURL() {
-        return "ws://" + this.host + ":" + this.port + this.context;
+        return ( this.secure ? "wss" : "ws" ) + "://" + this.host + ":" + this.port + this.context;
     }
     
     public String toString() {
         return getEndpointURL();
     }
     
+    private boolean secure;
     private String host;
     private int port;
     private String context;

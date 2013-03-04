@@ -38,95 +38,94 @@ import org.junit.Test;
 import org.projectodd.polyglot.stomp.StompEndpointBindingService;
 
 public class StompEndpointBindingServiceTest {
-    
+
     @Test
     public void testWithoutVirtualHost() throws Exception {
-        StompEndpointBindingService service = new StompEndpointBindingService( null, "/"  );
-        
+        StompEndpointBindingService service = new StompEndpointBindingService( null, "/", false );
+
         InetAddress address = InetAddress.getByAddress( new byte[] { 10, 42, 42, 2 } );
         Collection<NetworkInterface> networkInterfaces = new ArrayList<NetworkInterface>();
         NetworkInterfaceBinding networkInterfaceBinding = new NetworkInterfaceBinding( networkInterfaces, address );
         SocketBindingManager socketBindingManager = new SocketBindingManagerService( 0 );
-        SocketBinding socketBinding = new SocketBinding("stomp", 8675, false, null, 0, networkInterfaceBinding, socketBindingManager, null );
+        SocketBinding socketBinding = new SocketBinding( "stomp", 8675, false, null, 0, networkInterfaceBinding, socketBindingManager, null );
         service.getSocketBindingInjector().inject( socketBinding );
-        
+
         StartContext context = new MockStartContext();
         service.start( context );
         String binding = service.getValue();
-        
+
         assertNotNull( binding );
-        
+
         assertEquals( "ws://10.42.42.2:8675/", binding );
     }
-    
+
     @Test
     public void testWithStompVirtualHost() throws Exception {
-        StompEndpointBindingService service = new StompEndpointBindingService( "tacos.com", "/"  );
-        
+        StompEndpointBindingService service = new StompEndpointBindingService( "tacos.com", "/", false );
+
         InetAddress address = InetAddress.getByAddress( new byte[] { 10, 42, 42, 2 } );
         Collection<NetworkInterface> networkInterfaces = new ArrayList<NetworkInterface>();
         NetworkInterfaceBinding networkInterfaceBinding = new NetworkInterfaceBinding( networkInterfaces, address );
         SocketBindingManager socketBindingManager = new SocketBindingManagerService( 0 );
-        SocketBinding socketBinding = new SocketBinding("stomp", 8675, false, null, 0, networkInterfaceBinding, socketBindingManager, null );
+        SocketBinding socketBinding = new SocketBinding( "stomp", 8675, false, null, 0, networkInterfaceBinding, socketBindingManager, null );
         service.getSocketBindingInjector().inject( socketBinding );
-        
+
         StartContext context = new MockStartContext();
         service.start( context );
         String binding = service.getValue();
-        
+
         assertNotNull( binding );
-        
+
         assertEquals( "ws://tacos.com:8675/", binding );
     }
-    
-    
+
     @Test
     public void testWithWebVirtualHost() throws Exception {
-        StompEndpointBindingService service = new StompEndpointBindingService( null, "/" );
-        
+        StompEndpointBindingService service = new StompEndpointBindingService( null, "/", false );
+
         InetAddress address = InetAddress.getByAddress( new byte[] { 10, 42, 42, 2 } );
         Collection<NetworkInterface> networkInterfaces = new ArrayList<NetworkInterface>();
         NetworkInterfaceBinding networkInterfaceBinding = new NetworkInterfaceBinding( networkInterfaces, address );
         SocketBindingManager socketBindingManager = new SocketBindingManagerService( 0 );
-        SocketBinding socketBinding = new SocketBinding("stomp", 8675, false, null, 0, networkInterfaceBinding, socketBindingManager, null );
+        SocketBinding socketBinding = new SocketBinding( "stomp", 8675, false, null, 0, networkInterfaceBinding, socketBindingManager, null );
         service.getSocketBindingInjector().inject( socketBinding );
-        
+
         Host host = new StandardHost();
         host.setName( "fajitas.com" );
         VirtualHost virtualHost = new VirtualHost( host, false );
-        service.getVirtualHostInjector().inject(  virtualHost  );
-        
+        service.getVirtualHostInjector().inject( virtualHost );
+
         StartContext context = new MockStartContext();
         service.start( context );
         String binding = service.getValue();
-        
+
         assertNotNull( binding );
-        
+
         assertEquals( "ws://fajitas.com:8675/", binding );
     }
-    
+
     @Test
     public void testWithStompAndWebVirtualHost() throws Exception {
-        StompEndpointBindingService service = new StompEndpointBindingService( "tacos.com", "/" );
-        
+        StompEndpointBindingService service = new StompEndpointBindingService( "tacos.com", "/", false );
+
         InetAddress address = InetAddress.getByAddress( new byte[] { 10, 42, 42, 2 } );
         Collection<NetworkInterface> networkInterfaces = new ArrayList<NetworkInterface>();
         NetworkInterfaceBinding networkInterfaceBinding = new NetworkInterfaceBinding( networkInterfaces, address );
         SocketBindingManager socketBindingManager = new SocketBindingManagerService( 0 );
-        SocketBinding socketBinding = new SocketBinding("stomp", 8675, false, null, 0, networkInterfaceBinding, socketBindingManager, null );
+        SocketBinding socketBinding = new SocketBinding( "stomp", 8675, false, null, 0, networkInterfaceBinding, socketBindingManager, null );
         service.getSocketBindingInjector().inject( socketBinding );
-        
+
         Host host = new StandardHost();
         host.setName( "fajitas.com" );
         VirtualHost virtualHost = new VirtualHost( host, false );
-        service.getVirtualHostInjector().inject(  virtualHost  );
-        
+        service.getVirtualHostInjector().inject( virtualHost );
+
         StartContext context = new MockStartContext();
         service.start( context );
         String binding = service.getValue();
-        
+
         assertNotNull( binding );
-        
+
         assertEquals( "ws://tacos.com:8675/", binding );
     }
 

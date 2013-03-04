@@ -28,13 +28,11 @@ public class SSLContextService implements Service<SSLContext> {
 
     @Override
     public SSLContext getValue() throws IllegalStateException, IllegalArgumentException {
-        log.info( "GET SSL CONTEXT: " + this.sslContext );
         return this.sslContext;
     }
 
     @Override
     public void start(StartContext context) throws StartException {
-        log.info( "**** starting SSL context service" );
         Connector connector = connectorInjector.getValue();
 
         ProtocolHandler handler = connector.getProtocolHandler();
@@ -54,12 +52,6 @@ public class SSLContextService implements Service<SSLContext> {
             algorithm = "SunX509";
         }
         
-        log.info( "keystore: " + keystorePath );
-        log.info( "password: " + keystorePassword );
-        log.info( "type: " + keystoreType );
-        log.info( "protocols: " + protocols );
-        log.info( "algorithm: " + algorithm );
-
         try {
             this.sslContext = SSLContext.getInstance( protocols );
 
@@ -88,7 +80,6 @@ public class SSLContextService implements Service<SSLContext> {
         } catch (IOException e) {
             throw new StartException( e );
         }
-
     }
 
     @Override

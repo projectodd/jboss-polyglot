@@ -42,8 +42,9 @@ import org.projectodd.stilts.stomplet.server.StompletServer;
 
 public class StompletContainerInstaller implements DeploymentUnitProcessor {
 
-    public StompletContainerInstaller(String socketBindingRef) {
+    public StompletContainerInstaller(String socketBindingRef, String secureSocketBindingRef) {
         this.socketBindingRef = socketBindingRef;
+        this.secureSocketBindingRef = secureSocketBindingRef;
     }
 
     @Override
@@ -88,17 +89,23 @@ public class StompletContainerInstaller implements DeploymentUnitProcessor {
             contextPath = stompAppMetaData.getContextPath();
         } else {
             if (contextPath.endsWith( "/" )) {
-                contextPath = contextPath.substring(0, contextPath.length() - 1 ) + stompAppMetaData.getContextPath();
+                contextPath = contextPath.substring( 0, contextPath.length() - 1 ) + stompAppMetaData.getContextPath();
             } else {
                 contextPath = contextPath + stompAppMetaData.getContextPath();
             }
         }
 
-        StompEndpointBindingService bindingService = new StompEndpointBindingService( host, contextPath );
+        installEndpoint( phaseContext, host, contextPath, this.socketBindingRef, webAppMetaData, false );
+        if (this.secureSocketBindingRef != null) {
+            installEndpoint( phaseContext, host, contextPath, this.secureSocketBindingRef, webAppMetaData, true );
+        }
+    }
 
-        ServiceBuilder<String> builder = phaseContext.getServiceTarget().addService( StompServices.endpointBinding( unit ), bindingService )
-                // .addDependency( containerName );
-                .addDependency( SocketBinding.JBOSS_BINDING_NAME.append( socketBindingRef ), SocketBinding.class, bindingService.getSocketBindingInjector() );
+    protected void installEndpoint(DeploymentPhaseContext phaseContext, String host, String contextPath, String bindingRef, WebApplicationMetaData webAppMetaData, boolean secure) {
+        StompEndpointBindingService bindingService = new StompEndpointBindingService( host, contextPath, secure );
+        
+        ServiceBuilder<String> builder = phaseContext.getServiceTarget().addService( StompServices.endpointBinding( phaseContext.getDeploymentUnit(), secure ), bindingService )
+                .addDependency( SocketBinding.JBOSS_BINDING_NAME.append( bindingRef ), SocketBinding.class, bindingService.getSocketBindingInjector() );
 
         if (webAppMetaData != null) {
             if (host == null) {
@@ -119,4 +126,6 @@ public class StompletContainerInstaller implements DeploymentUnitProcessor {
     }
 
     private String socketBindingRef;
+    private String secureSocketBindingRef;
+
 }

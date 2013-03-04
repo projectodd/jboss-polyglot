@@ -37,13 +37,11 @@ public class StompletServerService implements Service<StompletServer> {
 
     @Override
     public StompletServer getValue() throws IllegalStateException, IllegalArgumentException {
-        log.info( "GET_VALUE: "+ this.server);
         return this.server;
     }
 
     @Override
     public void start(StartContext context) throws StartException {
-        log.info( "START STOMPLET SERVICE" );
         this.server = new StompletServer();
         try {
             this.server.setTransactionManager( this.transactionManagerInjector.getValue() );
@@ -51,7 +49,6 @@ public class StompletServerService implements Service<StompletServer> {
         } catch (Exception e) {
             throw new StartException( e );
         }
-        log.info( "STARTED STOMPLET SERVICE" );
     }
 
     @Override

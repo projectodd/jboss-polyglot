@@ -41,7 +41,6 @@ import org.jboss.as.web.WebSubsystemServices;
 import org.jboss.dmr.ModelNode;
 import org.jboss.logging.Logger;
 import org.jboss.msc.service.ServiceController;
-import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.projectodd.polyglot.stomp.InsecureStompConnectorService;
 import org.projectodd.polyglot.stomp.SSLContextService;
@@ -56,12 +55,8 @@ public class StompSubsystemAdd extends AbstractBoottimeAddStepHandler {
 
     @Override
     protected void populateModel(ModelNode operation, ModelNode subModel) {
-        log.info( "STOMP socket binding: " + operation.get( "socket-binding" ) );
-        log.info( "STOMP secure socket binding: " + operation.get( "secure-socket-binding" ) );
-
         subModel.get( "socket-binding" ).set( operation.get( "socket-binding" ) );
         if (operation.has( "secure-socket-binding" )) {
-            log.info( "has a secure socket binding" );
             subModel.get( "secure-socket-binding" ).set( operation.get( "secure-socket-binding" ) );
         }
     }
@@ -73,10 +68,12 @@ public class StompSubsystemAdd extends AbstractBoottimeAddStepHandler {
         context.addStep( new AbstractDeploymentChainStep() {
             @Override
             protected void execute(DeploymentProcessorTarget processorTarget) {
-                log.info( "START STEP" );
-                final String bindingRef = operation.require( "socket-binding" ).asString();
-                addDeploymentProcessors( processorTarget, bindingRef );
-                log.info( "COMPLETED STEP" );
+                String bindingRef = operation.require( "socket-binding" ).asString();
+                String secureBindingRef = null;
+                if (operation.has( "secure-socket-binding" )) {
+                    secureBindingRef = operation.require( "secure-socket-binding" ).asString();
+                }
+                addDeploymentProcessors( processorTarget, bindingRef, secureBindingRef );
             }
         }, OperationContext.Stage.RUNTIME );
 
@@ -146,12 +143,9 @@ public class StompSubsystemAdd extends AbstractBoottimeAddStepHandler {
         if (!operation.has( "secure-socket-binding" )) {
             return;
         }
-        
-        log.info( "SECURE STOMP ON: " + bindingRef );
-        
-        ServiceController<?> bindingService = context.getServiceRegistry( true  ).getService( SocketBinding.JBOSS_BINDING_NAME.append( bindingRef ) );
-        if ( bindingService != null ) {
-            log.info( "activating secure stomp binding" );
+
+        ServiceController<?> bindingService = context.getServiceRegistry( true ).getService( SocketBinding.JBOSS_BINDING_NAME.append( bindingRef ) );
+        if (bindingService != null) {
             bindingService.setMode( Mode.ACTIVE );
         }
 
@@ -164,16 +158,16 @@ public class StompSubsystemAdd extends AbstractBoottimeAddStepHandler {
                 .setInitialMode( Mode.PASSIVE )
                 .addListener( verificationHandler )
                 .install();
-        
 
         newControllers.add( controller );
     }
 
-    protected void addDeploymentProcessors(final DeploymentProcessorTarget processorTarget, String socketBindingRef) {
+    protected void addDeploymentProcessors(final DeploymentProcessorTarget processorTarget, String socketBindingRef, String secureSocketBindingRef) {
         processorTarget.addDeploymentProcessor( StompExtension.SUBSYSTEM_NAME, Phase.PARSE, 1031, rootSafe( new StompWebAdjuster() ) );
         processorTarget.addDeploymentProcessor( StompExtension.SUBSYSTEM_NAME, Phase.DEPENDENCIES, 5, rootSafe( new StompDependenciesProcessor() ) );
         processorTarget.addDeploymentProcessor( StompExtension.SUBSYSTEM_NAME, Phase.INSTALL, 99, rootSafe( new SessionManagerInstaller( "localhost" ) ) );
-        processorTarget.addDeploymentProcessor( StompExtension.SUBSYSTEM_NAME, Phase.INSTALL, 100, rootSafe( new StompletContainerInstaller( socketBindingRef ) ) );
+        processorTarget.addDeploymentProcessor( StompExtension.SUBSYSTEM_NAME, Phase.INSTALL, 100, rootSafe( new StompletContainerInstaller( socketBindingRef,
+                secureSocketBindingRef ) ) );
     }
 
     static ModelNode createOperation(ModelNode address) {
