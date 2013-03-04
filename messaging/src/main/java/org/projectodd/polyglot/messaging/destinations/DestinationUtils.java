@@ -21,19 +21,37 @@ package org.projectodd.polyglot.messaging.destinations;
 
 import org.jboss.msc.service.ServiceName;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class DestinationUtils {
-    
+
     public static String jndiName(String destinationName) {
         return cleanServiceName( destinationName ).
                 replace( '.', '/' );
     }
-    
+
+    public static String exportedJndiName(String destinationName) {
+        return "jboss/exported/" + jndiName(destinationName);
+    }
+
+    public static String[] jndiNames(String destinationName, boolean exported) {
+        List<String> names = new ArrayList<String>();
+
+        names.add(DestinationUtils.jndiName(destinationName));
+
+        if (exported)
+            names.add(DestinationUtils.exportedJndiName(destinationName));
+
+        return names.toArray(new String[names.size()]);
+    }
+
     public static String cleanServiceName(String destinationName) {
         return destinationName.replaceAll( "[./]", " " )
                 .trim()
                 .replace( ' ', '.' );
     }
-    
+
     public static ServiceName getServiceName(String destinationName) {
         return ServiceName.parse( cleanServiceName( destinationName ) );
     }
