@@ -48,9 +48,14 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
     public static final String HA_SINGLETON_SERVICE_SUFFIX = "ha-singleton";
         
     public AtRuntimeInstaller(DeploymentUnit unit) {
-        this.unit = unit;
+        this( unit, null );
     }
-
+    
+    public AtRuntimeInstaller(DeploymentUnit unit, ServiceTarget globalServiceTarget) {
+        this.unit = unit;
+        this.globalServiceTarget = globalServiceTarget;
+    }
+    
     @SuppressWarnings("unchecked")
     protected void replaceService(ServiceName name, Runnable actionOnRemove) {
         ServiceController<?> service = this.unit.getServiceRegistry().getService( name ); 
@@ -142,8 +147,13 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
         return unit;
     }
 
+    public ServiceTarget getGlobalTarget() {
+        return this.globalServiceTarget;
+    }
+    
     private DeploymentUnit unit;
     private ServiceTarget serviceTarget;
+    private ServiceTarget globalServiceTarget;
     
     @SuppressWarnings("rawtypes")
     public class RemovalListener implements ServiceListener {

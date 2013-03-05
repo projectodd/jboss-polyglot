@@ -66,15 +66,24 @@ public class TopicInstaller implements DeploymentUnitProcessor {
 
     }
 
+    public static ServiceName topicServiceName(String name) {
+        return JMSServices.getJmsTopicBaseServiceName(MessagingServices.getHornetQServiceName( "default" ))
+                .append( name );
+    }
+    
     public static ServiceName deploy(ServiceTarget serviceTarget, DestroyableJMSTopicService service, String name) {
+        return deploy(serviceTarget, service, name, Mode.ACTIVE);
+    }
+    
+    public static ServiceName deploy(ServiceTarget serviceTarget, DestroyableJMSTopicService service, String name, Mode initial) {
         final ServiceName hornetQserviceName = MessagingServices.getHornetQServiceName( "default" );
-        final ServiceName serviceName = JMSServices.getJmsTopicBaseServiceName( hornetQserviceName ).append( name );
+        final ServiceName serviceName = topicServiceName(name);
 
         try {
             ServiceBuilder<?> serviceBuilder = serviceTarget.addService(serviceName, service)
                     .addDependency(JMSServices.getJmsManagerBaseServiceName( hornetQserviceName ), JMSServerManager.class, service.getJmsServer() )
                     .addDependency( HornetQStartupPoolService.getServiceName( hornetQserviceName ), ExecutorService.class, service.getExecutorServiceInjector() )
-                    .setInitialMode( Mode.ACTIVE );
+                    .setInitialMode( initial );
             serviceBuilder.install();
         } catch (org.jboss.msc.service.DuplicateServiceException ignored) {
             log.warn("Already started "+serviceName);

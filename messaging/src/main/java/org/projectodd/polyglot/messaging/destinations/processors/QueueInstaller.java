@@ -66,14 +66,24 @@ public class QueueInstaller implements DeploymentUnitProcessor {
 
     }
 
+    public static ServiceName queueServiceName(String name) {
+        return JMSServices.getJmsQueueBaseServiceName(MessagingServices.getHornetQServiceName( "default" ))
+                .append( name );
+    }
+    
     public static ServiceName deploy(ServiceTarget serviceTarget, DestroyableJMSQueueService service, String name) {
+        return deploy(serviceTarget, service, name, Mode.ACTIVE);
+    }
+    
+    public static ServiceName deploy(ServiceTarget serviceTarget, DestroyableJMSQueueService service, String name, Mode initial) {
+        
         final ServiceName hornetQserviceName = MessagingServices.getHornetQServiceName( "default" );
-        final ServiceName serviceName = JMSServices.getJmsQueueBaseServiceName( hornetQserviceName ).append( name );
+        final ServiceName serviceName = queueServiceName( name );
         try {
             ServiceBuilder<?> serviceBuilder = serviceTarget.addService(serviceName, service)
                     .addDependency( JMSServices.getJmsManagerBaseServiceName( hornetQserviceName ), JMSServerManager.class, service.getJmsServer() )
                     .addDependency( HornetQStartupPoolService.getServiceName( hornetQserviceName ), ExecutorService.class, service.getExecutorServiceInjector() )
-                    .setInitialMode( Mode.ACTIVE );
+                    .setInitialMode( initial );
             serviceBuilder.install();
         } catch (org.jboss.msc.service.DuplicateServiceException ignored) {
             log.warn("Already started "+serviceName);
@@ -100,3 +110,4 @@ public class QueueInstaller implements DeploymentUnitProcessor {
 
     static final Logger log = Logger.getLogger( "org.projectodd.polyglot.messaging" );
 }
+

@@ -34,6 +34,10 @@ public class DestroyableJMSQueueService extends JMSQueueService implements Destr
         super( queueName, selectorString, durable, jndi );
         this.shouldDestroy = ! durable;
         this.queueName = queueName;
+        //store these so we can check for reconfiguration. Not actually used for 
+        //configuration - the values passed to super() are
+        this.durable = durable;
+        this.selector = selectorString;
     }
 
     @Override
@@ -49,7 +53,6 @@ public class DestroyableJMSQueueService extends JMSQueueService implements Destr
                 }
             }
         }
-        
         super.stop( context );
     }
 
@@ -83,9 +86,19 @@ public class DestroyableJMSQueueService extends JMSQueueService implements Destr
         this.shouldDestroy = shouldDestroy;
     }
 
+    public boolean isDurable() {
+        return durable;
+    }
+
+    public String getSelector() {
+        return selector;
+    }
+
     private boolean shouldDestroy;
     private String queueName;
-
+    private boolean durable;
+    private String selector;
+    
     static final Logger log = Logger.getLogger( "org.projectodd.polyglot.messaging" );
 
 }
