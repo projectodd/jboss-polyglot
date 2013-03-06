@@ -35,6 +35,7 @@ import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceController.Transition;
 import org.jboss.msc.service.ServiceListener;
 import org.jboss.msc.service.ServiceName;
+import org.jboss.msc.service.ServiceRegistry;
 import org.jboss.msc.service.ServiceTarget;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
@@ -56,9 +57,15 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
         this.globalServiceTarget = globalServiceTarget;
     }
     
-    @SuppressWarnings("unchecked")
     protected void replaceService(ServiceName name, Runnable actionOnRemove) {
-        ServiceController<?> service = this.unit.getServiceRegistry().getService( name ); 
+        replaceService(this.unit.getServiceRegistry(), 
+                       name,
+                       actionOnRemove);
+    }
+    
+    @SuppressWarnings("unchecked")
+    public static void replaceService(ServiceRegistry registry, ServiceName name, Runnable actionOnRemove) {
+        ServiceController<?> service = registry.getService( name ); 
         
         if (service != null) {
             if (actionOnRemove != null) {
@@ -68,7 +75,8 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
         } else if (actionOnRemove != null) {
             actionOnRemove.run();
         }
-    }
+    }    
+    
     
     protected ServiceBuilder<?> build(final ServiceName serviceName, final Service<?> service, final boolean singleton) {
         ServiceBuilder<?> builder = getTarget().addService(serviceName, service);
@@ -115,6 +123,7 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
         return mbeanName;
     }
 
+    @SuppressWarnings("serial")
     public String mbeanName(final String domain, final ServiceName name) {
         final ApplicationMetaData appMetaData = unit.getAttachment( ApplicationMetaData.ATTACHMENT_KEY );
         return ObjectNameFactory.create( domain, new Hashtable<String, String>() {
@@ -134,6 +143,7 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
     public synchronized void stop(StopContext context) {
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public T getValue() {
         return (T)this;
@@ -156,7 +166,7 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
     private ServiceTarget globalServiceTarget;
     
     @SuppressWarnings("rawtypes")
-    public class RemovalListener implements ServiceListener {
+    public static class RemovalListener implements ServiceListener {
 
         public RemovalListener(Runnable action) {
             this.action = action;

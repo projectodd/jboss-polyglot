@@ -32,6 +32,9 @@ public class DestroyableJMSTopicService extends JMSTopicService implements Destr
     public DestroyableJMSTopicService(String topicName, String[] jndi) {
         super(topicName, jndi);
         this.topicName = topicName;
+        //store this so we can check for reconfiguration. Not actually used for 
+        //configuration - the values passed to super() are
+        this.jndi = jndi;
     }
 
     @Override
@@ -81,8 +84,13 @@ public class DestroyableJMSTopicService extends JMSTopicService implements Destr
         this.shouldDestroy = shouldDestroy;
     }
 
+    public String[] getJndi() {
+        return this.jndi;
+    }
+    
     private String topicName;
     private boolean shouldDestroy = false;
+    private String[] jndi;
     
     static final Logger log = Logger.getLogger( "org.projectodd.polyglot.messaging" );
 }

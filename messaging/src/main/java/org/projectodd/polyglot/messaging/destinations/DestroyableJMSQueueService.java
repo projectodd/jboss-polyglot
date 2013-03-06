@@ -38,6 +38,7 @@ public class DestroyableJMSQueueService extends JMSQueueService implements Destr
         //configuration - the values passed to super() are
         this.durable = durable;
         this.selector = selectorString;
+        this.jndi = jndi;
     }
 
     @Override
@@ -87,17 +88,22 @@ public class DestroyableJMSQueueService extends JMSQueueService implements Destr
     }
 
     public boolean isDurable() {
-        return durable;
+        return this.durable;
     }
 
     public String getSelector() {
-        return selector;
+        return this.selector;
+    }
+
+    public String[] getJndi() {
+        return this.jndi;
     }
 
     private boolean shouldDestroy;
     private String queueName;
     private boolean durable;
     private String selector;
+    private String[] jndi;
     
     static final Logger log = Logger.getLogger( "org.projectodd.polyglot.messaging" );
 

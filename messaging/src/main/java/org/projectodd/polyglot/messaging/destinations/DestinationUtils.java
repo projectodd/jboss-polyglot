@@ -19,10 +19,16 @@
 
 package org.projectodd.polyglot.messaging.destinations;
 
-import org.jboss.msc.service.ServiceName;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.jboss.as.server.deployment.DeploymentUnit;
+import org.jboss.logging.Logger;
+import org.jboss.msc.service.DuplicateServiceException;
+import org.jboss.msc.service.ServiceController.Mode;
+import org.jboss.msc.service.ServiceListener;
+import org.jboss.msc.service.ServiceName;
+import org.jboss.msc.service.ServiceTarget;
 
 public class DestinationUtils {
 
@@ -56,4 +62,32 @@ public class DestinationUtils {
         return ServiceName.parse( cleanServiceName( destinationName ) );
     }
 
+    public static ServiceName destinationPointerName(DeploymentUnit unit, String name) {
+        return unit.getServiceName().append( "polyglot", "messaging", "destination-pointer", name );
+    }
+    
+    public static boolean destinationPointerExists(DeploymentUnit unit, String name) {
+        return (unit.getServiceRegistry().getService(destinationPointerName(unit, name)) != null);
+    }
+    
+    @SuppressWarnings("rawtypes")
+    public static ServiceName deployDestinationPointerService(DeploymentUnit unit, ServiceTarget target,
+                                                              String destName, ServiceName globalName, 
+                                                              ServiceListener... listeners) {
+        DestinationService service = new DestinationService(destName, listeners);
+        ServiceName serviceName = destinationPointerName(unit, destName);
+        
+        try {
+            target.addService(serviceName, service)
+                .addDependency(globalName)
+                .setInitialMode(Mode.ACTIVE)
+                .install();
+        } catch (DuplicateServiceException ingored) {
+            log.warn(serviceName + " already started");
+        }
+                
+        return serviceName;
+    }
+    
+    static final Logger log = Logger.getLogger( "org.projectodd.polyglot.messaging" );
 }

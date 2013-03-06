@@ -31,26 +31,22 @@ import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.logging.Logger;
-import org.jboss.msc.service.ServiceBuilder;
+import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceController.Mode;
+import org.jboss.msc.service.ServiceController.State;
 import org.jboss.msc.service.ServiceName;
+import org.jboss.msc.service.ServiceRegistry;
 import org.jboss.msc.service.ServiceTarget;
+import org.projectodd.polyglot.core.AtRuntimeInstaller;
 import org.projectodd.polyglot.messaging.destinations.DestinationUtils;
 import org.projectodd.polyglot.messaging.destinations.DestroyableJMSQueueService;
 import org.projectodd.polyglot.messaging.destinations.HornetQStartupPoolService;
 import org.projectodd.polyglot.messaging.destinations.QueueMetaData;
 
-/**
- * <pre>
- * Stage: REAL
- *    In: QueueMetaData
- *   Out: ManagedQueue
- * </pre>
- * 
- */
 public class QueueInstaller implements DeploymentUnitProcessor {
 
-    public QueueInstaller() {
+    public QueueInstaller(ServiceTarget globalTarget) {
+        this.globalTarget = globalTarget;
     }
 
     @Override
@@ -61,7 +57,7 @@ public class QueueInstaller implements DeploymentUnitProcessor {
 
         for (QueueMetaData each : allMetaData) {
             if (!each.isRemote())
-                deploy( phaseContext.getServiceTarget(), each );
+                deploy( phaseContext.getDeploymentUnit(), phaseContext.getServiceTarget(), each );
         }
 
     }
@@ -71,43 +67,133 @@ public class QueueInstaller implements DeploymentUnitProcessor {
                 .append( name );
     }
     
-    public static ServiceName deploy(ServiceTarget serviceTarget, DestroyableJMSQueueService service, String name) {
-        return deploy(serviceTarget, service, name, Mode.ACTIVE);
-    }
-    
-    public static ServiceName deploy(ServiceTarget serviceTarget, DestroyableJMSQueueService service, String name, Mode initial) {
-        
+    private static ServiceName deployGlobalQueue(ServiceTarget serviceTarget, DestroyableJMSQueueService service, String name) {
         final ServiceName hornetQserviceName = MessagingServices.getHornetQServiceName( "default" );
         final ServiceName serviceName = queueServiceName( name );
-        try {
-            ServiceBuilder<?> serviceBuilder = serviceTarget.addService(serviceName, service)
-                    .addDependency( JMSServices.getJmsManagerBaseServiceName( hornetQserviceName ), JMSServerManager.class, service.getJmsServer() )
-                    .addDependency( HornetQStartupPoolService.getServiceName( hornetQserviceName ), ExecutorService.class, service.getExecutorServiceInjector() )
-                    .setInitialMode( initial );
-            serviceBuilder.install();
-        } catch (org.jboss.msc.service.DuplicateServiceException ignored) {
-            log.warn("Already started "+serviceName);
-        }
+        serviceTarget.addService(serviceName, service)
+          .addDependency( JMSServices.getJmsManagerBaseServiceName( hornetQserviceName ), JMSServerManager.class, service.getJmsServer() )
+          .addDependency( HornetQStartupPoolService.getServiceName( hornetQserviceName ), ExecutorService.class, service.getExecutorServiceInjector() )
+          .setInitialMode( Mode.ON_DEMAND )
+          .install();
 
         return serviceName;
     }
 
-    public static ServiceName deploy(ServiceTarget serviceTarget, QueueMetaData queue) {
+    @SuppressWarnings("rawtypes")
+    public static ServiceName deployGlobalQueue(ServiceRegistry registry, final ServiceTarget serviceTarget, 
+                                                final String queueName, final boolean durable, 
+                                                final String selector, final String[] jndiNames) {
+        ServiceName globalQServiceName = queueServiceName( queueName );
+        ServiceController globalQService = registry.getService( globalQServiceName );
+                
+        if (globalQService == null) {
+            deployGlobalQueue(serviceTarget,
+                              new DestroyableJMSQueueService(queueName, selector, durable, jndiNames),
+                              queueName);    
+        } else {
+            //handle reconfiguration of an existing queue
+            DestroyableJMSQueueService actual = (DestroyableJMSQueueService)globalQService.getService();
+            ReconfigurationValidator validator = new ReconfigurationValidator(actual, durable, selector, jndiNames);
+            if (validator.isReconfigure()) {
+                State currentState = globalQService.getState();     
+                if (currentState == State.DOWN || 
+                        currentState == State.STOPPING) {
+                    log.infof("Reconfiguring %s from %s to %s",
+                              queueName, validator.fromMsg(), validator.toMsg());
+                    AtRuntimeInstaller.replaceService(registry, globalQServiceName, new Runnable() {
+                        public void run() {
+                            deployGlobalQueue(serviceTarget,
+                                              new DestroyableJMSQueueService(queueName, selector, durable, jndiNames),
+                                              queueName);
+                        }
+                    });
+                } else {
+                    log.warnf("Ignoring attempt to reconfigure %s from %s to %s - it is currently active",
+                              queueName, validator.fromMsg(), validator.toMsg());
+                }
+            }   
+        }
+        
+        return globalQServiceName;
+    }
+    
+    protected ServiceName deploy(DeploymentUnit unit, ServiceTarget serviceTarget, QueueMetaData queue) {
         String[] jndis = DestinationUtils.jndiNames(queue.getName(), queue.isExported());
 
         log.debugf("JNDI names to bind the '%s' queue to: %s", queue.getName(), Arrays.toString(jndis));
 
-        return deploy( serviceTarget,
-                       new DestroyableJMSQueueService( queue.getName(), queue.getSelector(), 
-                                                       queue.isDurable(), jndis ),
-                                                       queue.getName() );
-    }
+        ServiceName globalName = deployGlobalQueue(unit.getServiceRegistry(),
+                                                   this.globalTarget,
+                                                   queue.getName(), 
+                                                   queue.isDurable(),
+                                                   queue.getSelector(), 
+                                                   jndis);
+        
+        return DestinationUtils.deployDestinationPointerService(unit, serviceTarget, queue.getName(), globalName);
+    }   
 
     @Override
     public void undeploy(DeploymentUnit context) {
 
     }
 
+    private ServiceTarget globalTarget;
+    
     static final Logger log = Logger.getLogger( "org.projectodd.polyglot.messaging" );
+    
+    protected static class ReconfigurationValidator {
+        ReconfigurationValidator() {}
+        
+        ReconfigurationValidator(DestroyableJMSQueueService actual, boolean durable, String selector, String[] jndi) {
+            boolean jndiEqual = jndiEqual(actual.getJndi(), jndi);
+            boolean selectorEqual = (selector == null && actual.getSelector() == null) ||
+                                       (selector != null && selector.equals(actual.getSelector()));        
+             this.reconfigure = actual.isDurable() != durable || 
+                    !selectorEqual ||
+                    !jndiEqual;
+            
+            if (actual.isDurable() != durable)
+                add("durable", actual.isDurable(), durable);
+            
+            if (!selectorEqual)
+                add("selector", actual.getSelector(), selector);
+            
+            if (!jndiEqual)
+                add("jndi", actual.getJndi(), jndi);
+        }
+        
+        public String fromMsg() {
+            return this.from.toString();
+        }
+        
+        public String toMsg() {
+            return this.to.toString();
+        }
+        
+        protected boolean jndiEqual(String[] actual, String[] update) {
+            String[] sortedJndi = update.clone();
+            String[] actualJndi = actual.clone();
+            Arrays.sort(sortedJndi);
+            Arrays.sort(actualJndi);
+            return Arrays.equals(sortedJndi, actualJndi);
+        }
+        
+        protected void add(String key, Object from, Object to) {
+            if (this.from.length() > 0) {
+                this.from.append(", ");
+                this.to.append(", ");
+            }
+            this.from.append(key + ": " + from);
+            this.to.append(key + ": " + to);
+        }
+        
+        public boolean isReconfigure() {
+            return this.reconfigure;
+        }
+        
+        protected boolean reconfigure = false;
+        private StringBuilder from = new StringBuilder();
+        private StringBuilder to = new StringBuilder();
+    }
 }
 
