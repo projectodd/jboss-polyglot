@@ -51,7 +51,7 @@ public class WebApplicationMetaData {
     public void setContextPath(String contextPath) {
         // https://issues.jboss.org/browse/TORQUE-1031
         if (contextPath != null)
-            this.contextPath = contextPath.replaceAll("^/*", "/").replaceAll("/*$", "");
+            this.contextPath = contextPath.replaceAll("/*$", "").replaceAll("^/*", "/");
     }
 
     public String getContextPath() {
