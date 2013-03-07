@@ -34,6 +34,7 @@ import org.jboss.logging.Logger;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceController.State;
+import org.jboss.msc.service.ServiceController.Substate;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
 import org.jboss.msc.service.ServiceTarget;
@@ -97,26 +98,30 @@ public class TopicInstaller implements DeploymentUnitProcessor {
             //handle reconfiguration of an existing Topic
             DestroyableJMSTopicService actual = (DestroyableJMSTopicService)globalTService.getService();
             ReconfigurationValidator validator = new ReconfigurationValidator(actual, jndiNames);
-            if (validator.isReconfigure()) {
-                State currentState = globalTService.getState();     
-                if (currentState == State.DOWN || 
-                        currentState == State.STOPPING) {
+            State currentState = globalTService.getState();
+            
+            if (currentState == State.DOWN || 
+                    currentState == State.STOPPING ||
+                    globalTService.getSubstate() == Substate.STOP_REQUESTED) {
+                if (validator.isReconfigure()) {
                     log.infof("Reconfiguring %s from %s to %s",
                               topicName, validator.fromMsg(), validator.toMsg());
-                    AtRuntimeInstaller.replaceService(registry, globalTServiceName, new Runnable() {
-                        public void run() {
-                            deployGlobalTopic(serviceTarget,
-                                              new DestroyableJMSTopicService(topicName, jndiNames),
-                                              topicName);
-                        }
-                    });
-                } else {
-                    log.warnf("Ignoring attempt to reconfigure %s from %s to %s - it is currently active",
-                              topicName, validator.fromMsg(), validator.toMsg());
                 }
-            }   
-        }
-        
+                AtRuntimeInstaller.replaceService(registry, globalTServiceName, new Runnable() {
+                    public void run() {
+                        deployGlobalTopic(serviceTarget,
+                                          new DestroyableJMSTopicService(topicName, jndiNames),
+                                          topicName);
+                    }
+                });
+            } 
+
+            if (!validator.isReconfigure()) {
+                log.warnf("Ignoring attempt to reconfigure %s from %s to %s - it is currently active",
+                          topicName, validator.fromMsg(), validator.toMsg());
+            }
+        }   
+            
         return globalTServiceName;
     }
     
