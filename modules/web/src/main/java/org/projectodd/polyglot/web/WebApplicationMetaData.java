@@ -30,6 +30,22 @@ import org.projectodd.polyglot.core.util.TimeInterval;
 public class WebApplicationMetaData {
     public static final AttachmentKey<WebApplicationMetaData> ATTACHMENT_KEY = AttachmentKey.create( WebApplicationMetaData.class );
 
+    /**
+     * Override to return false to prevent WebApplicationDefaultsProcessor 
+     * from setting an empty context to /
+     */
+    public boolean forceDefaultContext() {
+        return true;
+    }
+    
+    /**
+     * Override to return false to prevent WebApplicationDefaultsProcessor 
+     * from setting the static path prefix to public/
+     */
+    public boolean forceDefaultStaticPathPrefix() {
+        return true;
+    }
+    
     public void addHost(String host) {
         if (host != null && !this.hosts.contains( host )) {
             this.hosts.add( host );
