@@ -22,6 +22,7 @@ package org.projectodd.polyglot.messaging.destinations.processors;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.hornetq.jms.server.JMSServerManager;
 import org.jboss.as.messaging.MessagingServices;
@@ -33,8 +34,6 @@ import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.logging.Logger;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceController.Mode;
-import org.jboss.msc.service.ServiceController.State;
-import org.jboss.msc.service.ServiceController.Substate;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
 import org.jboss.msc.service.ServiceTarget;
@@ -81,46 +80,57 @@ public class QueueInstaller implements DeploymentUnitProcessor {
     }
 
     @SuppressWarnings("rawtypes")
-    public static ServiceName deployGlobalQueue(ServiceRegistry registry, final ServiceTarget serviceTarget, 
-                                                final String queueName, final boolean durable, 
-                                                final String selector, final String[] jndiNames) {
+    public static DestroyableJMSQueueService deployGlobalQueue(ServiceRegistry registry, final ServiceTarget serviceTarget, 
+                                                               final String queueName, final boolean durable, 
+                                                               final String selector, final String[] jndiNames) {
         ServiceName globalQServiceName = queueServiceName( queueName );
         ServiceController globalQService = registry.getService( globalQServiceName );
-                
+        DestroyableJMSQueueService globalQ;
+        
         if (globalQService == null) {
-            deployGlobalQueue(serviceTarget,
-                              new DestroyableJMSQueueService(queueName, selector, durable, jndiNames),
-                              queueName);    
+            globalQ = new DestroyableJMSQueueService(queueName, selector, durable, jndiNames);
+            deployGlobalQueue(serviceTarget, globalQ, queueName);    
         } else {
-            //handle reconfiguration of an existing queue
-            DestroyableJMSQueueService actual = (DestroyableJMSQueueService)globalQService.getService();
-            ReconfigurationValidator validator = new ReconfigurationValidator(actual, durable, selector, jndiNames);
-            State currentState = globalQService.getState();
-            
-            if (currentState == State.DOWN || 
-                    currentState == State.STOPPING ||
-                    globalQService.getSubstate() == Substate.STOP_REQUESTED) {
+            globalQ = (DestroyableJMSQueueService)globalQService.getService();
+            ReconfigurationValidator validator = new ReconfigurationValidator(globalQ, durable, selector, jndiNames);
+            if (globalQ.getReferenceCount().intValue() == 0) {
+                // It should be stopping - wait
+                try {
+                    if (!globalQ.getStopLatch().await(1, TimeUnit.MINUTES)) {
+                        log.warn("Timed out waiting for inactive " + queueName + " to stop");
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
                 if (validator.isReconfigure()) {
                     log.infof("Reconfiguring %s from %s to %s",
                               queueName, validator.fromMsg(), validator.toMsg());
                 }
+                
+                globalQ = new DestroyableJMSQueueService(queueName, selector, durable, jndiNames);
+                final DestroyableJMSQueueService finalGlobalQ = globalQ;
+                
                 AtRuntimeInstaller.replaceService(registry, globalQServiceName, new Runnable() {
                     public void run() {
-                        deployGlobalQueue(serviceTarget,
-                                          new DestroyableJMSQueueService(queueName, selector, durable, jndiNames),
-                                          queueName);
+                        deployGlobalQueue(serviceTarget, finalGlobalQ, queueName);
+                        try {
+                            if (!finalGlobalQ.getStartLatch().await(1, TimeUnit.MINUTES)) {
+                                log.warn("Timed out waiting for " + queueName + " to start");
+                            }
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
                 });
-            }
-            
-            if (!validator.isReconfigure()){
+            } else if (validator.isReconfigure()){
                 log.warnf("Ignoring attempt to reconfigure %s from %s to %s - it is currently active",
                           queueName, validator.fromMsg(), validator.toMsg());
             }
        
         }
         
-        return globalQServiceName;
+        return globalQ;
     }
     
     protected ServiceName deploy(DeploymentUnit unit, ServiceTarget serviceTarget, QueueMetaData queue) {
@@ -128,14 +138,16 @@ public class QueueInstaller implements DeploymentUnitProcessor {
 
         log.debugf("JNDI names to bind the '%s' queue to: %s", queue.getName(), Arrays.toString(jndis));
 
-        ServiceName globalName = deployGlobalQueue(unit.getServiceRegistry(),
-                                                   this.globalTarget,
-                                                   queue.getName(), 
-                                                   queue.isDurable(),
-                                                   queue.getSelector(), 
-                                                   jndis);
+        DestroyableJMSQueueService global = deployGlobalQueue(unit.getServiceRegistry(),
+                                                              this.globalTarget,
+                                                              queue.getName(), 
+                                                              queue.isDurable(),
+                                                              queue.getSelector(), 
+                                                              jndis);
         
-        return DestinationUtils.deployDestinationPointerService(unit, serviceTarget, queue.getName(), globalName);
+        return DestinationUtils.deployDestinationPointerService(unit, serviceTarget, queue.getName(), 
+                                                                queueServiceName(queue.getName()),
+                                                                global.getReferenceCount());
     }   
 
     @Override

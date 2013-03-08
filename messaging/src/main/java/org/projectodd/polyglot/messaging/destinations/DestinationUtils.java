@@ -21,6 +21,7 @@ package org.projectodd.polyglot.messaging.destinations;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.logging.Logger;
@@ -70,11 +71,12 @@ public class DestinationUtils {
         return (unit.getServiceRegistry().getService(destinationPointerName(unit, name)) != null);
     }
     
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public static ServiceName deployDestinationPointerService(DeploymentUnit unit, ServiceTarget target,
-                                                              String destName, ServiceName globalName, 
+                                                              String destName, ServiceName globalName,
+                                                              AtomicInteger references,
                                                               ServiceListener... listeners) {
-        DestinationService service = new DestinationService(destName, listeners);
+        DestinationService service = new DestinationService(destName, references, listeners);
         ServiceName serviceName = destinationPointerName(unit, destName);
         
         try {

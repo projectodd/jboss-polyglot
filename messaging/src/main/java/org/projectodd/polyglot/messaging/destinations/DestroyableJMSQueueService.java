@@ -19,21 +19,29 @@
 
 package org.projectodd.polyglot.messaging.destinations;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jboss.as.messaging.jms.JMSQueueService;
 import org.jboss.logging.Logger;
 import org.jboss.msc.inject.InjectionException;
 import org.jboss.msc.inject.Injector;
+import org.jboss.msc.service.StartContext;
+import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
+import org.projectodd.polyglot.core.HasStartStopLatches;
+import org.projectodd.polyglot.core.HasStartStopLatchesServiceListener;
 
-public class DestroyableJMSQueueService extends JMSQueueService implements Destroyable, Injector<ExecutorService> {
+public class DestroyableJMSQueueService extends JMSQueueService implements Destroyable, 
+    HasStartStopLatches, Injector<ExecutorService> {
 
 
     public DestroyableJMSQueueService(String queueName, String selectorString, boolean durable, String[] jndi) {
         super( queueName, selectorString, durable, jndi );
         this.shouldDestroy = ! durable;
         this.queueName = queueName;
+        this.startLatch = new CountDownLatch(1);
         //store these so we can check for reconfiguration. Not actually used for 
         //configuration - the values passed to super() are
         this.durable = durable;
@@ -41,6 +49,14 @@ public class DestroyableJMSQueueService extends JMSQueueService implements Destr
         this.jndi = jndi;
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public synchronized void start(final StartContext context) throws StartException {
+        this.stopLatch = new CountDownLatch(1);
+        context.getController().addListener(new HasStartStopLatchesServiceListener());
+        super.start(context);
+    }
+    
     @Override
     public synchronized void stop(StopContext context) {
         if ( shouldDestroy ) {
@@ -55,6 +71,7 @@ public class DestroyableJMSQueueService extends JMSQueueService implements Destr
             }
         }
         super.stop( context );
+        this.startLatch = new CountDownLatch(1);
     }
 
     /**
@@ -98,13 +115,29 @@ public class DestroyableJMSQueueService extends JMSQueueService implements Destr
     public String[] getJndi() {
         return this.jndi;
     }
+    
+    public AtomicInteger getReferenceCount() {
+        return this.referenceCount;
+    }
+
+    @Override
+    public CountDownLatch getStartLatch() {
+        return this.startLatch;
+    }
+
+    @Override
+    public CountDownLatch getStopLatch() {
+        return this.stopLatch;
+    }
 
     private boolean shouldDestroy;
     private String queueName;
     private boolean durable;
     private String selector;
     private String[] jndi;
+    private AtomicInteger referenceCount = new AtomicInteger(0);
+    private CountDownLatch stopLatch;
+    private CountDownLatch startLatch;
     
     static final Logger log = Logger.getLogger( "org.projectodd.polyglot.messaging" );
-
 }
