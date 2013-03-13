@@ -54,6 +54,11 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>org.projectodd.stilts</groupId>
+      <artifactId>stilts-stomp-client-js</artifactId>
+      <version>${version.org.projectodd.stilts}</version>
+    </dependency>
+    <dependency>
       <groupId>org.jboss.as</groupId>
       <artifactId>jboss-as-web</artifactId>
       <scope>provided</scope>

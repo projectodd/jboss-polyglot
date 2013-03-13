@@ -35,6 +35,7 @@
         <resource-root path="stilts-conduit-server-spi.jar"/>
         <resource-root path="stilts-stomplet-server-core.jar"/>
         <resource-root path="stilts-stomplet-api.jar"/>
+        <resource-root path="stilts-stomp-client-js.jar"/>
     </resources>
 
     <dependencies>
