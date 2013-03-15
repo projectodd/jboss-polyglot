@@ -29,7 +29,7 @@ import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 
-public class StompEndpointBindingService implements Service<String> {
+public class StompEndpointBindingService implements Service<StompEndpointBinding> {
 
     public StompEndpointBindingService(String hostName, String context, boolean secure) {
         this.hostName = hostName;
@@ -38,8 +38,8 @@ public class StompEndpointBindingService implements Service<String> {
     }
 
     @Override
-    public String getValue() throws IllegalStateException, IllegalArgumentException {
-        return this.binding.toString();
+    public StompEndpointBinding getValue() throws IllegalStateException, IllegalArgumentException {
+        return this.binding;
     }
 
     @Override

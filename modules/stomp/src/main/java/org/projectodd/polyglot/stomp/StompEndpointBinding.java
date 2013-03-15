@@ -28,13 +28,21 @@ public class StompEndpointBinding {
         this.context = context;
         this.secure = secure;
     }
-
-    public String getEndpointURL() {
-        return ( this.secure ? "wss" : "ws" ) + "://" + this.host + ":" + this.port + this.context;
+    
+    public String getHost() {
+        return this.host;
+    }
+    
+    public int getPort() {
+        return this.port;
+    }
+    
+    public boolean isSecure() {
+        return this.secure;
     }
     
     public String toString() {
-        return getEndpointURL();
+        return "host: " + this.host + ", port=" + this.port + ", secure=" + this.secure;
     }
     
     private boolean secure;

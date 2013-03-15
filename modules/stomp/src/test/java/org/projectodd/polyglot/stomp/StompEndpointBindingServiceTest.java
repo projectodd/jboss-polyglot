@@ -52,11 +52,13 @@ public class StompEndpointBindingServiceTest {
 
         StartContext context = new MockStartContext();
         service.start( context );
-        String binding = service.getValue();
+        StompEndpointBinding binding = service.getValue();
 
         assertNotNull( binding );
 
-        assertEquals( "ws://10.42.42.2:8675/", binding );
+        assertEquals( "10.42.42.2", binding.getHost() );
+        assertEquals( 8675, binding.getPort() );
+        assertEquals( false, binding.isSecure() );
     }
 
     @Test
@@ -72,11 +74,13 @@ public class StompEndpointBindingServiceTest {
 
         StartContext context = new MockStartContext();
         service.start( context );
-        String binding = service.getValue();
+        StompEndpointBinding binding = service.getValue();
 
         assertNotNull( binding );
 
-        assertEquals( "ws://tacos.com:8675/", binding );
+        assertEquals( "tacos.com", binding.getHost() );
+        assertEquals( 8675, binding.getPort() );
+        assertEquals( false, binding.isSecure() );
     }
 
     @Test
@@ -97,11 +101,13 @@ public class StompEndpointBindingServiceTest {
 
         StartContext context = new MockStartContext();
         service.start( context );
-        String binding = service.getValue();
+        StompEndpointBinding binding = service.getValue();
 
         assertNotNull( binding );
 
-        assertEquals( "ws://fajitas.com:8675/", binding );
+        assertEquals( "fajitas.com", binding.getHost() );
+        assertEquals( 8675, binding.getPort() );
+        assertEquals( false, binding.isSecure() );
     }
 
     @Test
@@ -122,11 +128,13 @@ public class StompEndpointBindingServiceTest {
 
         StartContext context = new MockStartContext();
         service.start( context );
-        String binding = service.getValue();
+        StompEndpointBinding binding = service.getValue();
 
         assertNotNull( binding );
 
-        assertEquals( "ws://tacos.com:8675/", binding );
+        assertEquals( "tacos.com", binding.getHost() );
+        assertEquals( 8675, binding.getPort() );
+        assertEquals( false, binding.isSecure() );
     }
 
 }

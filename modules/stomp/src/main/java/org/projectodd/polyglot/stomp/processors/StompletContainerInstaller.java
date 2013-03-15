@@ -32,12 +32,14 @@ import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceName;
 import org.projectodd.polyglot.stomp.StompApplicationMetaData;
+import org.projectodd.polyglot.stomp.StompEndpointBinding;
 import org.projectodd.polyglot.stomp.StompEndpointBindingService;
 import org.projectodd.polyglot.stomp.StompletContainerService;
 import org.projectodd.polyglot.stomp.StompletMetaData;
 import org.projectodd.polyglot.stomp.as.StompServices;
 import org.projectodd.polyglot.web.WebApplicationMetaData;
 import org.projectodd.stilts.conduit.spi.StompSessionManager;
+import org.projectodd.stilts.stomp.server.Connector;
 import org.projectodd.stilts.stomplet.server.StompletServer;
 
 public class StompletContainerInstaller implements DeploymentUnitProcessor {
@@ -104,8 +106,16 @@ public class StompletContainerInstaller implements DeploymentUnitProcessor {
     protected void installEndpoint(DeploymentPhaseContext phaseContext, String host, String contextPath, String bindingRef, WebApplicationMetaData webAppMetaData, boolean secure) {
         StompEndpointBindingService bindingService = new StompEndpointBindingService( host, contextPath, secure );
         
-        ServiceBuilder<String> builder = phaseContext.getServiceTarget().addService( StompServices.endpointBinding( phaseContext.getDeploymentUnit(), secure ), bindingService )
+        ServiceBuilder<StompEndpointBinding> builder = phaseContext.getServiceTarget().addService( StompServices.endpointBinding( phaseContext.getDeploymentUnit(), secure ), bindingService )
                 .addDependency( SocketBinding.JBOSS_BINDING_NAME.append( bindingRef ), SocketBinding.class, bindingService.getSocketBindingInjector() );
+        
+        /*
+        if ( secure ) {
+            builder.addDependency( StompServices.CONNECTOR.append( "secure" ) );
+        } else {
+            builder.addDependency( StompServices.CONNECTOR.append( "insecure" ) );
+        }
+        */
 
         if (webAppMetaData != null) {
             if (host == null) {
