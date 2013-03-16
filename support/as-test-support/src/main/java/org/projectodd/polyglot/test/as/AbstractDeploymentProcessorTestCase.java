@@ -31,7 +31,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.projectodd.polyglot.test.AbstractBoxTestCase;
 
-
 public abstract class AbstractDeploymentProcessorTestCase extends AbstractBoxTestCase {
     
     private List<DeploymentUnitProcessor> deployers = new ArrayList<DeploymentUnitProcessor>();
@@ -80,6 +79,12 @@ public abstract class AbstractDeploymentProcessorTestCase extends AbstractBoxTes
     
     public MockDeploymentPhaseContext createPhaseContext(String name, URL url) throws Exception {
         MockDeploymentPhaseContext context = new MockDeploymentPhaseContext( name, url );
+        this.contexts.add(  context  );
+        return context;
+    }
+
+    public MockDeploymentPhaseContext createPhaseContext(MockServiceRegistry serviceRegistry, String name) throws Exception {
+        MockDeploymentPhaseContext context = new MockDeploymentPhaseContext( serviceRegistry, name );
         this.contexts.add(  context  );
         return context;
     }

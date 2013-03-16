@@ -53,6 +53,6 @@ public class MockServiceRegistry implements ServiceRegistry {
         return names;
     }
     
-    private Map<ServiceName,ServiceController<?>> registry = new HashMap<ServiceName,ServiceController<?>>();
+    protected Map<ServiceName,ServiceController<?>> registry = new HashMap<ServiceName,ServiceController<?>>();
 
 }
