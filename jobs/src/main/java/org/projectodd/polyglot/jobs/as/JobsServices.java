@@ -33,10 +33,6 @@ public class JobsServices {
         return name;
     }
 
-    public static ServiceName componentResolver(DeploymentUnit unit, String jobName) {
-        return unit.getServiceName().append("component_resolver").append(jobName);
-    }
-
     public static ServiceName job(DeploymentUnit unit, String name) {
         return unit.getServiceName().append("scheduled_job").append(name);
     }
