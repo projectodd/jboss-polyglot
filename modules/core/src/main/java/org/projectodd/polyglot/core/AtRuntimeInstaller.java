@@ -108,7 +108,7 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
             }
             service.setMode(Mode.REMOVE);
         } else if (actionOnRemove != null) {
-            completionService.submit(actionOnRemove, null);
+            completionService.submit(actionOnRemove, service);
         }
 
         return completionService;
@@ -210,7 +210,7 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
         public RemovalListener() {
         }
 
-        public RemovalListener(ExecutorCompletionService completionService, Runnable action) {
+        public RemovalListener(ExecutorCompletionService<ServiceController> completionService, Runnable action) {
             this.completionService = completionService;
             this.action = action;
         }
@@ -221,7 +221,7 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
             if (transition == Transition.REMOVING_to_REMOVED) {
                 if (action != null) {
                     if (completionService != null) {
-                        completionService.submit(action, null);
+                        completionService.submit(action, controller);
                     } else  {
                         action.run();
                     }
@@ -275,7 +275,7 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
            // not used
         }
 
-        private ExecutorCompletionService completionService;
+        private ExecutorCompletionService<ServiceController> completionService;
         private Runnable action;
     }
 }
