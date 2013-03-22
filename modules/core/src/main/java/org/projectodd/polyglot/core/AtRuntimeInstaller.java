@@ -63,8 +63,7 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
     protected ExecutorCompletionService<ServiceController> replaceService(ServiceName name, Runnable actionOnRemove) {
         return replaceService(this.unit.getServiceRegistry(),
                 name,
-                actionOnRemove,
-                null);
+                actionOnRemove);
     }
 
     @SuppressWarnings("unused")
