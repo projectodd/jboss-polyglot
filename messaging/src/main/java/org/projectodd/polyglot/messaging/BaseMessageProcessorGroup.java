@@ -58,11 +58,11 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
 
     @Override
     public void start(final StartContext context) throws StartException {
-    
+
         final boolean async = this.startAsynchronously;
-        
+
         Runnable action = new Runnable() {
-    
+
             @Override
             public void run() {
                 ManagedReferenceFactory destinationManagedReferenceFactory = BaseMessageProcessorGroup.this.destinationInjector.getValue();
@@ -74,11 +74,11 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
                         destinationManagedReference.release();
                     }
                 }
-              
+
                 startConnection( context );
-                
+
                 ServiceTarget target = context.getChildTarget();
-    
+
                 if (BaseMessageProcessorGroup.this.destination instanceof Queue) {
                     target.addDependency( JMSServices.getJmsQueueBaseServiceName( MessagingServices.getHornetQServiceName( "default" ) )
                             .append( BaseMessageProcessorGroup.this.destinationName ) );
@@ -88,7 +88,11 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
                 }
 
                 try {
-                    start();
+                    if (stoppedAfterDeploy) {
+                        log.debugf("Skipping start of '%s' message processor because it's set to not start on boot", name);
+                    } else {
+                        start();
+                    }
                 } catch (Exception e) {
                     context.failed( new StartException( e ) );
                 }
@@ -97,16 +101,16 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
                     context.complete();
                 }
             }
-    
+
         };
-        
+
         if (async) {
             context.asynchronous();
             context.execute( action );
         } else {
             action.run();
         }
-    
+
     }
 
     @Override
@@ -160,7 +164,7 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
             return getConnection().createSession( true, Session.SESSION_TRANSACTED );
         }
     }
-    
+
     protected MessageConsumer createConsumer(Session session) throws JMSException {
         Destination destination = getDestination();
 
@@ -174,12 +178,12 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
         }
 
     }
-    
+
     protected void startConsumer(BaseMessageProcessor processor) throws Exception {
         log.trace("Adding new consumer for '" + getName() + "' message processor (current count: " + messageProcessors.size() + ")");
 
         Session session = createSession();
-            
+
         processor.initialize(this, session, createConsumer( session ) );
 
         messageProcessors.add(processor);
@@ -193,7 +197,7 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
     }
 
     protected void startConnection(StartContext context) {
-        
+
         ManagedReferenceFactory connectionFactoryManagedReferenceFactory = BaseMessageProcessorGroup.this.connectionFactoryInjector.getValue();
         ManagedReference connectionFactoryManagedReference = connectionFactoryManagedReferenceFactory.getReference();
         HornetQConnectionFactory connectionFactory = (HornetQConnectionFactory) connectionFactoryManagedReference.getInstance();
@@ -211,7 +215,7 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
                     log.info( "Setting clientID for " + name + " to " + clientID );
                     this.connection.setClientID( clientID );
                 } else {
-                    log.warn( "ClientID set for processor " + name + ", but " + 
+                    log.warn( "ClientID set for processor " + name + ", but " +
                             destination + " is not a topic - ignoring." );
                 }
             } else if (this.durable && clientID == null) {
@@ -225,13 +229,13 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
                 connectionFactoryManagedReference.release();
             }
         }
- 
+
     }
-    
+
     protected BaseMessageProcessor instantiateProcessor() throws IllegalAccessException, InstantiationException {
         return this.messageProcessorClass.newInstance();
     }
-    
+
     public String getDestinationName() {
         return this.destinationName;
     }
@@ -340,7 +344,7 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
     public boolean isXAEnabled() {
         return this.xaEnabled;
     }
-    
+
     public Injector<ManagedReferenceFactory> getConnectionFactoryInjector() {
         return this.connectionFactoryInjector;
     }
@@ -356,7 +360,7 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
     protected void setConnection(Connection connection) {
         this.connection = connection;
     }
-    
+
     public Destination getDestination() {
         return this.destination;
     }
@@ -373,6 +377,14 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
         this.startAsynchronously = startAsynchronously;
     }
 
+    public boolean isStoppedAfterDeploy() {
+        return stoppedAfterDeploy;
+    }
+
+    public void setStoppedAfterDeploy(boolean stoppedAfterDeploy) {
+        this.stoppedAfterDeploy = stoppedAfterDeploy;
+    }
+
     protected boolean startAsynchronously = true;
     private Class<? extends BaseMessageProcessor> messageProcessorClass;
     protected Connection connection;
@@ -387,6 +399,7 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
     private String clientID;
     private boolean xaEnabled = true;
     protected boolean running = false;
+    private boolean stoppedAfterDeploy = false;
     private int concurrency;
     private List<BaseMessageProcessor> messageProcessors = new ArrayList<BaseMessageProcessor>();
     private final InjectedValue<ManagedReferenceFactory> connectionFactoryInjector = new InjectedValue<ManagedReferenceFactory>();

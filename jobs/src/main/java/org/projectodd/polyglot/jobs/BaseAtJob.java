@@ -38,7 +38,7 @@ public class BaseAtJob extends BaseJob {
                      String description, 
                      TimeInterval timeout, 
                      boolean singleton) {
-        super(jobClass, group, name, description, timeout, singleton);
+        super(jobClass, group, name, description, timeout, singleton, false);
     }
 
     @Override
