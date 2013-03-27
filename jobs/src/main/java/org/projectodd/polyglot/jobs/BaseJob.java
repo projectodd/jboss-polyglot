@@ -47,13 +47,15 @@ public abstract class BaseJob implements Service<BaseJob>, BaseJobMBean {
                    String name, 
                    String description, 
                    TimeInterval timeout, 
-                   boolean singleton) {
+                   boolean singleton,
+                   boolean stoppedAfterDeploy) {
         this.group = group;
         this.name = name;
         this.description = description;
         this.timeout = timeout;
         this.singleton = singleton;
         this.jobClass = jobClass;
+        this.stoppedAfterDeploy = stoppedAfterDeploy;
     }
     
   
@@ -71,7 +73,11 @@ public abstract class BaseJob implements Service<BaseJob>, BaseJobMBean {
         context.execute(new Runnable() {
             public void run() {
                 try {
-                    BaseJob.this.start();
+                    if (stoppedAfterDeploy) {
+                        log.debugf("Skipping start of '%s' job because it's set to not start on boot", getName());
+                    } else {
+                        BaseJob.this.start();
+                    }
                     context.complete();
                 } catch (Exception e) {
                     context.failed( new StartException( e ) );
@@ -91,7 +97,7 @@ public abstract class BaseJob implements Service<BaseJob>, BaseJobMBean {
         try {
             getScheduler().unscheduleJob( triggerKey(getTriggerName(), this.group) );
         } catch (SchedulerException ex) {
-            log.warn( "An error occurred stoping job " + this.name, ex );
+            log.warn( "An error occurred stopping job " + this.name, ex );
         } 
         this.jobDetail = null;  
     }
@@ -180,6 +186,10 @@ public abstract class BaseJob implements Service<BaseJob>, BaseJobMBean {
         return this.timeout.valueAs( TimeUnit.SECONDS );
     }
 
+    public boolean isStoppedAfterDeploy() {
+        return stoppedAfterDeploy;
+    }
+
     private Class<? extends Job> jobClass;
     private String group;
     private String name;
@@ -187,6 +197,7 @@ public abstract class BaseJob implements Service<BaseJob>, BaseJobMBean {
     private TimeInterval timeout;
     private JobDetail jobDetail;
     private boolean singleton;
+    private boolean stoppedAfterDeploy = false;
 
     private InjectedValue<BaseJobScheduler> jobSchedulerInjector = new InjectedValue<BaseJobScheduler>();
     

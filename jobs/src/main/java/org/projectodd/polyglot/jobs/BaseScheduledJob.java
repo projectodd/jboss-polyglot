@@ -29,19 +29,20 @@ import org.quartz.SchedulerException;
 
 public class BaseScheduledJob extends BaseJob implements BaseScheduledJobMBean {
     
-    public BaseScheduledJob(Class<? extends Job> jobClass, String group, String name, String description, String cronExpression, boolean singleton) {    
-        this( jobClass, group, name, description, cronExpression, null, singleton );
+    public BaseScheduledJob(Class<? extends Job> jobClass, String group, String name, String description, String cronExpression, boolean singleton, boolean stoppedOnStart) {
+        this( jobClass, group, name, description, cronExpression, null, singleton, stoppedOnStart );
     }
     
-    public BaseScheduledJob(Class<? extends Job> jobClass, String group, String name, String description, String cronExpression, TimeInterval timeout, boolean singleton) {
-        super(jobClass, group, name, description, timeout, singleton);
+    public BaseScheduledJob(Class<? extends Job> jobClass, String group, String name, String description, String cronExpression, TimeInterval timeout, boolean singleton, boolean stoppedOnStart) {
+        super(jobClass, group, name, description, timeout, singleton, stoppedOnStart);
         this.cronExpression = cronExpression;
+
     }
     
     @Override
     public synchronized void start() throws ParseException, SchedulerException {
-        getScheduler().scheduleJob( buildJobDetail(), 
-                                    baseTrigger()        
+        getScheduler().scheduleJob( buildJobDetail(),
+                                    baseTrigger()
                                     .withSchedule( CronScheduleBuilder.cronSchedule( this.cronExpression ) )
                                    .build() );
     }
@@ -69,5 +70,5 @@ public class BaseScheduledJob extends BaseJob implements BaseScheduledJobMBean {
     }
 
     private String cronExpression;
-    
+
 }
