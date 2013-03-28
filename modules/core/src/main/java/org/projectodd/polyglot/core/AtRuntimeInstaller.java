@@ -19,24 +19,18 @@
 
 package org.projectodd.polyglot.core;
 
-import java.util.Hashtable;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.Executors;
-
-import javax.management.MBeanServer;
-
 import org.jboss.as.jmx.MBeanRegistrationService;
 import org.jboss.as.jmx.MBeanServerService;
 import org.jboss.as.jmx.ObjectNameFactory;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.logging.Logger;
+import org.jboss.msc.service.AbstractServiceListener;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceController.Transition;
-import org.jboss.msc.service.ServiceListener;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
 import org.jboss.msc.service.ServiceTarget;
@@ -47,12 +41,15 @@ import org.jboss.msc.value.ImmediateValue;
 import org.projectodd.polyglot.core.app.ApplicationMetaData;
 import org.projectodd.polyglot.core.util.ClusterUtil;
 
-public class AtRuntimeInstaller<T> implements Service<T>  {
+import javax.management.MBeanServer;
+import java.util.Hashtable;
+
+public class AtRuntimeInstaller<T> implements Service<T> {
 
     public static final String HA_SINGLETON_SERVICE_SUFFIX = "ha-singleton";
 
     public AtRuntimeInstaller(DeploymentUnit unit) {
-        this( unit, null );
+        this(unit, null);
     }
 
     public AtRuntimeInstaller(DeploymentUnit unit, ServiceTarget globalServiceTarget) {
@@ -60,65 +57,36 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
         this.globalServiceTarget = globalServiceTarget;
     }
 
-    protected ExecutorCompletionService<ServiceController> replaceService(ServiceName name, Runnable actionOnRemove) {
-        return replaceService(this.unit.getServiceRegistry(),
+    @SuppressWarnings("unused")
+    protected void replaceService(ServiceName name) {
+        replaceService(this.unit.getServiceRegistry(),
+                name,
+                null);
+    }
+
+    protected void replaceService(ServiceName name, Runnable actionOnRemove) {
+        replaceService(this.unit.getServiceRegistry(),
                 name,
                 actionOnRemove);
     }
 
-    @SuppressWarnings("unused")
-    protected ExecutorCompletionService<ServiceController> replaceService(ServiceName name, ExecutorCompletionService<ServiceController> completionService) {
-        return replaceService(this.unit.getServiceRegistry(),
-                name,
-                null,
-                completionService);
-    }
-
-    @SuppressWarnings("unused")
-    protected ExecutorCompletionService<ServiceController> replaceService(ServiceName name, Runnable actionOnRemove, ExecutorCompletionService<ServiceController> completionService) {
-        return replaceService(this.unit.getServiceRegistry(),
-                name,
-                actionOnRemove,
-                completionService);
-    }
-
     @SuppressWarnings("unchecked")
-    public static ExecutorCompletionService<ServiceController> replaceService(ServiceRegistry registry, final ServiceName name, Runnable actionOnRemove) {
-        return replaceService(registry, name, actionOnRemove, new ExecutorCompletionService<ServiceController>(Executors.newSingleThreadExecutor()));
-    }
-
-    @SuppressWarnings("unchecked")
-    public static ExecutorCompletionService<ServiceController> replaceService(ServiceRegistry registry, final ServiceName name, Runnable actionOnRemove, ExecutorCompletionService<ServiceController> completionService) {
-        final ServiceController<?> service = registry.getService(name);
+    public static void replaceService(ServiceRegistry registry, ServiceName name, Runnable actionOnRemove) {
+        final ServiceController service = registry.getService(name);
 
         if (service != null) {
-            if (actionOnRemove != null) {
-                service.addListener(new RemovalListener(completionService, actionOnRemove));
-            } else {
-                // If there is no actionOnRemove provided but we have a service to remove
-                // let's create a dummy action, this will help to watch for the
-                // removal completion when using the returned ExecutorCompletionService
-                // and its methods
-                service.addListener(new RemovalListener(completionService, new Runnable() {
-                    @Override
-                    public void run() {
-                        log.debugf("The '%s' service was removed", name.getCanonicalName());
-                    }
-                }));
-            }
+            service.addListener(new RemovalListener(actionOnRemove));
             service.setMode(Mode.REMOVE);
         } else if (actionOnRemove != null) {
-            completionService.submit(actionOnRemove, service);
+            actionOnRemove.run();
         }
-
-        return completionService;
     }
 
 
     protected ServiceBuilder<?> build(final ServiceName serviceName, final Service<?> service, final boolean singleton) {
         ServiceBuilder<?> builder = getTarget().addService(serviceName, service);
-        if (singleton && ClusterUtil.isClustered( getUnit().getServiceRegistry() )) {
-            builder.addDependency( unit.getServiceName().append( HA_SINGLETON_SERVICE_SUFFIX ) );
+        if (singleton && ClusterUtil.isClustered(getUnit().getServiceRegistry())) {
+            builder.addDependency(unit.getServiceName().append(HA_SINGLETON_SERVICE_SUFFIX));
             builder.setInitialMode(Mode.PASSIVE);
         } else {
             builder.setInitialMode(Mode.ACTIVE);
@@ -128,47 +96,47 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
     }
 
     protected void deploy(final ServiceName serviceName, final Service<?> service) {
-        deploy( serviceName, service, false );
+        deploy(serviceName, service, false);
     }
 
     protected void deploy(final ServiceName serviceName, final Service<?> service, final boolean singleton) {
-        replaceService( serviceName, new Runnable() {
+        replaceService(serviceName, new Runnable() {
             public void run() {
-                build( serviceName, service, singleton ).install();
+                build(serviceName, service, singleton).install();
             }
         });
     }
 
     public ServiceName installMBean(final ServiceName name, final String groupName, Object mbean) {
-        return installMBean( name, new MBeanRegistrationService<Object>( mbeanName( groupName, name ),
+        return installMBean(name, new MBeanRegistrationService<Object>(mbeanName(groupName, name),
                 name,
-                new ImmediateValue<Object>( mbean ) ) );
+                new ImmediateValue<Object>(mbean)));
     }
 
     public ServiceName installMBean(final ServiceName name, final MBeanRegistrationService<?> mbeanService) {
-        final ServiceName mbeanName = name.append( "mbean" );
+        final ServiceName mbeanName = name.append("mbean");
 
-        replaceService( mbeanName, new Runnable() {
+        replaceService(mbeanName, new Runnable() {
             public void run() {
-                getTarget().addService( mbeanName, mbeanService ).
-                addDependency( DependencyType.OPTIONAL, MBeanServerService.SERVICE_NAME, MBeanServer.class, mbeanService.getMBeanServerInjector() ).
-                setInitialMode( Mode.PASSIVE ).
-                install();
+                getTarget().addService(mbeanName, mbeanService).
+                        addDependency(DependencyType.OPTIONAL, MBeanServerService.SERVICE_NAME, MBeanServer.class, mbeanService.getMBeanServerInjector()).
+                        setInitialMode(Mode.PASSIVE).
+                        install();
             }
-        } );
+        });
 
         return mbeanName;
     }
 
     @SuppressWarnings("serial")
     public String mbeanName(final String domain, final ServiceName name) {
-        final ApplicationMetaData appMetaData = unit.getAttachment( ApplicationMetaData.ATTACHMENT_KEY );
-        return ObjectNameFactory.create( domain, new Hashtable<String, String>() {
+        final ApplicationMetaData appMetaData = unit.getAttachment(ApplicationMetaData.ATTACHMENT_KEY);
+        return ObjectNameFactory.create(domain, new Hashtable<String, String>() {
             {
-                put( "app", appMetaData.getApplicationName() );
-                put( "name", name.getSimpleName() );
+                put("app", appMetaData.getApplicationName());
+                put("name", name.getSimpleName());
             }
-        } ).toString();
+        }).toString();
     }
 
     @Override
@@ -183,7 +151,7 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
     @SuppressWarnings("unchecked")
     @Override
     public T getValue() {
-        return (T)this;
+        return (T) this;
     }
 
     public ServiceTarget getTarget() {
@@ -202,80 +170,28 @@ public class AtRuntimeInstaller<T> implements Service<T>  {
     private ServiceTarget serviceTarget;
     private ServiceTarget globalServiceTarget;
 
-    protected static final Logger log = Logger.getLogger( "org.projectodd.polyglot.core" );
+    protected static final Logger log = Logger.getLogger("org.projectodd.polyglot.core");
 
     @SuppressWarnings("rawtypes")
-    public static class RemovalListener implements ServiceListener {
+    public static class RemovalListener extends AbstractServiceListener {
 
         public RemovalListener() {
         }
 
-        public RemovalListener(ExecutorCompletionService<ServiceController> completionService, Runnable action) {
-            this.completionService = completionService;
+        public RemovalListener(Runnable action) {
             this.action = action;
         }
 
         @Override
         public void transition(ServiceController controller,
-                Transition transition) {
+                               Transition transition) {
             if (transition == Transition.REMOVING_to_REMOVED) {
                 if (action != null) {
-                    if (completionService != null) {
-                        completionService.submit(action, controller);
-                    } else  {
-                        action.run();
-                    }
+                    action.run();
                 }
-
             }
         }
 
-        @Override
-        public void listenerAdded(ServiceController controller) {
-           // not used
-        }
-
-        @Override
-        public void serviceRemoveRequested(ServiceController controller) {
-           // not used
-        }
-
-        @Override
-        public void serviceRemoveRequestCleared(ServiceController controller) {
-           // not used
-        }
-
-        @Override
-        public void dependencyFailed(ServiceController controller) {
-           // not used
-        }
-
-        @Override
-        public void dependencyFailureCleared(ServiceController controller) {
-           // not used
-        }
-
-        @Override
-        public void immediateDependencyUnavailable(ServiceController controller) {
-           // not used
-        }
-
-        @Override
-        public void immediateDependencyAvailable(ServiceController controller) {
-           // not used
-        }
-
-        @Override
-        public void transitiveDependencyUnavailable(ServiceController controller) {
-           // not used
-        }
-
-        @Override
-        public void transitiveDependencyAvailable(ServiceController controller) {
-           // not used
-        }
-
-        private ExecutorCompletionService<ServiceController> completionService;
         private Runnable action;
     }
 }
