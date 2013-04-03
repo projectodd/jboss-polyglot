@@ -15,11 +15,14 @@
 
 
   <modules>
-    <module>core</module>
-    <module>web</module>
-    <module>hasingleton</module>
     <module>cache</module>
+    <module>core</module>
+    <module>hasingleton</module>
+    <module>jobs</module>
+    <module>messaging</module>
     <module>stomp</module>
+    <module>web</module>
+    <module>xa</module>
   </modules>
 
   <build> 

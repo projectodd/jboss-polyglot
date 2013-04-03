@@ -34,11 +34,8 @@
   </developers>
 
   <modules>
-    <module>jobs</module>
-    <module>messaging</module>
     <module>support</module>
     <module>modules</module>
-    <module>xa</module>
   </modules>
   
   <dependencyManagement>

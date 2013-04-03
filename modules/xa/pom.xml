@@ -2,7 +2,7 @@
 
   <parent>
     <groupId>org.projectodd</groupId>
-    <artifactId>polyglot</artifactId>
+    <artifactId>polyglot-modules-parent</artifactId>
     <version>1.13.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
@@ -10,7 +10,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>polyglot-xa</artifactId>
   <packaging>jar</packaging>
-  <name>Polyglot XA Support</name>
+  <name>Polyglot XA Support Module</name>
   <description />
 
   <dependencies>
@@ -41,6 +41,15 @@
           <execution>
             <id>assemble-module</id>
             <phase>package</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>de.saumya.mojo</groupId>
+        <artifactId>jruby-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>install-module</id>
           </execution>
         </executions>
       </plugin>
