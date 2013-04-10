@@ -59,7 +59,7 @@ public class HASingletonCoordinator implements GroupMembershipListener {
     }
     
     protected boolean shouldBeMaster(List<ClusterNode> members) {
-        log.info( "inquire if we should be master" );
+        log.info( "inquire if we should be master (" + this.clusterName + ")" );
         if ( members.isEmpty() ) {
             return false;
         }
@@ -71,10 +71,10 @@ public class HASingletonCoordinator implements GroupMembershipListener {
     
     protected void allMembersChanged(List<ClusterNode> allMembers) {
         if ( shouldBeMaster( allMembers ) ) {
-            log.info( "Becoming HASingleton master." );
+            log.info( "Becoming HASingleton master (" + this.clusterName + ")" );
             haSingletonController.setMode( Mode.ACTIVE );
         } else {
-            log.info( "Ensuring NOT HASingleton master." );
+            log.info( "Ensuring NOT HASingleton master (" + this.clusterName + ")" );
             haSingletonController.setMode( Mode.NEVER );
         }
     }

@@ -31,8 +31,9 @@ import org.jboss.logging.Logger;
 import org.jboss.modules.ModuleLoader;
 import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceController;
-import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceController.Mode;
+import org.jboss.msc.service.ServiceName;
+import org.jboss.msc.service.ServiceTarget;
 import org.jboss.msc.value.InjectedValue;
 import org.jgroups.Channel;
 import org.projectodd.polyglot.core.util.ClusterUtil;
@@ -41,11 +42,27 @@ public class HASingletonInstaller implements DeploymentUnitProcessor {
 
     @Override
     public void deploy(DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
-        DeploymentUnit unit = phaseContext.getDeploymentUnit();
+        deploy(phaseContext.getDeploymentUnit(), phaseContext.getServiceTarget(), "global");
+    }
 
-        ServiceBuilder<Void> builder = phaseContext.getServiceTarget().addService( HASingleton.serviceName( unit ), new HASingleton() );
+    @Override
+    public void undeploy(DeploymentUnit context) {
+    }
 
-        if (ClusterUtil.isClustered( phaseContext )) {
+    public static void deployOnce(DeploymentUnit unit, ServiceTarget target, String name) {  
+        ServiceName serviceName = HASingleton.serviceName(unit, name);
+        if (unit.getServiceRegistry().getService(serviceName) == null) {
+            deploy(unit, target, name);
+        }
+        
+    }
+    
+    public static void deploy(DeploymentUnit unit, ServiceTarget target, String name) {
+        ServiceName serviceName = HASingleton.serviceName(unit, name);
+        ServiceBuilder<Void> builder = target.addService( serviceName, new HASingleton() );
+
+        boolean clustered = ClusterUtil.isClustered( unit.getServiceRegistry() ); 
+        if (clustered) {
             builder.setInitialMode( Mode.NEVER );
         } else {
             builder.setInitialMode( Mode.ACTIVE );
@@ -53,28 +70,24 @@ public class HASingletonInstaller implements DeploymentUnitProcessor {
 
         ServiceController<Void> singletonController = builder.install();
 
-        if (ClusterUtil.isClustered( phaseContext )) {
-            String hasingletonId = unit.getName() + "-hasingleton";
+        if (clustered) {
+            String hasingletonId = unit.getName() + "-hasingleton-" + name;
             ServiceName channelServiceName = ChannelService.getServiceName( hasingletonId );
             InjectedValue<ChannelFactory> channelFactory = new InjectedValue<ChannelFactory>();
-            phaseContext.getServiceTarget().addService( channelServiceName, new ChannelService( hasingletonId, channelFactory ) )
+            target.addService( channelServiceName, new ChannelService( hasingletonId, channelFactory ) )
                     .addDependency( ChannelFactoryService.getServiceName( null ), ChannelFactory.class, channelFactory )
                     .setInitialMode( Mode.ON_DEMAND )
                     .install();
 
             HASingletonCoordinatorService coordinator = new HASingletonCoordinatorService( singletonController, hasingletonId );
-            phaseContext.getServiceTarget().addService( HASingleton.serviceName( unit ).append( "coordinator" ), coordinator )
+            target.addService( serviceName.append( "coordinator" ), coordinator )
                     .addDependency( channelServiceName, Channel.class, coordinator.getChannelInjector() )
                     .addDependency( Services.JBOSS_SERVICE_MODULE_LOADER, ModuleLoader.class, coordinator.getModuleLoaderInjector() )
                     .install();
         }
+	
     }
-
-    @Override
-    public void undeploy(DeploymentUnit context) {
-
-    }
-
+    
     private static final Logger log = Logger.getLogger( "org.projectodd.polyglot.hasingleton" );
 
 }

@@ -29,10 +29,10 @@ import org.jboss.msc.service.StopContext;
 
 public class HASingleton implements Service<Void> {
     
-    public static ServiceName serviceName(DeploymentUnit unit) {
-        return unit.getServiceName().append(  "ha-singleton"  );
+    public static ServiceName serviceName(DeploymentUnit unit, String name) {
+    	return unit.getServiceName().append("ha-singleton").append(name);
     }
-
+    
     @Override
     public Void getValue() throws IllegalStateException, IllegalArgumentException {
         return null;

@@ -19,6 +19,10 @@
 
 package org.projectodd.polyglot.core;
 
+import java.util.Hashtable;
+
+import javax.management.MBeanServer;
+
 import org.jboss.as.jmx.MBeanRegistrationService;
 import org.jboss.as.jmx.MBeanServerService;
 import org.jboss.as.jmx.ObjectNameFactory;
@@ -40,9 +44,6 @@ import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.ImmediateValue;
 import org.projectodd.polyglot.core.app.ApplicationMetaData;
 import org.projectodd.polyglot.core.util.ClusterUtil;
-
-import javax.management.MBeanServer;
-import java.util.Hashtable;
 
 public class AtRuntimeInstaller<T> implements Service<T> {
 
@@ -84,9 +85,15 @@ public class AtRuntimeInstaller<T> implements Service<T> {
 
 
     protected ServiceBuilder<?> build(final ServiceName serviceName, final Service<?> service, final boolean singleton) {
+    	return build(serviceName, service, singleton, "global");
+    }
+    
+    protected ServiceBuilder<?> build(final ServiceName serviceName, final Service<?> service, final boolean singleton, String singletonContext) {	
         ServiceBuilder<?> builder = getTarget().addService(serviceName, service);
         if (singleton && ClusterUtil.isClustered(getUnit().getServiceRegistry())) {
-            builder.addDependency(unit.getServiceName().append(HA_SINGLETON_SERVICE_SUFFIX));
+            builder.addDependency(unit.getServiceName().
+                    append(HA_SINGLETON_SERVICE_SUFFIX).
+                    append(singletonContext));
             builder.setInitialMode(Mode.PASSIVE);
         } else {
             builder.setInitialMode(Mode.ACTIVE);
