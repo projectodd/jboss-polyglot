@@ -19,16 +19,29 @@
 
 package org.projectodd.polyglot.jobs;
 
-
 import java.text.ParseException;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 
+import org.jboss.msc.inject.Injector;
+import org.jboss.msc.service.StartContext;
+import org.jboss.msc.service.StartException;
+import org.jboss.msc.value.InjectedValue;
+import org.projectodd.polyglot.core.util.ClusterUtil;
 import org.projectodd.polyglot.core.util.TimeInterval;
 import org.quartz.Job;
+import org.quartz.JobExecutionContext;
+import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
+import org.quartz.Trigger.CompletedExecutionInstruction;
 import org.quartz.TriggerBuilder;
+import org.quartz.TriggerKey;
+import org.quartz.impl.matchers.KeyMatcher;
+import org.quartz.listeners.TriggerListenerSupport;
 
 public class BaseAtJob extends BaseJob {
 
@@ -42,13 +55,76 @@ public class BaseAtJob extends BaseJob {
     }
 
     @Override
+    public void start(StartContext context) throws StartException {
+        this.clustered = ClusterUtil.isClustered(context.getController().getServiceContainer());
+        super.start(context);
+    }    
+
+    @Override
     public synchronized void start() throws ParseException, SchedulerException {
+        Scheduler scheduler = getScheduler();
+
+        if (isSingleton() 
+            && this.clustered) {
+            Map statusMap = statusMap();
+
+            if (Status.COMPLETE.equals(statusMap.get(STATUS_KEY))) {
+                log.debug("Job complete, not starting: " + coordinationContext());
+                return;
+            }
+            
+            if (this.repeat > 0) {
+                if (statusMap.containsKey(COUNT_KEY)) {
+                    Integer count = (Integer)statusMap.get(COUNT_KEY);
+                    this.repeat -= count;
+                    log.debug("Job repeat count updated to " + this.repeat 
+                              + ": " + coordinationContext());
+                    if (this.repeat < 0) {
+                        log.debug("Job repeat count less than zero, not starting: " 
+                                  + coordinationContext());
+                        return;
+                    }
+                } else {
+                    statusMap.put(COUNT_KEY, 0);
+                }
+            }
+
+            scheduler.getListenerManager().      
+                addTriggerListener(new TriggerStatusListener(this),
+                                   KeyMatcher.keyEquals(TriggerKey.triggerKey(getTriggerName(), getGroup())));
+
+            statusMap.put(STATUS_KEY, Status.STARTED);
+
+            updateStatusMap(statusMap);
+        }
+
+        initTrigger();
+        
+        scheduler.scheduleJob(buildJobDetail(), this.trigger);
+    }
+
+    public void updateStatusMap(Map m) {
+        coordinationMap().put(coordinationContext(), m);
+    }
+                                      
+    public Map<String, Object> statusMap() {
+        Map<String, Object> statusMap = 
+            statusMap = (Map<String, Object>)coordinationMap().get(coordinationContext());
+
+        if (statusMap == null) {
+            statusMap = new HashMap<String, Object>();
+        }
+
+        return statusMap;
+    }
+
+    public void initTrigger() {
         TriggerBuilder<Trigger> trigger = baseTrigger();
         
         if (this.startAt != null) {
-            trigger.startAt( this.startAt );
+            trigger.startAt( this.startAt );    
         }
-        
+                  
         if (this.endAt != null) {
             trigger.endAt( this.endAt );
         }
@@ -66,10 +142,10 @@ public class BaseAtJob extends BaseJob {
         } else if (this.repeat > 0) {
             throw new IllegalArgumentException("Attempted to schedule a job with a repeat but no interval. job: " + getName() );
         }
-             
-        getScheduler().scheduleJob( buildJobDetail(), trigger.build() );
+         
+        this.trigger = trigger.build();
     }
-
+    
     public void setStartAt(Date startAt) {
         this.startAt = startAt;
     }
@@ -86,8 +162,73 @@ public class BaseAtJob extends BaseJob {
         this.repeat = repeat;
     }
 
+    @SuppressWarnings("rawtypes")
+    public Injector<ConcurrentMap> getCoordinationMapInjector() {
+        return this.coordinationMapInjector;
+    }
+
+    @SuppressWarnings("rawtypes")
+    public ConcurrentMap coordinationMap() {
+        return this.coordinationMapInjector.getValue();
+    }
+
+    public String coordinationContext() {
+        return getGroup() + "." + getName();
+    }
+
+    private enum Status {
+        STARTED, COMPLETE
+    }
+
+    private String STATUS_KEY = "s";
+    private String COUNT_KEY = "c";
+
+    private Trigger trigger;
+    private boolean clustered = false;
     private Date startAt = null;
     private Date endAt = null;
     private long interval = 0;
     private int repeat = 0;
+    @SuppressWarnings("rawtypes")
+    private InjectedValue<ConcurrentMap> coordinationMapInjector = new InjectedValue<ConcurrentMap>();
+    
+    class TriggerStatusListener extends TriggerListenerSupport {
+
+        @SuppressWarnings("rawtypes")
+        public TriggerStatusListener(BaseAtJob job) {
+            this.job = job;
+        }
+        
+        @Override
+        public String getName() {
+            return "trigger-status-listener." + this.job.coordinationContext();
+        }
+
+        @Override
+        public void triggerComplete(Trigger trigger, 
+                                    JobExecutionContext ignored,
+                                    CompletedExecutionInstruction alsoIgnored) {
+            Map statusMap = this.job.statusMap();
+            boolean update = false;
+            
+            if (!trigger.mayFireAgain()) {
+                log.debug("Marking job as complete: " + this.job.coordinationContext());
+                statusMap.put(STATUS_KEY, Status.COMPLETE);
+                update = true;
+            }
+
+            if (statusMap.containsKey(COUNT_KEY)) {
+                statusMap.put(COUNT_KEY, ((Integer)statusMap.get(COUNT_KEY)) + 1);
+                update = true;
+                log.debug("Updated :repeat count to " + statusMap.get(COUNT_KEY) 
+                          + " for: " + this.job.coordinationContext());
+            }
+
+            if (update) {
+                this.job.updateStatusMap(statusMap);
+            }
+        }
+
+        private BaseAtJob job;
+      }
 }
