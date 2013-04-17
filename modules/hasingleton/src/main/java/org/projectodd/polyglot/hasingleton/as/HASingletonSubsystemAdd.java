@@ -36,6 +36,7 @@ import org.jboss.as.server.deployment.Phase;
 import org.jboss.dmr.ModelNode;
 import org.jboss.logging.Logger;
 import org.jboss.msc.service.ServiceController;
+import org.projectodd.polyglot.hasingleton.CoordinationMapInstaller;
 import org.projectodd.polyglot.hasingleton.HASingletonInstaller;
 
 public class HASingletonSubsystemAdd extends AbstractBoottimeAddStepHandler {
@@ -59,6 +60,7 @@ public class HASingletonSubsystemAdd extends AbstractBoottimeAddStepHandler {
 
     protected void addDeploymentProcessors(final DeploymentProcessorTarget processorTarget) {
         processorTarget.addDeploymentProcessor( HASingletonExtension.SUBSYSTEM_NAME, Phase.INSTALL, 200, rootSafe( new HASingletonInstaller() ) );
+        processorTarget.addDeploymentProcessor( HASingletonExtension.SUBSYSTEM_NAME, Phase.INSTALL, 200, new CoordinationMapInstaller() );
     }
 
     static ModelNode createOperation(ModelNode address) {

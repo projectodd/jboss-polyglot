@@ -20,6 +20,7 @@
 package org.projectodd.polyglot.core;
 
 import java.util.Hashtable;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.management.MBeanServer;
 
@@ -28,6 +29,7 @@ import org.jboss.as.jmx.MBeanServerService;
 import org.jboss.as.jmx.ObjectNameFactory;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.logging.Logger;
+import org.jboss.msc.inject.Injector;
 import org.jboss.msc.service.AbstractServiceListener;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceBuilder;
@@ -42,6 +44,7 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.ImmediateValue;
+import org.jboss.msc.value.InjectedValue;
 import org.projectodd.polyglot.core.app.ApplicationMetaData;
 import org.projectodd.polyglot.core.util.ClusterUtil;
 
@@ -58,7 +61,6 @@ public class AtRuntimeInstaller<T> implements Service<T> {
         this.globalServiceTarget = globalServiceTarget;
     }
 
-    @SuppressWarnings("unused")
     protected void replaceService(ServiceName name) {
         replaceService(this.unit.getServiceRegistry(),
                 name,
@@ -146,13 +148,28 @@ public class AtRuntimeInstaller<T> implements Service<T> {
         }).toString();
     }
 
+
+    public boolean inCluster() {
+        return ClusterUtil.isClustered(this.unit.getServiceRegistry());
+    }
+    
+    public boolean isStarted() {
+        return this.started;
+    }
+
+    public String getName() {
+        return this.getClass().getName();
+    }
+
     @Override
     public void start(StartContext context) throws StartException {
         this.serviceTarget = context.getChildTarget();
+        this.started = true;
     }
 
     @Override
     public synchronized void stop(StopContext context) {
+        this.started = false;
     }
 
     @SuppressWarnings("unchecked")
@@ -172,11 +189,25 @@ public class AtRuntimeInstaller<T> implements Service<T> {
     public ServiceTarget getGlobalTarget() {
         return this.globalServiceTarget;
     }
+    
+    @SuppressWarnings("rawtypes")
+    public ConcurrentMap getCoordinationMap() {
+        return this.coordinationMapInjector.getValue();
+    }
 
+    @SuppressWarnings("rawtypes")
+    public Injector<ConcurrentMap> getCoordinationMapInjector() {
+        return this.coordinationMapInjector;
+    }
+    
     private DeploymentUnit unit;
     private ServiceTarget serviceTarget;
     private ServiceTarget globalServiceTarget;
+    private boolean started = false;
 
+    @SuppressWarnings("rawtypes")
+    private InjectedValue<ConcurrentMap> coordinationMapInjector = new InjectedValue<ConcurrentMap>();
+    
     protected static final Logger log = Logger.getLogger("org.projectodd.polyglot.core");
 
     @SuppressWarnings("rawtypes")

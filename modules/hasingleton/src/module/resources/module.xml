@@ -41,6 +41,8 @@
         <module name="org.jboss.logging"/>
         <module name="org.jboss.vfs"/>
         <module name="org.jgroups"/>
+        <module name="org.infinispan"/>
+        <module name="org.projectodd.polyglot.cache"/>
         <module name="org.projectodd.polyglot.core"/>
     </dependencies>
 </module>
