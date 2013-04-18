@@ -37,19 +37,4 @@ public class PostgresAdapter extends Adapter {
             "jdbcpostgresql",
         };
     }
-
-
-    @Override
-    public Map<String, String> getPropertiesFor(Map<String, Object> config) {
-        Map<String, String> properties = new HashMap<String, String>();
-
-        properties.put( "ServerName"   , null==config.get("host") ? "localhost" : ""+config.get("host") );
-        properties.put( "PortNumber"   , null==config.get("port") ? "5432" : ""+config.get("port") );
-        properties.put( "DatabaseName" , ""+config.get("database") );
-        properties.put( "User"         , ""+config.get("username") );
-        properties.put( "Password"     , ""+config.get("password") );
-
-        return properties;
-    }
-
 }

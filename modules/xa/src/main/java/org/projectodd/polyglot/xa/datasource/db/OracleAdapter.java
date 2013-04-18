@@ -49,6 +49,13 @@ public class OracleAdapter extends Adapter {
         }
 
         properties.put( "URL"     , url );
+
+        // It's tough to know which Oracle driver allows
+        // username/password in the URL, so I debated using
+        // putUnlessNull here, but when the driver doesn't support
+        // creds in the url, you get a more useful error message with
+        // the following. Once we figure out which driver *does* allow
+        // creds in the URL, we can revisit.
         properties.put( "User"    , ""+config.get("username") );
         properties.put( "Password", ""+config.get("password") );
 

@@ -44,19 +44,6 @@ public class MySQLAdapter extends Adapter {
     }
 
     @Override
-    public Map<String, String> getPropertiesFor(Map<String, Object> config) {
-        Map<String, String> properties = new HashMap<String, String>();
-
-        properties.put( "ServerName", null == config.get( "host" ) ? "localhost" : "" + config.get( "host" ) );
-        properties.put( "PortNumber", null == config.get( "port" ) ? "3306" : "" + config.get( "port" ) );
-        properties.put( "DatabaseName", "" + config.get( "database" ) );
-        properties.put( "User", "" + config.get( "username" ) );
-        properties.put( "Password", "" + config.get( "password" ) );
-
-        return properties;
-    }
-
-    @Override
     public Validation getValidationFor(Map<String, Object> config) throws Exception {
         Boolean backgroundValidation = false;
         Long backgroundValidationMillis = 0L;

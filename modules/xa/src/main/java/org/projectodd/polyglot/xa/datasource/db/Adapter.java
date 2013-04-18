@@ -64,10 +64,20 @@ public abstract class Adapter {
 
     // Subclasses must override these
 
-    public abstract Map<String,String> getPropertiesFor(Map<String,Object> config);
     public abstract String[] getNames();
 
     // Subclasses might override these
+
+    public Map<String,String> getPropertiesFor(Map<String,Object> config) {
+        Map<String, String> properties = new HashMap<String, String>();
+        putUnlessNull(properties, "ServerName",    config, "host");
+        putUnlessNull(properties, "PortNumber",    config, "port");
+        putUnlessNull(properties, "DatabaseName",  config, "database");
+        putUnlessNull(properties, "User",          config, "username");
+        putUnlessNull(properties, "Password",      config, "password");
+        putUnlessNull(properties, "URL",           config, "url");
+        return properties;
+    }
 
     public String getId() {
         return this.id;
@@ -93,6 +103,13 @@ public abstract class Adapter {
         return null;
     }
 
+    Map<String, String> putUnlessNull(Map<String,String> props, String prop, Map<String,Object> config, String name) {
+        Object value = config.get(name);
+        if (value != null) {
+            props.put(prop, value.toString());
+        }
+        return props;
+    }
 
     private String id;
     private String requirePath;
