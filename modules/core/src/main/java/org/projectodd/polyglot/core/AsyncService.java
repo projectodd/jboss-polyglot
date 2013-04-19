@@ -48,7 +48,7 @@ public abstract class AsyncService<T> implements Service<T> {
                 try {
                     startAsync(context);
                     context.complete();
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     context.failed( new StartException( e ) );
                 }
             }
