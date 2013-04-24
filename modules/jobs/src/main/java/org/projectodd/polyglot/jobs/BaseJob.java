@@ -118,6 +118,8 @@ public abstract class BaseJob implements Service<BaseJob>, BaseJobMBean {
                 
         this.jobDetail.getJobDataMap().put("timeout", timeout); 
         
+        this.pending = false;
+        
         return this.jobDetail;
     }
     
@@ -190,6 +192,15 @@ public abstract class BaseJob implements Service<BaseJob>, BaseJobMBean {
         return stoppedAfterDeploy;
     }
 
+    /**
+     * A job is pending if it has been created, but not yet
+     * started. Once it has been started for the first time, it should
+     * never re-enter the pending state, only stopped.
+     */
+    public boolean isPending() {
+        return this.pending;
+    }
+        
     private Class<? extends Job> jobClass;
     private String group;
     private String name;
@@ -197,6 +208,7 @@ public abstract class BaseJob implements Service<BaseJob>, BaseJobMBean {
     private TimeInterval timeout;
     private JobDetail jobDetail;
     private boolean singleton;
+    private boolean pending = true;
     private boolean stoppedAfterDeploy = false;
 
     private InjectedValue<BaseJobScheduler> jobSchedulerInjector = new InjectedValue<BaseJobScheduler>();
