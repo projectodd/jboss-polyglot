@@ -46,8 +46,9 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
+import org.projectodd.polyglot.core.StartState;
 
-public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGroup> {
+public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGroup>, StartState {
 
     public BaseMessageProcessorGroup(ServiceRegistry registry, ServiceName baseServiceName, String destinationName, Class<? extends BaseMessageProcessor> messageProcessorClass) {
         this.serviceRegistry = registry;
@@ -136,6 +137,7 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
         installMessageProcessors();
 
         this.running = true;
+        this.hasStarted = true;
     }
 
     public synchronized void stop() throws Exception {
@@ -242,6 +244,16 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
 
     public Class<? extends BaseMessageProcessor> getMessageProcessorClass() {
         return messageProcessorClass;
+    }
+
+    @Override
+    public boolean isStarted() {
+        return this.running;
+    }
+
+    @Override 
+    public boolean hasStartedAtLeastOnce() {
+        return this.hasStarted;
     }
 
     public String getStatus() {
@@ -399,6 +411,7 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
     private String clientID;
     private boolean xaEnabled = true;
     protected boolean running = false;
+    private boolean hasStarted = false;
     private boolean stoppedAfterDeploy = false;
     private int concurrency;
     private List<BaseMessageProcessor> messageProcessors = new ArrayList<BaseMessageProcessor>();

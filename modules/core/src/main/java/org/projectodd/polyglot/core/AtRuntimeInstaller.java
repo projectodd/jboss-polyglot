@@ -48,7 +48,7 @@ import org.jboss.msc.value.InjectedValue;
 import org.projectodd.polyglot.core.app.ApplicationMetaData;
 import org.projectodd.polyglot.core.util.ClusterUtil;
 
-public class AtRuntimeInstaller<T> implements Service<T> {
+public class AtRuntimeInstaller<T> implements Service<T>, StartState {
 
     public static final String HA_SINGLETON_SERVICE_SUFFIX = "ha-singleton";
 
@@ -153,8 +153,14 @@ public class AtRuntimeInstaller<T> implements Service<T> {
         return ClusterUtil.isClustered(this.unit.getServiceRegistry());
     }
     
+    @Override
     public boolean isStarted() {
-        return this.started;
+        return this.running;
+    }
+
+    @Override
+    public boolean hasStartedAtLeastOnce() {
+        return this.hasStarted;
     }
 
     public String getName() {
@@ -164,12 +170,13 @@ public class AtRuntimeInstaller<T> implements Service<T> {
     @Override
     public void start(StartContext context) throws StartException {
         this.serviceTarget = context.getChildTarget();
-        this.started = true;
+        this.running = true;
+        this.hasStarted = true;
     }
 
     @Override
     public synchronized void stop(StopContext context) {
-        this.started = false;
+        this.running = false;
     }
 
     @SuppressWarnings("unchecked")
@@ -203,7 +210,8 @@ public class AtRuntimeInstaller<T> implements Service<T> {
     private DeploymentUnit unit;
     private ServiceTarget serviceTarget;
     private ServiceTarget globalServiceTarget;
-    private boolean started = false;
+    private boolean running = false;
+    private boolean hasStarted = false;
 
     @SuppressWarnings("rawtypes")
     private InjectedValue<ConcurrentMap> coordinationMapInjector = new InjectedValue<ConcurrentMap>();

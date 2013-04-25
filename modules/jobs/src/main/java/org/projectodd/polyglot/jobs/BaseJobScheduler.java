@@ -27,12 +27,13 @@ import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
+import org.projectodd.polyglot.core.StartState;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.spi.JobFactory;
 
-public class BaseJobScheduler implements Service<BaseJobScheduler> {
+public class BaseJobScheduler implements Service<BaseJobScheduler>, StartState {
 
     public BaseJobScheduler(String name) {
         this.name = name;
@@ -87,6 +88,8 @@ public class BaseJobScheduler implements Service<BaseJobScheduler> {
         this.scheduler = factory.getScheduler();
         this.scheduler.setJobFactory( this.jobFactory );
         this.scheduler.start();
+
+        this.hasStarted = true;
     }
 
     public String getName() {
@@ -110,6 +113,7 @@ public class BaseJobScheduler implements Service<BaseJobScheduler> {
     }
 
     
+    @Override
     public boolean isStarted() {
         boolean started = false;
     
@@ -122,10 +126,16 @@ public class BaseJobScheduler implements Service<BaseJobScheduler> {
         return started;        
     }
 
+    @Override
+    public boolean hasStartedAtLeastOnce() {
+        return this.hasStarted;
+    }
+
     private String name;
     private int threadCount = -1;
     private Scheduler scheduler;
     private JobFactory jobFactory;
-        
+    private boolean hasStarted = false;
+
     private static final Logger log = Logger.getLogger( "org.projectodd.polyglot.jobs" );
 }

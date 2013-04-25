@@ -30,6 +30,7 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
+import org.projectodd.polyglot.core.StartState;
 import org.projectodd.polyglot.core.util.TimeInterval;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -40,7 +41,7 @@ import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 
-public abstract class BaseJob implements Service<BaseJob>, BaseJobMBean {
+public abstract class BaseJob implements Service<BaseJob>, BaseJobMBean, StartState {
 
     public BaseJob(Class<? extends Job> jobClass, 
                    String group, 
@@ -118,7 +119,7 @@ public abstract class BaseJob implements Service<BaseJob>, BaseJobMBean {
                 
         this.jobDetail.getJobDataMap().put("timeout", timeout); 
         
-        this.pending = false;
+        this.hasStarted = true;
         
         return this.jobDetail;
     }
@@ -137,6 +138,7 @@ public abstract class BaseJob implements Service<BaseJob>, BaseJobMBean {
         return this.name + ".trigger";
     }
 
+    @Override
     public synchronized boolean isStarted() {
         return this.jobDetail != null;
     }
@@ -192,13 +194,9 @@ public abstract class BaseJob implements Service<BaseJob>, BaseJobMBean {
         return stoppedAfterDeploy;
     }
 
-    /**
-     * A job is pending if it has been created, but not yet
-     * started. Once it has been started for the first time, it should
-     * never re-enter the pending state, only stopped.
-     */
-    public boolean isPending() {
-        return this.pending;
+    @Override
+    public boolean hasStartedAtLeastOnce() {
+        return this.hasStarted;
     }
         
     private Class<? extends Job> jobClass;
@@ -208,7 +206,7 @@ public abstract class BaseJob implements Service<BaseJob>, BaseJobMBean {
     private TimeInterval timeout;
     private JobDetail jobDetail;
     private boolean singleton;
-    private boolean pending = true;
+    private boolean hasStarted = false;
     private boolean stoppedAfterDeploy = false;
 
     private InjectedValue<BaseJobScheduler> jobSchedulerInjector = new InjectedValue<BaseJobScheduler>();
