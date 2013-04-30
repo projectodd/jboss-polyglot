@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jboss</groupId>
     <artifactId>jboss-parent</artifactId>
-    <version>6-beta-1</version>
+    <version>10-redhat-2</version>
   </parent>
 
   <groupId>org.projectodd</groupId>
@@ -85,6 +85,7 @@
   </properties>
 
   
+  <!--
   <repositories>
     <repository>
       <id>jboss-third-party-releases</id>
@@ -110,6 +111,7 @@
       </snapshots>
     </repository>
   </repositories>
+  -->
 
   <!-- Plugin Repositories -->
   <pluginRepositories>
@@ -150,25 +152,12 @@
       </properties>
     </profile>
     <profile>
-      <id>not-wfk</id>
-      <activation>
-        <property>
-          <name>!wfk</name>
-        </property>
-      </activation>
-      <properties>
-        <version.jbossas>7.1.x.incremental.129</version.jbossas>
-      </properties>
-    </profile>
-    <profile>
       <id>wfk</id>
       <activation>
-        <property>
-          <name>wfk</name>
-        </property>
+        <activeByDefault>true</activeByDefault>
       </activation>
       <properties>
-        <version.jbossas>7.1.2.Final-redhat-1</version.jbossas>
+        <version.jbossas>7.2.0.Final-redhat-5</version.jbossas>
       </properties>
     </profile>
   </profiles>
@@ -210,7 +199,6 @@
     <plugins>
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>2.4</version>
         <configuration>
           <encoding>UTF-8</encoding>
         </configuration>
@@ -218,7 +206,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>2.0.2</version>
         <configuration>
           <source>1.6</source>
           <target>1.6</target>
