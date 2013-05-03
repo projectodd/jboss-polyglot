@@ -80,6 +80,8 @@
     <version.org.quartz-scheduler>2.1.5</version.org.quartz-scheduler>
     <version.org.slf4j>1.5.10</version.org.slf4j>
     <version.org.projectodd.stilts>0.1.38</version.org.projectodd.stilts>
+    <version.jruby.plugin>0.29.4</version.jruby.plugin>
+    <version.jruby>1.7.3</version.jruby>
   </properties>
 
   
@@ -282,6 +284,14 @@
           <configuration>
             <followSymLinks>false</followSymLinks>
           </configuration>
+        </plugin>
+        <plugin>
+        	<groupId>de.saumya.mojo</groupId>
+        	<artifactId>jruby-maven-plugin</artifactId>
+        	<version>${version.jruby.plugin}</version>
+        	<configuration>
+        		<jrubyVersion>${version.jruby}</jrubyVersion>
+        	</configuration>
         </plugin>
       </plugins>
     </pluginManagement>
