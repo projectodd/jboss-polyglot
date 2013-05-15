@@ -26,7 +26,7 @@ import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
-import org.jboss.as.web.WebSubsystemServices;
+//import org.jboss.as.web.WebSubsystemServices;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ValueService;
 import org.jboss.msc.value.ImmediateValue;
@@ -101,10 +101,10 @@ public class SessionManagerInstaller implements DeploymentUnitProcessor {
         HttpStompSessionManagerService service = new HttpStompSessionManagerService();
         ServiceName serviceName = StompServices.container( unit ).append( "session-manager" );
 
-        ServiceName contextServiceName = WebSubsystemServices.deploymentServiceName( hostName, context );
-        phaseContext.getServiceTarget().addService( serviceName, service )
-                .addDependency( contextServiceName, Context.class, service.getContextInjector() )
-                .install();
+//        ServiceName contextServiceName = WebSubsystemServices.deploymentServiceName( hostName, context );
+//        phaseContext.getServiceTarget().addService( serviceName, service )
+//                .addDependency( contextServiceName, Context.class, service.getContextInjector() )
+//                .install();
     }
 
     protected void deployStandaloneSessionManager(DeploymentPhaseContext phaseContext) {
@@ -128,7 +128,8 @@ public class SessionManagerInstaller implements DeploymentUnitProcessor {
             hostName = hosts.get( 0 );
         }
 
-        return WebSubsystemServices.JBOSS_WEB_HOST.append( hostName );
+//        return WebSubsystemServices.JBOSS_WEB_HOST.append( hostName );
+        return null;
     }
 
     @Override

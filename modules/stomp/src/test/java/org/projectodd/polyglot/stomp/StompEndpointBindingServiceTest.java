@@ -32,7 +32,7 @@ import org.jboss.as.network.NetworkInterfaceBinding;
 import org.jboss.as.network.SocketBinding;
 import org.jboss.as.network.SocketBindingManager;
 import org.jboss.as.server.services.net.SocketBindingManagerService;
-import org.jboss.as.web.VirtualHost;
+// import org.jboss.as.web.VirtualHost;
 import org.jboss.msc.service.StartContext;
 import org.junit.Test;
 import org.projectodd.polyglot.stomp.StompEndpointBindingService;
@@ -96,8 +96,8 @@ public class StompEndpointBindingServiceTest {
 
         Host host = new StandardHost();
         host.setName( "fajitas.com" );
-        VirtualHost virtualHost = new VirtualHost( host, false );
-        service.getVirtualHostInjector().inject( virtualHost );
+//        VirtualHost virtualHost = new VirtualHost( host, false );
+//        service.getVirtualHostInjector().inject( virtualHost );
 
         StartContext context = new MockStartContext();
         service.start( context );
@@ -123,8 +123,8 @@ public class StompEndpointBindingServiceTest {
 
         Host host = new StandardHost();
         host.setName( "fajitas.com" );
-        VirtualHost virtualHost = new VirtualHost( host, false );
-        service.getVirtualHostInjector().inject( virtualHost );
+//        VirtualHost virtualHost = new VirtualHost( host, false );
+//        service.getVirtualHostInjector().inject( virtualHost );
 
         StartContext context = new MockStartContext();
         service.start( context );

@@ -21,8 +21,8 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.jboss.as</groupId>
-      <artifactId>jboss-as-server</artifactId>
+      <groupId>org.wildfly</groupId>
+      <artifactId>wildfly-server</artifactId>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -37,14 +37,14 @@
     </dependency>
 
     <dependency>
-      <groupId>org.jboss.as</groupId>
-      <artifactId>jboss-as-clustering-jgroups</artifactId>
+      <groupId>org.wildfly</groupId>
+      <artifactId>wildfly-clustering-jgroups</artifactId>
       <scope>provided</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.jboss.as</groupId>
-      <artifactId>jboss-as-clustering-impl</artifactId>
+      <groupId>org.wildfly</groupId>
+      <artifactId>wildfly-clustering-impl</artifactId>
       <scope>provided</scope>
     </dependency>
 

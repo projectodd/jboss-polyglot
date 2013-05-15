@@ -40,7 +40,8 @@
         <module name="org.jboss.as.jmx"/>
         <module name="org.jboss.as.server"/>
         <module name="org.jboss.as.transactions"/>
-        <module name="org.jboss.as.web"/>
+        <module name="io.undertow.servlet"/>
+        <module name="org.jboss.as.web-common"/>
         <module name="org.jboss.as.network"/>
         <module name="org.jboss.as.clustering.jgroups"/>
         <module name="org.jboss.modules"/>

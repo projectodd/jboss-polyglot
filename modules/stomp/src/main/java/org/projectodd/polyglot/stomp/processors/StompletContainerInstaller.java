@@ -26,8 +26,8 @@ import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
-import org.jboss.as.web.VirtualHost;
-import org.jboss.as.web.WebSubsystemServices;
+//import org.jboss.as.web.VirtualHost;
+//import org.jboss.as.web.WebSubsystemServices;
 import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceName;
@@ -117,17 +117,17 @@ public class StompletContainerInstaller implements DeploymentUnitProcessor {
         }
         */
 
-        if (webAppMetaData != null) {
-            if (host == null) {
-                host = "default-host";
-            }
-            builder.addDependency( DependencyType.OPTIONAL,
-                    WebSubsystemServices.JBOSS_WEB_HOST.append( host ),
-                    VirtualHost.class,
-                    bindingService.getVirtualHostInjector() );
-        }
-
-        builder.install();
+//        if (webAppMetaData != null) {
+//            if (host == null) {
+//                host = "default-host";
+//            }
+//            builder.addDependency( DependencyType.OPTIONAL,
+//                    WebSubsystemServices.JBOSS_WEB_HOST.append( host ),
+//                    VirtualHost.class,
+//                    bindingService.getVirtualHostInjector() );
+//        }
+//
+//        builder.install();
     }
 
     @Override

@@ -39,7 +39,9 @@
         <module name="org.jboss.as.jmx"/>
         <module name="org.jboss.as.server"/>
         <module name="org.jboss.as.transactions"/>
-        <module name="org.jboss.as.web"/>
+        <module name="io.undertow.core"/>
+        <module name="io.undertow.servlet"/>
+        <module name="org.jboss.as.web-common"/>
         <module name="org.jboss.as.network"/>
         <module name="org.jboss.modules"/>
         <module name="org.jboss.msc"/>

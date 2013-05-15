@@ -28,9 +28,9 @@ import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
-import org.jboss.as.web.WebServer;
-import org.jboss.as.web.WebSubsystemServices;
-import org.jboss.as.web.WebVirtualHostService;
+//import org.jboss.as.web.WebServer;
+//import org.jboss.as.web.WebSubsystemServices;
+//import org.jboss.as.web.WebVirtualHostService;
 import org.jboss.msc.service.ServiceName;
 import org.projectodd.polyglot.web.WebApplicationMetaData;
 
@@ -58,20 +58,20 @@ public class VirtualHostInstaller implements DeploymentUnitProcessor {
         
         String name = hosts.remove( 0 );
         
-        ServiceName serviceName = WebSubsystemServices.JBOSS_WEB_HOST.append(name);
-        
-        if ( phaseContext.getServiceRegistry().getService( serviceName ) != null ) {
-            return;
-        }
-        
-        String[] aliases = hosts.toArray( EMPTY_STRING_ARRAY );
-        
-        WebVirtualHostService service = new WebVirtualHostService( name, aliases, false, TEMP_DIR );
-        
-        phaseContext.getServiceTarget().addService( serviceName, service )
-           .addDependency(PathManagerService.SERVICE_NAME, PathManager.class, service.getPathManagerInjector())
-           .addDependency(WebSubsystemServices.JBOSS_WEB, WebServer.class, service.getWebServer())
-           .install();
+//        ServiceName serviceName = WebSubsystemServices.JBOSS_WEB_HOST.append(name);
+//        
+//        if ( phaseContext.getServiceRegistry().getService( serviceName ) != null ) {
+//            return;
+//        }
+//        
+//        String[] aliases = hosts.toArray( EMPTY_STRING_ARRAY );
+//        
+//        WebVirtualHostService service = new WebVirtualHostService( name, aliases, false, TEMP_DIR );
+//        
+//        phaseContext.getServiceTarget().addService( serviceName, service )
+//           .addDependency(PathManagerService.SERVICE_NAME, PathManager.class, service.getPathManagerInjector())
+//           .addDependency(WebSubsystemServices.JBOSS_WEB, WebServer.class, service.getWebServer())
+//           .install();
     }
     
 

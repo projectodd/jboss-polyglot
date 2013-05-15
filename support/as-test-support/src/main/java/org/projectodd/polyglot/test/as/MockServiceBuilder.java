@@ -30,6 +30,7 @@ import org.jboss.msc.service.ServiceListener;
 import org.jboss.msc.service.ServiceListener.Inheritance;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistryException;
+import org.jboss.msc.service.StabilityMonitor;
 import org.jboss.msc.value.Value;
 
 public class MockServiceBuilder<T> implements ServiceBuilder<T> {
@@ -167,6 +168,16 @@ public class MockServiceBuilder<T> implements ServiceBuilder<T> {
 
     @Override
     public ServiceBuilder<T> addListener(Inheritance inheritance, Collection<? extends ServiceListener<? super T>> listeners) {
+        return this;
+    }
+
+    @Override
+    public ServiceBuilder<T> addMonitor(StabilityMonitor monitor) {
+        return this;
+    }
+
+    @Override
+    public ServiceBuilder<T> addMonitors(StabilityMonitor... monitors) {
         return this;
     }
 

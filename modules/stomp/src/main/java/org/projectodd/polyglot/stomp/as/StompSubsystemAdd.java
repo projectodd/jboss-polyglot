@@ -37,7 +37,7 @@ import org.jboss.as.server.AbstractDeploymentChainStep;
 import org.jboss.as.server.DeploymentProcessorTarget;
 import org.jboss.as.server.deployment.Phase;
 import org.jboss.as.txn.service.TxnServices;
-import org.jboss.as.web.WebSubsystemServices;
+//import org.jboss.as.web.WebSubsystemServices;
 import org.jboss.dmr.ModelNode;
 import org.jboss.logging.Logger;
 import org.jboss.msc.service.ServiceController;
@@ -97,13 +97,13 @@ public class StompSubsystemAdd extends AbstractBoottimeAddStepHandler {
 
         SSLContextService service = new SSLContextService();
 
-        ServiceController<SSLContext> controller = context.getServiceTarget().addService( StompServices.SSL_CONTEXT, service )
-                .addDependency( WebSubsystemServices.JBOSS_WEB_CONNECTOR.append( "https" ), Connector.class, service.getWebConnectorInjector() )
-                .setInitialMode( Mode.PASSIVE )
-                .addListener( verificationHandler )
-                .install();
-
-        newControllers.add( controller );
+//        ServiceController<SSLContext> controller = context.getServiceTarget().addService( StompServices.SSL_CONTEXT, service )
+//                .addDependency( WebSubsystemServices.JBOSS_WEB_CONNECTOR.append( "https" ), Connector.class, service.getWebConnectorInjector() )
+//                .setInitialMode( Mode.PASSIVE )
+//                .addListener( verificationHandler )
+//                .install();
+//
+//        newControllers.add( controller );
 
     }
 

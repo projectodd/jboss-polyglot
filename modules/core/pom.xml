@@ -26,38 +26,38 @@
     </dependency>
 
     <dependency>
-      <groupId>org.jboss.as</groupId>
-      <artifactId>jboss-as-ee</artifactId>
+      <groupId>org.wildfly</groupId>
+      <artifactId>wildfly-ee</artifactId>
       <scope>provided</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.jboss.as</groupId>
-      <artifactId>jboss-as-naming</artifactId>
+      <groupId>org.wildfly</groupId>
+      <artifactId>wildfly-naming</artifactId>
       <scope>provided</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.jboss.as</groupId>
-      <artifactId>jboss-as-clustering-jgroups</artifactId>
+      <groupId>org.wildfly</groupId>
+      <artifactId>wildfly-clustering-jgroups</artifactId>
       <scope>provided</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.jboss.as</groupId>
-      <artifactId>jboss-as-transactions</artifactId>
+      <groupId>org.wildfly</groupId>
+      <artifactId>wildfly-transactions</artifactId>
       <scope>provided</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.jboss.as</groupId>
-      <artifactId>jboss-as-jmx</artifactId>
+      <groupId>org.wildfly</groupId>
+      <artifactId>wildfly-jmx</artifactId>
       <scope>provided</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.jboss.as</groupId>
-      <artifactId>jboss-as-connector</artifactId>
+      <groupId>org.wildfly</groupId>
+      <artifactId>wildfly-connector</artifactId>
       <scope>provided</scope>
     </dependency>
 

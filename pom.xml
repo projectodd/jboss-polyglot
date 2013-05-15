@@ -42,8 +42,8 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>org.jboss.as</groupId>
-        <artifactId>jboss-as-parent</artifactId>
+        <groupId>org.wildfly</groupId>
+        <artifactId>wildfly-parent</artifactId>
         <version>${version.jbossas}</version>
         <type>pom</type>
         <scope>import</scope>
@@ -157,7 +157,7 @@
         </property>
       </activation>
       <properties>
-        <version.jbossas>7.x.incremental.673</version.jbossas>
+        <version.jbossas>8.0.0.Alpha1-SNAPSHOT</version.jbossas>
       </properties>
     </profile>
     <profile>

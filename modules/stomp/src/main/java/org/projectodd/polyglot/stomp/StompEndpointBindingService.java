@@ -20,7 +20,7 @@
 package org.projectodd.polyglot.stomp;
 
 import org.jboss.as.network.SocketBinding;
-import org.jboss.as.web.VirtualHost;
+//import org.jboss.as.web.VirtualHost;
 import org.jboss.logging.Logger;
 import org.jboss.msc.inject.Injector;
 import org.jboss.msc.service.Service;
@@ -49,21 +49,21 @@ public class StompEndpointBindingService implements Service<StompEndpointBinding
         String host = this.hostName;
 
         if (host == null) {
-            VirtualHost vhost = this.virtualHostInjector.getOptionalValue();
-
-            if (vhost != null) {
-                host = vhost.getHost().getName();
-                if (host.equals( "default-host" )) {
-                    if (vhost.getHost().getName() != null) {
-                        host = vhost.getHost().getName();
-                    } else {
-                        String[] aliases = vhost.getHost().findAliases();
-                        if (aliases != null && aliases.length >= 1) {
-                            host = aliases[0];
-                        }
-                    }
-                }
-            }
+//            VirtualHost vhost = this.virtualHostInjector.getOptionalValue();
+//
+//            if (vhost != null) {
+//                host = vhost.getHost().getName();
+//                if (host.equals( "default-host" )) {
+//                    if (vhost.getHost().getName() != null) {
+//                        host = vhost.getHost().getName();
+//                    } else {
+//                        String[] aliases = vhost.getHost().findAliases();
+//                        if (aliases != null && aliases.length >= 1) {
+//                            host = aliases[0];
+//                        }
+//                    }
+//                }
+//            }
 
         }
 
@@ -85,14 +85,14 @@ public class StompEndpointBindingService implements Service<StompEndpointBinding
         return this.socketBindingInjector;
     }
     
-    public Injector<VirtualHost> getVirtualHostInjector() {
-        return this.virtualHostInjector;
-    }
+//    public Injector<VirtualHost> getVirtualHostInjector() {
+//        return this.virtualHostInjector;
+//    }
 
     private static final Logger log = Logger.getLogger( "org.projectodd.polyglot.stomp.binding" );
 
     private InjectedValue<SocketBinding> socketBindingInjector = new InjectedValue<SocketBinding>();
-    private InjectedValue<VirtualHost> virtualHostInjector = new InjectedValue<VirtualHost>();
+//    private InjectedValue<VirtualHost> virtualHostInjector = new InjectedValue<VirtualHost>();
 
     private StompEndpointBinding binding;
     private String hostName;

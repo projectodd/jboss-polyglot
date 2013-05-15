@@ -19,7 +19,9 @@
 
 package org.projectodd.polyglot.test.as;
 
+import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.PathElement;
+import org.jboss.as.controller.registry.Resource;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.SimpleAttachable;
 import org.jboss.dmr.ModelNode;
@@ -69,6 +71,16 @@ public class MockDeploymentUnit extends SimpleAttachable implements DeploymentUn
 
     @Override
     public ModelNode createDeploymentSubModel(String subsystemName, PathElement address) {
+        return null;
+    }
+
+    @Override
+    public ModelNode createDeploymentSubModel(String subsystemName, PathAddress address) {
+        return null;
+    }
+
+    @Override
+    public ModelNode createDeploymentSubModel(String subsystemName, PathAddress address, Resource resource) {
         return null;
     }
 

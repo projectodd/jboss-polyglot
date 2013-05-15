@@ -32,6 +32,7 @@ public class FiveHundredServlet extends HttpServlet {
 
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        request.setAttribute( "polyglot.servlet", true );
         response.sendError( 500 );
     }
 
