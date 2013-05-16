@@ -45,7 +45,7 @@ package org.projectodd.polyglot.web.servlet;
 import io.undertow.server.handlers.resource.FileResourceManager;
 import io.undertow.server.handlers.resource.Resource;
 import io.undertow.server.handlers.resource.ResourceManager;
-import io.undertow.servlet.spec.HttpServletRequestImpl;
+import io.undertow.servlet.handlers.ServletRequestContext;
 import io.undertow.util.ETag;
 
 import java.io.FileNotFoundException;
@@ -134,7 +134,7 @@ public class StaticResourceServlet extends HttpServlet {
 
     protected String getPageCachedRelativePath(HttpServletRequest request) throws IOException {
         // First look for static files
-        String path = resourceRoot + getRelativePath(request);
+        String path = getRelativePath(request);
         Resource resource = resourceManager.getResource(path);
 
         if (resource != null) {
@@ -406,7 +406,7 @@ public class StaticResourceServlet extends HttpServlet {
             }
         }
 
-        resource.serve(HttpServletRequestImpl.getRequestImpl(request).getExchange());
+        resource.serve(ServletRequestContext.current().getOriginalRequest().getExchange());
 
     }
 
