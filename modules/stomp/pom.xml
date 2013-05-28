@@ -32,16 +32,24 @@
       <version>${version.org.projectodd.stilts}</version>
       <exclusions>
         <exclusion>
+          <groupId>javax.jms</groupId>
+          <artifactId>jms-api</artifactId>
+        </exclusion>
+        <exclusion>
           <groupId>javax.transaction</groupId>
           <artifactId>jta</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.jboss.netty</groupId>
+          <groupId>io.netty</groupId>
           <artifactId>netty</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.jboss.logging</groupId>
           <artifactId>jboss-logging</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.logmanager</groupId>
+          <artifactId>jboss-logmanager</artifactId>
         </exclusion>
         <exclusion>
           <groupId>commons-codec</groupId>
@@ -57,6 +65,24 @@
       <groupId>org.projectodd.stilts</groupId>
       <artifactId>stilts-stomp-client-js</artifactId>
       <version>${version.org.projectodd.stilts}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>javax.jms</groupId>
+          <artifactId>jms-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.logging</groupId>
+          <artifactId>jboss-logging</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.logmanager</groupId>
+          <artifactId>jboss-logmanager</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.jboss.as</groupId>
