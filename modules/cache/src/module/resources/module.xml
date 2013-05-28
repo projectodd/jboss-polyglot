@@ -47,7 +47,6 @@
         <!-- Infinispan-requirements -->
         <module name="org.infinispan" services="import"/>
         <module name="javax.transaction.api"/>
-        <module name="javax.xml.bind.api"/>
         <module name="org.apache.xerces" services="import"/>
         <module name="org.jboss.marshalling"/>
         <module name="org.jboss.marshalling.river" services="import"/>
