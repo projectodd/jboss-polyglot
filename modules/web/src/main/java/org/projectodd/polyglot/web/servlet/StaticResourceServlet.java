@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.catalina.servlets.DefaultServlet;
 import org.apache.naming.resources.CacheEntry;
 import org.apache.naming.resources.FileDirContext;
+import org.apache.naming.resources.ResourceCache;
 
 public class StaticResourceServlet extends DefaultServlet {
 
@@ -62,7 +63,11 @@ public class StaticResourceServlet extends DefaultServlet {
                 path = cacheDirectory + request.getContextPath() + super.getRelativePath( request );
                 // Always check page cache content on disk since the application may
                 // create or expire it at any time
-                resources.getCache().unload( path );
+
+                ResourceCache cache = resources.getCache();
+                synchronized( cache ) {
+                    cache.unload( path );
+                }
                 cacheEntry = resources.lookupCache( path );
                 if (cacheEntry != null && !cacheEntry.exists) {
                     // no page cache found - try appending the cache extension to the path
@@ -71,7 +76,9 @@ public class StaticResourceServlet extends DefaultServlet {
                     }
                     path = path + this.cacheExtension;
                     // ensure this new path isn't cached in memory either
-                    resources.getCache().unload( path );
+                    synchronized( cache ) {
+                        cache.unload( path );
+                    }
                 }
             }
         }
