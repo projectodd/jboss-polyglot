@@ -19,8 +19,11 @@
 
 package org.projectodd.polyglot.web.servlet;
 
+import java.io.IOException;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.catalina.servlets.DefaultServlet;
 import org.apache.naming.resources.CacheEntry;
@@ -83,6 +86,24 @@ public class StaticResourceServlet extends DefaultServlet {
             }
         }
         return path;
+    }
+    
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+    		throws IOException, ServletException {
+    	resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+    }
+    
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp)
+    		throws ServletException, IOException {
+    	resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+    }
+    
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp)
+    		throws ServletException, IOException {
+    	resp.sendError(HttpServletResponse.SC_FORBIDDEN);
     }
 
 }
