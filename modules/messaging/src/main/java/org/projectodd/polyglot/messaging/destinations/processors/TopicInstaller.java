@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import org.hornetq.jms.server.JMSServerManager;
 import org.jboss.as.messaging.MessagingServices;
 import org.jboss.as.messaging.jms.JMSServices;
+import org.jboss.as.messaging.jms.JMSTopicService;
 import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
@@ -82,40 +83,43 @@ public class TopicInstaller implements DeploymentUnitProcessor {
     }
 
     @SuppressWarnings("rawtypes")
-    public static DestroyableJMSTopicService deployGlobalTopic(ServiceRegistry registry, 
-                                                               final ServiceTarget serviceTarget,
-                                                               final String topicName, 
-                                                               final String[] jndiNames) {
+    public static JMSTopicService deployGlobalTopic(ServiceRegistry registry,
+                                                    final ServiceTarget serviceTarget,
+                                                    final String topicName,
+                                                    final String[] jndiNames) {
         ServiceName globalTServiceName = topicServiceName( topicName );
         ServiceController globalTService = registry.getService( globalTServiceName );
-        DestroyableJMSTopicService globalT;
+        JMSTopicService globalT;
         
         if (globalTService == null) {
             globalT = new DestroyableJMSTopicService(topicName, jndiNames);
-            deployGlobalTopic(serviceTarget, globalT, topicName);    
+            deployGlobalTopic(serviceTarget, (DestroyableJMSTopicService)globalT, topicName);
         } else {
-            globalT = (DestroyableJMSTopicService)globalTService.getService();
-            ReconfigurationValidator validator = new ReconfigurationValidator(globalT, jndiNames);
-                        
-            if (globalT.getReferenceCount().intValue() == 0) {
-                // It should be stopping - wait
-                try {
-                    if (!globalT.getStopLatch().await(1, TimeUnit.MINUTES)) {
-                        log.warn("Timed out waiting for inactive " + topicName + " to stop");
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+            globalT = (JMSTopicService)globalTService.getService();
 
-                if (validator.isReconfigure()) {
-                    log.infof("Reconfiguring %s from %s to %s",
-                              topicName, validator.fromMsg(), validator.toMsg());
-                }
+            if (globalT instanceof DestroyableJMSTopicService) {
+                DestroyableJMSTopicService destroyableT = (DestroyableJMSTopicService)globalT;
+                ReconfigurationValidator validator = new ReconfigurationValidator(destroyableT, jndiNames);
+                        
+                if (destroyableT.getReferenceCount().intValue() == 0) {
+                    // It should be stopping - wait
+                    try {
+                        if (!destroyableT.getStopLatch().await(1, TimeUnit.MINUTES)) {
+                            log.warn("Timed out waiting for inactive " + topicName + " to stop");
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    if (validator.isReconfigure()) {
+                        log.infof("Reconfiguring %s from %s to %s",
+                                  topicName, validator.fromMsg(), validator.toMsg());
+                    }
+
+                    globalT = new DestroyableJMSTopicService(topicName, jndiNames);
+                    final DestroyableJMSTopicService finalGlobalT = (DestroyableJMSTopicService)globalT;
                 
-                globalT = new DestroyableJMSTopicService(topicName, jndiNames);
-                final DestroyableJMSTopicService finalGlobalT = globalT;
-                
-                AtRuntimeInstaller.replaceService(registry, globalTServiceName, new Runnable() {
+                    AtRuntimeInstaller.replaceService(registry, globalTServiceName, new Runnable() {
                     public void run() {
                         deployGlobalTopic(serviceTarget, finalGlobalT, topicName);
                         try {
@@ -126,13 +130,14 @@ public class TopicInstaller implements DeploymentUnitProcessor {
                             e.printStackTrace();
                         }
                     }
-                });
-            } else if (validator.isReconfigure()) {
-                log.warnf("Ignoring attempt to reconfigure %s from %s to %s - it is currently active",
-                          topicName, validator.fromMsg(), validator.toMsg());
+                    });
+                } else if (validator.isReconfigure()) {
+                    log.warnf("Ignoring attempt to reconfigure %s from %s to %s - it is currently active",
+                              topicName, validator.fromMsg(), validator.toMsg());
+                }
             }
-        }   
-            
+        }
+
         return globalT;
     }
     
@@ -141,14 +146,17 @@ public class TopicInstaller implements DeploymentUnitProcessor {
 
         log.debugf("JNDI names to bind the '%s' topic to: %s", topic.getName(), Arrays.toString(jndis));
 
-        DestroyableJMSTopicService global = deployGlobalTopic(unit.getServiceRegistry(),
-                                                              this.globalTarget,
-                                                              topic.getName(),
-                                                              jndis);
+        JMSTopicService global = deployGlobalTopic(unit.getServiceRegistry(),
+                                                   this.globalTarget,
+                                                   topic.getName(),
+                                                   jndis);
         
-        return DestinationUtils.deployDestinationPointerService(unit, serviceTarget, topic.getName(),
-                                                                topicServiceName(topic.getName()),
-                                                                global.getReferenceCount());
+        return DestinationUtils.
+                deployDestinationPointerService(unit, serviceTarget, topic.getName(),
+                                                topicServiceName(topic.getName()),
+                                                global instanceof DestroyableJMSTopicService ?
+                                                        ((DestroyableJMSTopicService) global).getReferenceCount() :
+                                                        null);
     }
 
     @Override

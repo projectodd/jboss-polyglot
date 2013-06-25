@@ -40,7 +40,9 @@ public class DestinationService implements Service<Void> {
         for(ServiceListener each : this.listeners) {
             context.getController().addListener(each);
         }
-        this.referenceCount.getAndIncrement();
+        if (this.referenceCount != null) {
+            this.referenceCount.getAndIncrement();
+        }
     }
 
     @Override
@@ -51,7 +53,9 @@ public class DestinationService implements Service<Void> {
 
     @Override
     public void stop(StopContext context) {
-        this.referenceCount.getAndDecrement();
+        if (this.referenceCount != null) {
+            this.referenceCount.getAndDecrement();
+        }
     }
 
     @SuppressWarnings("rawtypes")

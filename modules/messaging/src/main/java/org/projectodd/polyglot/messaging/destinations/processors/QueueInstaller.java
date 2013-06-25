@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.hornetq.jms.server.JMSServerManager;
 import org.jboss.as.messaging.MessagingServices;
+import org.jboss.as.messaging.jms.JMSQueueService;
 import org.jboss.as.messaging.jms.JMSServices;
 import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
@@ -80,54 +81,58 @@ public class QueueInstaller implements DeploymentUnitProcessor {
     }
 
     @SuppressWarnings("rawtypes")
-    public static DestroyableJMSQueueService deployGlobalQueue(ServiceRegistry registry, final ServiceTarget serviceTarget, 
+    public static JMSQueueService deployGlobalQueue(ServiceRegistry registry, final ServiceTarget serviceTarget,
                                                                final String queueName, final boolean durable, 
                                                                final String selector, final String[] jndiNames) {
         ServiceName globalQServiceName = queueServiceName( queueName );
         ServiceController globalQService = registry.getService( globalQServiceName );
-        DestroyableJMSQueueService globalQ;
+        JMSQueueService globalQ;
         
         if (globalQService == null) {
             globalQ = new DestroyableJMSQueueService(queueName, selector, durable, jndiNames);
-            deployGlobalQueue(serviceTarget, globalQ, queueName);    
+            deployGlobalQueue(serviceTarget,(DestroyableJMSQueueService)globalQ, queueName);
         } else {
-            globalQ = (DestroyableJMSQueueService)globalQService.getService();
-            ReconfigurationValidator validator = new ReconfigurationValidator(globalQ, durable, selector, jndiNames);
-            if (globalQ.getReferenceCount().intValue() == 0) {
-                // It should be stopping - wait
-                try {
-                    if (!globalQ.getStopLatch().await(1, TimeUnit.MINUTES)) {
-                        log.warn("Timed out waiting for inactive " + queueName + " to stop");
+            globalQ = (JMSQueueService)globalQService.getService();
+            if (globalQ instanceof DestroyableJMSQueueService) {
+                DestroyableJMSQueueService destroyableQ = (DestroyableJMSQueueService)globalQ;
+                ReconfigurationValidator validator = new ReconfigurationValidator(destroyableQ,
+                                                                                  durable, selector, jndiNames);
+                if (destroyableQ.getReferenceCount().intValue() == 0) {
+                    // It should be stopping - wait
+                    try {
+                        if (!destroyableQ.getStopLatch().await(1, TimeUnit.MINUTES)) {
+                            log.warn("Timed out waiting for inactive " + queueName + " to stop");
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+
+                    if (validator.isReconfigure()) {
+                        log.infof("Reconfiguring %s from %s to %s",
+                                queueName, validator.fromMsg(), validator.toMsg());
+                    }
+
+                    globalQ = new DestroyableJMSQueueService(queueName, selector, durable, jndiNames);
+                    final DestroyableJMSQueueService finalGlobalQ = (DestroyableJMSQueueService)globalQ;
+
+                    AtRuntimeInstaller.replaceService(registry, globalQServiceName, new Runnable() {
+                        public void run() {
+                            deployGlobalQueue(serviceTarget, finalGlobalQ, queueName);
+                            try {
+                                if (!finalGlobalQ.getStartLatch().await(1, TimeUnit.MINUTES)) {
+                                    log.warn("Timed out waiting for " + queueName + " to start");
+                                }
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+                } else if (validator.isReconfigure()){
+                    log.warnf("Ignoring attempt to reconfigure %s from %s to %s - it is currently active",
+                            queueName, validator.fromMsg(), validator.toMsg());
                 }
 
-                if (validator.isReconfigure()) {
-                    log.infof("Reconfiguring %s from %s to %s",
-                              queueName, validator.fromMsg(), validator.toMsg());
-                }
-                
-                globalQ = new DestroyableJMSQueueService(queueName, selector, durable, jndiNames);
-                final DestroyableJMSQueueService finalGlobalQ = globalQ;
-                
-                AtRuntimeInstaller.replaceService(registry, globalQServiceName, new Runnable() {
-                    public void run() {
-                        deployGlobalQueue(serviceTarget, finalGlobalQ, queueName);
-                        try {
-                            if (!finalGlobalQ.getStartLatch().await(1, TimeUnit.MINUTES)) {
-                                log.warn("Timed out waiting for " + queueName + " to start");
-                            }
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-            } else if (validator.isReconfigure()){
-                log.warnf("Ignoring attempt to reconfigure %s from %s to %s - it is currently active",
-                          queueName, validator.fromMsg(), validator.toMsg());
             }
-       
         }
         
         return globalQ;
@@ -138,17 +143,20 @@ public class QueueInstaller implements DeploymentUnitProcessor {
 
         log.debugf("JNDI names to bind the '%s' queue to: %s", queue.getName(), Arrays.toString(jndis));
 
-        DestroyableJMSQueueService global = deployGlobalQueue(unit.getServiceRegistry(),
-                                                              this.globalTarget,
-                                                              queue.getName(), 
-                                                              queue.isDurable(),
-                                                              queue.getSelector(), 
-                                                              jndis);
+        JMSQueueService global = deployGlobalQueue(unit.getServiceRegistry(),
+                                                   this.globalTarget,
+                                                   queue.getName(),
+                                                   queue.isDurable(),
+                                                   queue.getSelector(),
+                                                   jndis);
         
-        return DestinationUtils.deployDestinationPointerService(unit, serviceTarget, queue.getName(), 
-                                                                queueServiceName(queue.getName()),
-                                                                global.getReferenceCount());
-    }   
+        return DestinationUtils
+                .deployDestinationPointerService(unit, serviceTarget, queue.getName(),
+                                                 queueServiceName(queue.getName()),
+                                                 global instanceof DestroyableJMSQueueService ?
+                                                         ((DestroyableJMSQueueService) global).getReferenceCount() :
+                                                         null);
+    }
 
     @Override
     public void undeploy(DeploymentUnit context) {
@@ -201,8 +209,8 @@ public class QueueInstaller implements DeploymentUnitProcessor {
                 this.from.append(", ");
                 this.to.append(", ");
             }
-            this.from.append(key + ": " + from);
-            this.to.append(key + ": " + to);
+            this.from.append(key).append(": ").append(from);
+            this.to.append(key).append(": ").append(to);
         }
         
         public boolean isReconfigure() {

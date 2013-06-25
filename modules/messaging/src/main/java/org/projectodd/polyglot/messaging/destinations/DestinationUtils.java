@@ -84,7 +84,7 @@ public class DestinationUtils {
                 .addDependency(globalName)
                 .setInitialMode(Mode.ACTIVE)
                 .install();
-        } catch (DuplicateServiceException ingored) {
+        } catch (DuplicateServiceException ignored) {
             log.warn(serviceName + " already started");
         }
                 
