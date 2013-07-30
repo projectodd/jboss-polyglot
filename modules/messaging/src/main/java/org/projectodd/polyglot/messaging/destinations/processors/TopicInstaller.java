@@ -97,7 +97,8 @@ public class TopicInstaller implements DeploymentUnitProcessor {
         } else {
             globalT = (JMSTopicService)globalTService.getService();
 
-            if (globalT instanceof DestroyableJMSTopicService) {
+            if (globalT instanceof DestroyableJMSTopicService &&
+                    ((DestroyableJMSTopicService)globalT).hasStarted()) {
                 DestroyableJMSTopicService destroyableT = (DestroyableJMSTopicService)globalT;
                 ReconfigurationValidator validator = new ReconfigurationValidator(destroyableT, jndiNames);
                         

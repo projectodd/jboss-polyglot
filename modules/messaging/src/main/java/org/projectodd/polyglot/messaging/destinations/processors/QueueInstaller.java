@@ -93,7 +93,8 @@ public class QueueInstaller implements DeploymentUnitProcessor {
             deployGlobalQueue(serviceTarget,(DestroyableJMSQueueService)globalQ, queueName);
         } else {
             globalQ = (JMSQueueService)globalQService.getService();
-            if (globalQ instanceof DestroyableJMSQueueService) {
+            if (globalQ instanceof DestroyableJMSQueueService &&
+                    ((DestroyableJMSQueueService)globalQ).hasStarted()) {
                 DestroyableJMSQueueService destroyableQ = (DestroyableJMSQueueService)globalQ;
                 ReconfigurationValidator validator = new ReconfigurationValidator(destroyableQ,
                                                                                   durable, selector, jndiNames);

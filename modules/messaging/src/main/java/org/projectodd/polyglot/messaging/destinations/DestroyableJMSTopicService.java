@@ -118,7 +118,11 @@ public class DestroyableJMSTopicService extends JMSTopicService implements Destr
     public CountDownLatch getStopLatch() {
         return this.stopLatch;
     }
-    
+
+    public boolean hasStarted() {
+        return this.stopLatch != null;
+    }
+
     private String topicName;
     private boolean shouldDestroy = false;
     private String[] jndi;

@@ -130,6 +130,10 @@ public class DestroyableJMSQueueService extends JMSQueueService implements Destr
         return this.stopLatch;
     }
 
+    public boolean hasStarted() {
+        return this.stopLatch != null;
+    }
+
     private boolean shouldDestroy;
     private String queueName;
     private boolean durable;
