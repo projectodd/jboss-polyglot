@@ -32,6 +32,7 @@ import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.projectodd.polyglot.core.HasStartStopLatches;
 import org.projectodd.polyglot.core.HasStartStopLatchesServiceListener;
+import org.projectodd.polyglot.messaging.destinations.processors.QueueInstaller;
 
 public class DestroyableJMSQueueService extends JMSQueueService implements Destroyable, 
     HasStartStopLatches, Injector<ExecutorService> {
@@ -72,6 +73,7 @@ public class DestroyableJMSQueueService extends JMSQueueService implements Destr
         }
         super.stop( context );
         this.startLatch = new CountDownLatch(1);
+        QueueInstaller.notifyStop(this.queueName);
     }
 
     /**

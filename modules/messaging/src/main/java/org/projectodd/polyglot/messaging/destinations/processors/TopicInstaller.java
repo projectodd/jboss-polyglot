@@ -20,7 +20,9 @@
 package org.projectodd.polyglot.messaging.destinations.processors;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -83,14 +85,27 @@ public class TopicInstaller implements DeploymentUnitProcessor {
     }
 
     @SuppressWarnings("rawtypes")
-    public static JMSTopicService deployGlobalTopic(ServiceRegistry registry,
-                                                    final ServiceTarget serviceTarget,
-                                                    final String topicName,
-                                                    final String[] jndiNames) {
+    public static synchronized JMSTopicService deployGlobalTopic(ServiceRegistry registry,
+                                                                 final ServiceTarget serviceTarget,
+                                                                 final String topicName,
+                                                                 final String[] jndiNames) {
         ServiceName globalTServiceName = topicServiceName( topicName );
         ServiceController globalTService = registry.getService( globalTServiceName );
         JMSTopicService globalT;
-        
+
+        if (startedTopics.contains(topicName) &&
+                globalTService == null) {
+            //we've started this queue already, but it hasn't yet made it to the MSC
+            while (globalTService == null) {
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException ignored) {}
+                globalTService = registry.getService(globalTServiceName);
+            }
+        }
+
+        startedTopics.add(topicName);
+
         if (globalTService == null) {
             globalT = new DestroyableJMSTopicService(topicName, jndiNames);
             deployGlobalTopic(serviceTarget, (DestroyableJMSTopicService)globalT, topicName);
@@ -141,7 +156,11 @@ public class TopicInstaller implements DeploymentUnitProcessor {
 
         return globalT;
     }
-    
+
+    public static void notifyStart(String name) {
+        startedTopics.add(name);
+    }
+
     protected ServiceName deploy(DeploymentUnit unit, ServiceTarget serviceTarget, TopicMetaData topic) {
         String[] jndis = DestinationUtils.jndiNames(topic.getName(), topic.isExported());
 
@@ -167,7 +186,9 @@ public class TopicInstaller implements DeploymentUnitProcessor {
     }
 
     private ServiceTarget globalTarget;
-    
+
+    private static Set<String> startedTopics = new HashSet<String>();
+
     static final Logger log = Logger.getLogger( "org.projectodd.polyglot.messaging" );
 
     protected static class ReconfigurationValidator extends QueueInstaller.ReconfigurationValidator {

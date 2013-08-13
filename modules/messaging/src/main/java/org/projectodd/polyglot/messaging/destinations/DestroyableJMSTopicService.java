@@ -32,6 +32,7 @@ import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.projectodd.polyglot.core.HasStartStopLatches;
 import org.projectodd.polyglot.core.HasStartStopLatchesServiceListener;
+import org.projectodd.polyglot.messaging.destinations.processors.TopicInstaller;
 
 public class DestroyableJMSTopicService extends JMSTopicService implements Destroyable, 
     HasStartStopLatches, Injector<ExecutorService> {
@@ -50,6 +51,7 @@ public class DestroyableJMSTopicService extends JMSTopicService implements Destr
     public synchronized void start(final StartContext context) throws StartException {
         this.stopLatch = new CountDownLatch(1);
         context.getController().addListener(new HasStartStopLatchesServiceListener());
+        TopicInstaller.notifyStart(this.topicName);
         super.start(context);
     }
     

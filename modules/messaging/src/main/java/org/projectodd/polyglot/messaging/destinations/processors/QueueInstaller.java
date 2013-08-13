@@ -20,7 +20,9 @@
 package org.projectodd.polyglot.messaging.destinations.processors;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -81,13 +83,26 @@ public class QueueInstaller implements DeploymentUnitProcessor {
     }
 
     @SuppressWarnings("rawtypes")
-    public static JMSQueueService deployGlobalQueue(ServiceRegistry registry, final ServiceTarget serviceTarget,
-                                                               final String queueName, final boolean durable, 
-                                                               final String selector, final String[] jndiNames) {
-        ServiceName globalQServiceName = queueServiceName( queueName );
-        ServiceController globalQService = registry.getService( globalQServiceName );
+    public static synchronized JMSQueueService deployGlobalQueue(ServiceRegistry registry, final ServiceTarget serviceTarget,
+                                                                 final String queueName, final boolean durable,
+                                                                 final String selector, final String[] jndiNames) {
+        ServiceName globalQServiceName = queueServiceName(queueName);
+        ServiceController globalQService = registry.getService(globalQServiceName);
         JMSQueueService globalQ;
-        
+
+        if (startedQueues.contains(queueName) &&
+                globalQService == null) {
+            //we've started this queue already, but it hasn't yet made it to the MSC
+            while (globalQService == null) {
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException ignored) {}
+                globalQServiceName = queueServiceName(queueName);
+            }
+        }
+
+        startedQueues.add(queueName);
+
         if (globalQService == null) {
             globalQ = new DestroyableJMSQueueService(queueName, selector, durable, jndiNames);
             deployGlobalQueue(serviceTarget,(DestroyableJMSQueueService)globalQ, queueName);
@@ -138,7 +153,11 @@ public class QueueInstaller implements DeploymentUnitProcessor {
         
         return globalQ;
     }
-    
+
+    public static void notifyStop(String name) {
+        startedQueues.remove(name);
+    }
+
     protected ServiceName deploy(DeploymentUnit unit, ServiceTarget serviceTarget, QueueMetaData queue) {
         String[] jndis = DestinationUtils.jndiNames(queue.getName(), queue.isExported());
 
@@ -165,7 +184,9 @@ public class QueueInstaller implements DeploymentUnitProcessor {
     }
 
     private ServiceTarget globalTarget;
-    
+
+    private static Set<String> startedQueues = new HashSet<String>();
+
     static final Logger log = Logger.getLogger( "org.projectodd.polyglot.messaging" );
     
     protected static class ReconfigurationValidator {
