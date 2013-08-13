@@ -93,11 +93,14 @@ public class QueueInstaller implements DeploymentUnitProcessor {
         if (startedQueues.contains(queueName) &&
                 globalQService == null) {
             //we've started this queue already, but it hasn't yet made it to the MSC
-            while (globalQService == null) {
+            int retries = 0;
+            while (globalQService == null &&
+                    retries < 10000) {
                 try {
                     Thread.sleep(1);
                 } catch (InterruptedException ignored) {}
-                globalQServiceName = queueServiceName(queueName);
+                globalQService = registry.getService(globalQServiceName);
+                retries++;
             }
         }
 

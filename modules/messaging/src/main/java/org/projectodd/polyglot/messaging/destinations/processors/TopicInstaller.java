@@ -96,11 +96,14 @@ public class TopicInstaller implements DeploymentUnitProcessor {
         if (startedTopics.contains(topicName) &&
                 globalTService == null) {
             //we've started this queue already, but it hasn't yet made it to the MSC
-            while (globalTService == null) {
+            int retries = 0;
+            while (globalTService == null &&
+                    retries < 10000) {
                 try {
                     Thread.sleep(1);
                 } catch (InterruptedException ignored) {}
                 globalTService = registry.getService(globalTServiceName);
+                retries++;
             }
         }
 
