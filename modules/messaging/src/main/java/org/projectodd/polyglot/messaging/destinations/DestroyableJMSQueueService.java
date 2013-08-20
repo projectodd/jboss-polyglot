@@ -27,7 +27,8 @@ import org.jboss.msc.inject.InjectionException;
 import org.jboss.msc.inject.Injector;
 import org.jboss.msc.service.StopContext;
 
-public class DestroyableJMSQueueService extends JMSQueueService implements Destroyable, Injector<ExecutorService> {
+public class DestroyableJMSQueueService extends JMSQueueService implements
+        DestinationService, Destroyable, Injector<ExecutorService> {
 
 
     public DestroyableJMSQueueService(String queueName, String selectorString, boolean durable, String[] jndi) {

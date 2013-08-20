@@ -27,7 +27,8 @@ import org.jboss.msc.service.StopContext;
 
 import java.util.concurrent.ExecutorService;
 
-public class DestroyableJMSTopicService extends JMSTopicService implements Destroyable, Injector<ExecutorService> {
+public class DestroyableJMSTopicService extends JMSTopicService implements
+        DestinationService, Destroyable, Injector<ExecutorService> {
 
     public DestroyableJMSTopicService(String topicName, String[] jndi) {
         super(topicName, jndi);
