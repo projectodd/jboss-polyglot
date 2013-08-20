@@ -19,13 +19,13 @@
 
 package org.projectodd.polyglot.messaging.destinations;
 
-import java.util.concurrent.ExecutorService;
-
 import org.jboss.as.messaging.jms.JMSQueueService;
 import org.jboss.logging.Logger;
 import org.jboss.msc.inject.InjectionException;
 import org.jboss.msc.inject.Injector;
 import org.jboss.msc.service.StopContext;
+
+import java.util.concurrent.ExecutorService;
 
 public class DestroyableJMSQueueService extends JMSQueueService implements
         DestinationService, Destroyable, Injector<ExecutorService> {

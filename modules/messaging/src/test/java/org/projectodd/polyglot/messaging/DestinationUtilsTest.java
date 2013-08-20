@@ -19,14 +19,14 @@
 
 package org.projectodd.polyglot.messaging;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+import org.projectodd.polyglot.messaging.destinations.DestinationUtils;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Test;
-import org.projectodd.polyglot.messaging.destinations.DestinationUtils;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 public class DestinationUtilsTest {
     

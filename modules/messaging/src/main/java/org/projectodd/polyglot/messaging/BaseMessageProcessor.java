@@ -19,13 +19,6 @@
 
 package org.projectodd.polyglot.messaging;
 
-import java.lang.reflect.Field;
-
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
-import javax.jms.Session;
-import javax.transaction.TransactionManager;
-
 import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.client.ClientConsumer;
 import org.hornetq.api.core.client.ClientMessage;
@@ -36,6 +29,12 @@ import org.hornetq.jms.client.HornetQMessageConsumer;
 import org.hornetq.jms.client.HornetQSession;
 import org.jboss.logging.Logger;
 import org.jboss.msc.value.InjectedValue;
+
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.Session;
+import javax.transaction.TransactionManager;
+import java.lang.reflect.Field;
 
 public abstract class BaseMessageProcessor implements MessageListener, MessageHandler {
 

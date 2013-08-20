@@ -19,18 +19,6 @@
 
 package org.projectodd.polyglot.messaging;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.jms.Connection;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.MessageConsumer;
-import javax.jms.Queue;
-import javax.jms.Session;
-import javax.jms.Topic;
-import javax.jms.XAConnection;
-
 import org.hornetq.jms.client.HornetQConnectionFactory;
 import org.jboss.as.messaging.MessagingServices;
 import org.jboss.as.messaging.jms.JMSServices;
@@ -47,6 +35,17 @@ import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.projectodd.polyglot.core.StartState;
+
+import javax.jms.Connection;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.MessageConsumer;
+import javax.jms.Queue;
+import javax.jms.Session;
+import javax.jms.Topic;
+import javax.jms.XAConnection;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGroup>, StartState {
 

@@ -19,17 +19,12 @@
 
 package org.projectodd.polyglot.messaging.destinations;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.logging.Logger;
-import org.jboss.msc.service.DuplicateServiceException;
-import org.jboss.msc.service.ServiceController.Mode;
-import org.jboss.msc.service.ServiceListener;
 import org.jboss.msc.service.ServiceName;
-import org.jboss.msc.service.ServiceTarget;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DestinationUtils {
 

@@ -24,7 +24,6 @@ import org.jboss.as.messaging.MessagingServices;
 import org.jboss.as.messaging.jms.JMSServices;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.logging.Logger;
-import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
@@ -34,9 +33,7 @@ import org.projectodd.polyglot.core.ServiceSynchronizationManager;
 import org.projectodd.polyglot.messaging.destinations.DestinationPointerService;
 import org.projectodd.polyglot.messaging.destinations.DestinationService;
 import org.projectodd.polyglot.messaging.destinations.DestinationUtils;
-import org.projectodd.polyglot.messaging.destinations.DestroyableJMSQueueService;
 import org.projectodd.polyglot.messaging.destinations.HornetQStartupPoolService;
-import org.projectodd.polyglot.messaging.destinations.QueueMetaData;
 
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
