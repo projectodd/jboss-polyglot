@@ -31,6 +31,7 @@ import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.logging.Logger;
 import org.jboss.msc.inject.Injector;
 import org.jboss.msc.service.AbstractServiceListener;
+import org.jboss.msc.service.DuplicateServiceException;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
@@ -74,7 +75,7 @@ public class AtRuntimeInstaller<T> implements Service<T>, StartState {
     }
 
     @SuppressWarnings("unchecked")
-    public static void replaceService(ServiceRegistry registry, ServiceName name, Runnable actionOnRemove) {
+    public static void replaceService(final ServiceRegistry registry, final ServiceName name, final Runnable actionOnRemove) {
         final ServiceController service = registry.getService(name);
 
         if (service != null) {

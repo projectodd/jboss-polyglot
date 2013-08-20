@@ -70,26 +70,15 @@ public class DestinationUtils {
     public static boolean destinationPointerExists(DeploymentUnit unit, String name) {
         return (unit.getServiceRegistry().getService(destinationPointerName(unit, name)) != null);
     }
-    
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public static ServiceName deployDestinationPointerService(DeploymentUnit unit, ServiceTarget target,
-                                                              String destName, ServiceName globalName,
-                                                              AtomicInteger references,
-                                                              ServiceListener... listeners) {
-        DestinationService service = new DestinationService(destName, references, listeners);
-        ServiceName serviceName = destinationPointerName(unit, destName);
-        
-        try {
-            target.addService(serviceName, service)
-                .addDependency(globalName)
-                .setInitialMode(Mode.ACTIVE)
-                .install();
-        } catch (DuplicateServiceException ignored) {
-            log.warn(serviceName + " already started");
+
+    public static long destinationWaitTimeout() {
+        String waitStr = System.getProperty("immutant.destination.start.wait");
+        if (waitStr == null) {
+            return 60000;  //1 minute
+        } else {
+            return Long.parseLong(waitStr);
         }
-                
-        return serviceName;
+
     }
-    
     static final Logger log = Logger.getLogger( "org.projectodd.polyglot.messaging" );
 }

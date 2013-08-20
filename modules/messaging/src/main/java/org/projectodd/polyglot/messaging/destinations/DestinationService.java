@@ -19,30 +19,21 @@
 
 package org.projectodd.polyglot.messaging.destinations;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.jboss.msc.service.Service;
-import org.jboss.msc.service.ServiceListener;
+import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 
 public class DestinationService implements Service<Void> {
     @SuppressWarnings("rawtypes")
-    public DestinationService(String queueName, AtomicInteger referenceCount, ServiceListener... listeners) {
-        this.listeners = listeners;
-        this.referenceCount = referenceCount;
+    public DestinationService(ServiceName name) {
+        this.name = name;
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override 
-    public synchronized void start(StartContext context) throws StartException {
-        for(ServiceListener each : this.listeners) {
-            context.getController().addListener(each);
-        }
-        if (this.referenceCount != null) {
-            this.referenceCount.getAndIncrement();
-        }
+    public void start(StartContext context) throws StartException {
     }
 
     @Override
@@ -53,12 +44,12 @@ public class DestinationService implements Service<Void> {
 
     @Override
     public void stop(StopContext context) {
-        if (this.referenceCount != null) {
-            this.referenceCount.getAndDecrement();
-        }
     }
 
-    @SuppressWarnings("rawtypes")
-    private ServiceListener[] listeners;
-    private AtomicInteger referenceCount;
+    @Override
+    public String toString() {
+        return "<DestinationService@" + hashCode() + " " + this.name + ">";
+    }
+
+    private ServiceName name;
 }

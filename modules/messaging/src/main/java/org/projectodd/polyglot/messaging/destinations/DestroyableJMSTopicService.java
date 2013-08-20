@@ -19,42 +19,24 @@
 
 package org.projectodd.polyglot.messaging.destinations;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.jboss.as.messaging.jms.JMSTopicService;
 import org.jboss.logging.Logger;
 import org.jboss.msc.inject.InjectionException;
 import org.jboss.msc.inject.Injector;
-import org.jboss.msc.service.StartContext;
-import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
-import org.projectodd.polyglot.core.HasStartStopLatches;
-import org.projectodd.polyglot.core.HasStartStopLatchesServiceListener;
-import org.projectodd.polyglot.messaging.destinations.processors.TopicInstaller;
 
-public class DestroyableJMSTopicService extends JMSTopicService implements Destroyable, 
-    HasStartStopLatches, Injector<ExecutorService> {
+import java.util.concurrent.ExecutorService;
+
+public class DestroyableJMSTopicService extends JMSTopicService implements Destroyable, Injector<ExecutorService> {
 
     public DestroyableJMSTopicService(String topicName, String[] jndi) {
         super(topicName, jndi);
         this.topicName = topicName;
-        this.startLatch = new CountDownLatch(1);
-        //store this so we can check for reconfiguration. Not actually used for 
+        //store this so we can check for reconfiguration. Not actually used for
         //configuration - the values passed to super() are
         this.jndi = jndi;
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public synchronized void start(final StartContext context) throws StartException {
-        this.stopLatch = new CountDownLatch(1);
-        context.getController().addListener(new HasStartStopLatchesServiceListener());
-        TopicInstaller.notifyStart(this.topicName);
-        super.start(context);
-    }
-    
     @Override
     public synchronized void stop(StopContext context) {
         if ( this.shouldDestroy ) {
@@ -70,9 +52,13 @@ public class DestroyableJMSTopicService extends JMSTopicService implements Destr
         }
         
         super.stop( context );
-        this.startLatch = new CountDownLatch(1);
     }
-    
+
+    @Override
+    public String toString() {
+        return "<DestroyableJMSTopicService@" + hashCode() + " " + this.topicName + ">";
+    }
+
     /**
      * In EAP DestroyableJMSTopicService getExecutorInjector() returns an
      * Injector<Executor> but in AS7 it returns Injector<ExecutorService>.
@@ -106,31 +92,10 @@ public class DestroyableJMSTopicService extends JMSTopicService implements Destr
     public String[] getJndi() {
         return this.jndi;
     }
-  
-    public AtomicInteger getReferenceCount() {
-        return this.referenceCount;
-    }
-
-    @Override
-    public CountDownLatch getStartLatch() {
-        return this.startLatch;
-    }
-
-    @Override
-    public CountDownLatch getStopLatch() {
-        return this.stopLatch;
-    }
-
-    public boolean hasStarted() {
-        return this.stopLatch != null;
-    }
 
     private String topicName;
     private boolean shouldDestroy = false;
     private String[] jndi;
-    private AtomicInteger referenceCount = new AtomicInteger(0);
-    private CountDownLatch stopLatch;
-    private CountDownLatch startLatch;
-    
+
     static final Logger log = Logger.getLogger( "org.projectodd.polyglot.messaging" );
 }

@@ -19,32 +19,32 @@
 
 package org.projectodd.polyglot.messaging.destinations.processors;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
-
 import org.hornetq.jms.server.JMSServerManager;
 import org.jboss.as.messaging.MessagingServices;
 import org.jboss.as.messaging.jms.JMSServices;
-import org.jboss.as.messaging.jms.JMSTopicService;
 import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.logging.Logger;
-import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
 import org.jboss.msc.service.ServiceTarget;
 import org.projectodd.polyglot.core.AtRuntimeInstaller;
+import org.projectodd.polyglot.core.ServiceSynchronizationManager;
+import org.projectodd.polyglot.messaging.destinations.DestinationService;
 import org.projectodd.polyglot.messaging.destinations.DestinationUtils;
 import org.projectodd.polyglot.messaging.destinations.DestroyableJMSTopicService;
 import org.projectodd.polyglot.messaging.destinations.HornetQStartupPoolService;
 import org.projectodd.polyglot.messaging.destinations.TopicMetaData;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+
+import static org.projectodd.polyglot.core.ServiceSynchronizationManager.INSTANCE;
+import static org.projectodd.polyglot.core.ServiceSynchronizationManager.State;
 
 public class TopicInstaller implements DeploymentUnitProcessor {
 
@@ -60,7 +60,10 @@ public class TopicInstaller implements DeploymentUnitProcessor {
 
         for (TopicMetaData each : allMetaData) {
             if (!each.isRemote())
-                deploy( phaseContext.getDeploymentUnit(), phaseContext.getServiceTarget(), each );
+                deploy( phaseContext.getDeploymentUnit(),
+                        phaseContext.getServiceTarget(),
+                        this.globalTarget,
+                        each );
         }
 
     }
@@ -71,115 +74,113 @@ public class TopicInstaller implements DeploymentUnitProcessor {
     }
     
     private static ServiceName deployGlobalTopic(ServiceTarget serviceTarget, DestroyableJMSTopicService service, String name) {
-        final ServiceName hornetQserviceName = MessagingServices.getHornetQServiceName( "default" );
+        final ServiceName hornetQserviceName = MessagingServices.getHornetQServiceName("default");
         final ServiceName serviceName = topicServiceName(name);
+        ServiceSynchronizationManager mgr = INSTANCE;
+
+        mgr.addService(serviceName, service, true);
 
         serviceTarget.addService(serviceName, service)
           .addDependency(JMSServices.getJmsManagerBaseServiceName( hornetQserviceName ), JMSServerManager.class, service.getJmsServer() )
           .addDependency( HornetQStartupPoolService.getServiceName( hornetQserviceName ), ExecutorService.class, service.getExecutorServiceInjector() )
+          .addListener(mgr)
           .setInitialMode( Mode.ON_DEMAND )
           .install();
         
+        if (!mgr.waitForServiceStart(serviceName,
+                                     WAIT_TIMEOUT)) {
+            log.warn("Timed out waiting for " + name + " to start");
+        }
+
         return serviceName;
 
     }
 
     @SuppressWarnings("rawtypes")
-    public static synchronized JMSTopicService deployGlobalTopic(ServiceRegistry registry,
-                                                                 final ServiceTarget serviceTarget,
-                                                                 final String topicName,
-                                                                 final String[] jndiNames) {
+    public static synchronized ServiceName deployGlobalTopic(ServiceRegistry registry,
+                                                             final ServiceTarget serviceTarget,
+                                                             final String topicName,
+                                                             final String[] jndiNames) {
+        ServiceSynchronizationManager mgr = INSTANCE;
         ServiceName globalTServiceName = topicServiceName( topicName );
-        ServiceController globalTService = registry.getService( globalTServiceName );
-        JMSTopicService globalT;
+        DestroyableJMSTopicService globalT = (DestroyableJMSTopicService)mgr.getService(globalTServiceName);
 
-        if (startedTopics.contains(topicName) &&
-                globalTService == null) {
-            //we've started this queue already, but it hasn't yet made it to the MSC
-            int retries = 0;
-            while (globalTService == null &&
-                    retries < 10000) {
-                try {
-                    Thread.sleep(1);
-                } catch (InterruptedException ignored) {}
-                globalTService = registry.getService(globalTServiceName);
-                retries++;
+        if (globalT == null) {
+            // if it exists but we don't know about it, it's container managed
+            if (registry.getService(globalTServiceName) == null) {
+                globalT = new DestroyableJMSTopicService(topicName, jndiNames);
+                deployGlobalTopic(serviceTarget, globalT, topicName);
             }
-        }
-
-        startedTopics.add(topicName);
-
-        if (globalTService == null) {
-            globalT = new DestroyableJMSTopicService(topicName, jndiNames);
-            deployGlobalTopic(serviceTarget, (DestroyableJMSTopicService)globalT, topicName);
         } else {
-            globalT = (JMSTopicService)globalTService.getService();
-
-            if (globalT instanceof DestroyableJMSTopicService &&
-                    ((DestroyableJMSTopicService)globalT).hasStarted()) {
-                DestroyableJMSTopicService destroyableT = (DestroyableJMSTopicService)globalT;
-                ReconfigurationValidator validator = new ReconfigurationValidator(destroyableT, jndiNames);
+            ReconfigurationValidator validator = new ReconfigurationValidator(globalT,
+                                                                              jndiNames);
                         
-                if (destroyableT.getReferenceCount().intValue() == 0) {
-                    // It should be stopping - wait
-                    try {
-                        if (!destroyableT.getStopLatch().await(1, TimeUnit.MINUTES)) {
-                            log.warn("Timed out waiting for inactive " + topicName + " to stop");
-                        }
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+            if (!mgr.hasDependents(globalT)) {
+                // It should be stopping - wait
+                if (!mgr.waitForServiceDown(globalTServiceName,
+                                            WAIT_TIMEOUT)) {
+                    log.warn("Timed out waiting for inactive " + topicName + " to stop");
+                }
 
-                    if (validator.isReconfigure()) {
-                        log.infof("Reconfiguring %s from %s to %s",
-                                  topicName, validator.fromMsg(), validator.toMsg());
-                    }
-
-                    globalT = new DestroyableJMSTopicService(topicName, jndiNames);
-                    final DestroyableJMSTopicService finalGlobalT = (DestroyableJMSTopicService)globalT;
-                
-                    AtRuntimeInstaller.replaceService(registry, globalTServiceName, new Runnable() {
-                    public void run() {
-                        deployGlobalTopic(serviceTarget, finalGlobalT, topicName);
-                        try {
-                            if (!finalGlobalT.getStartLatch().await(1, TimeUnit.MINUTES)) {
-                                log.warn("Timed out waiting for " + topicName + " to start");
-                            }
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    });
-                } else if (validator.isReconfigure()) {
-                    log.warnf("Ignoring attempt to reconfigure %s from %s to %s - it is currently active",
+                if (validator.isReconfigure()) {
+                    log.infof("Reconfiguring %s from %s to %s",
                               topicName, validator.fromMsg(), validator.toMsg());
                 }
+                
+                globalT = new DestroyableJMSTopicService(topicName, jndiNames);
+                final DestroyableJMSTopicService finalGlobalT = globalT;
+                
+                AtRuntimeInstaller.replaceService(registry, globalTServiceName, new Runnable() {
+                    public void run() {
+                        deployGlobalTopic(serviceTarget, finalGlobalT, topicName);
+                    }
+                });
+            } else if (validator.isReconfigure()) {
+                log.warnf("Ignoring attempt to reconfigure %s from %s to %s - it is currently active",
+                          topicName, validator.fromMsg(), validator.toMsg());
             }
         }
 
-        return globalT;
+        return globalTServiceName;
     }
 
-    public static void notifyStart(String name) {
-        startedTopics.add(name);
-    }
-
-    protected ServiceName deploy(DeploymentUnit unit, ServiceTarget serviceTarget, TopicMetaData topic) {
+    public static synchronized ServiceName deploy(DeploymentUnit unit,
+                                                  ServiceTarget serviceTarget,
+                                                  ServiceTarget globalTarget,
+                                                  TopicMetaData topic) {
         String[] jndis = DestinationUtils.jndiNames(topic.getName(), topic.isExported());
 
         log.debugf("JNDI names to bind the '%s' topic to: %s", topic.getName(), Arrays.toString(jndis));
 
-        JMSTopicService global = deployGlobalTopic(unit.getServiceRegistry(),
-                                                   this.globalTarget,
-                                                   topic.getName(),
-                                                   jndis);
+        ServiceName pointerName = DestinationUtils.destinationPointerName(unit,
+                                                                          topic.getName());
+        DestinationService service = new DestinationService(pointerName);
+        ServiceSynchronizationManager mgr = INSTANCE;
+
+        ServiceName globalTName = deployGlobalTopic(unit.getServiceRegistry(),
+                                                    globalTarget,
+                                                    topic.getName(),
+                                                    jndis);
         
-        return DestinationUtils.
-                deployDestinationPointerService(unit, serviceTarget, topic.getName(),
-                                                topicServiceName(topic.getName()),
-                                                global instanceof DestroyableJMSTopicService ?
-                                                        ((DestroyableJMSTopicService) global).getReferenceCount() :
-                                                        null);
+        if (!mgr.hasService(pointerName)) {
+            mgr.addService(pointerName, service, globalTName);
+
+            serviceTarget.addService(pointerName, service)
+                    .addDependency(topicServiceName(topic.getName()))
+                    .setInitialMode(Mode.ACTIVE)
+                    .addListener(mgr)
+                    .install();
+
+
+        } else {
+            log.warn(pointerName + " already started");
+        }
+
+        if (!mgr.waitForServiceStart(pointerName, WAIT_TIMEOUT)) {
+            log.warn("Timed out waiting for " + topic.getName() + " pointer to start");
+        }
+
+        return pointerName;
     }
 
     @Override
@@ -190,7 +191,7 @@ public class TopicInstaller implements DeploymentUnitProcessor {
 
     private ServiceTarget globalTarget;
 
-    private static Set<String> startedTopics = new HashSet<String>();
+    final static long WAIT_TIMEOUT = DestinationUtils.destinationWaitTimeout();
 
     static final Logger log = Logger.getLogger( "org.projectodd.polyglot.messaging" );
 
