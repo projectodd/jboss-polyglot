@@ -21,10 +21,7 @@ package org.projectodd.polyglot.messaging.destinations.processors;
 
 import org.jboss.as.messaging.MessagingServices;
 import org.jboss.as.messaging.jms.JMSServices;
-import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
-import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
-import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.logging.Logger;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceTarget;
@@ -34,28 +31,11 @@ import org.projectodd.polyglot.messaging.destinations.DestroyableJMSTopicService
 import org.projectodd.polyglot.messaging.destinations.TopicMetaData;
 
 import java.util.Arrays;
-import java.util.List;
 
-public class TopicInstaller extends DestinationInstaller implements DeploymentUnitProcessor {
+public class TopicInstaller extends DestinationInstaller {
 
     public TopicInstaller(ServiceTarget globalTarget) {
         super(globalTarget);
-    }
-    
-    @Override
-    public void deploy(DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
-        DeploymentUnit unit = phaseContext.getDeploymentUnit();
-
-        List<TopicMetaData> allMetaData = unit.getAttachmentList( TopicMetaData.ATTACHMENTS_KEY );
-
-        for (TopicMetaData each : allMetaData) {
-            if (!each.isRemote())
-                deploy( phaseContext.getDeploymentUnit(),
-                        phaseContext.getServiceTarget(),
-                        this.globalTarget,
-                        each );
-        }
-
     }
 
     public static ServiceName topicServiceName(String name) {
@@ -63,23 +43,45 @@ public class TopicInstaller extends DestinationInstaller implements DeploymentUn
                 .append( name );
     }
 
-    public static synchronized ServiceName deploy(DeploymentUnit unit,
+
+    public static ServiceName deploySync(DeploymentUnit unit,
+                                         ServiceTarget serviceTarget,
+                                         ServiceTarget globalTarget,
+                                         String name,
+                                         boolean exported) {
+       return deploy(unit, serviceTarget, globalTarget, true, name, exported);
+
+
+    }
+
+    public static ServiceName deployAsync(DeploymentUnit unit,
+                                          ServiceTarget serviceTarget,
+                                          ServiceTarget globalTarget,
+                                          String name,
+                                          boolean exported) {
+        return deploy(unit, serviceTarget, globalTarget, false, name, exported);
+
+
+    }
+
+    private static synchronized ServiceName deploy(DeploymentUnit unit,
                                                   ServiceTarget serviceTarget,
                                                   ServiceTarget globalTarget,
-                                                  final TopicMetaData topic) {
-        final String[] jndis = DestinationUtils.jndiNames(topic.getName(), topic.isExported());
+                                                  boolean waitForStart,
+                                                  final String name,
+                                                  boolean exported) {
+        final String[] jndis = DestinationUtils.jndiNames(name, exported);
 
-        log.debugf("JNDI names to bind the '%s' topic to: %s", topic.getName(), Arrays.toString(jndis));
+        log.debugf("JNDI names to bind the '%s' topic to: %s", name, Arrays.toString(jndis));
 
         return deploy(unit,
                       serviceTarget,
                       globalTarget,
-                      topic.getName(),
-                      topicServiceName(topic.getName()),
+                      name,
+                      topicServiceName(name),
                       new DestinationServiceFactory() {
                           public DestinationService newService() {
-                              return new DestroyableJMSTopicService(topic.getName(),
-                                                                    jndis);
+                              return new DestroyableJMSTopicService(name, jndis);
                           }
                       },
                       new ValidatorFactory() {
@@ -88,13 +90,8 @@ public class TopicInstaller extends DestinationInstaller implements DeploymentUn
                               return new TopicReconfigurationValidator((DestroyableJMSTopicService)service,
                                                                        jndis);
                           }
-                      });
-    }
-
-    @Override
-    public void undeploy(DeploymentUnit context) {
-        // TODO Auto-generated method stub
-
+                      },
+                      waitForStart);
     }
 
     static final Logger log = Logger.getLogger( "org.projectodd.polyglot.messaging" );

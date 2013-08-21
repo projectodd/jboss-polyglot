@@ -50,7 +50,8 @@ public class DestinationInstaller {
     protected static ServiceName deployGlobalDestination(ServiceTarget serviceTarget,
                                                          DestinationService service,
                                                          ServiceName serviceName,
-                                                         String name) {
+                                                         String name,
+                                                         boolean waitForStart) {
         final ServiceName hornetQserviceName = MessagingServices.getHornetQServiceName("default");
         ServiceSynchronizationManager mgr = ServiceSynchronizationManager.INSTANCE;
 
@@ -63,8 +64,10 @@ public class DestinationInstaller {
           .setInitialMode(ServiceController.Mode.ON_DEMAND)
           .install();
 
-        if (!mgr.waitForServiceStart(serviceName, WAIT_TIMEOUT)) {
-           log.warn("Timed out waiting for " + name + " to start");
+        if (waitForStart) {
+            if (!mgr.waitForServiceStart(serviceName, WAIT_TIMEOUT)) {
+                log.warn("Timed out waiting for " + name + " to start");
+            }
         }
 
         return serviceName;
@@ -78,7 +81,8 @@ public class DestinationInstaller {
                                                                    final ServiceName globalServiceName,
                                                                    final String destinationName,
                                                                    final DestinationServiceFactory destinationServiceFactory,
-                                                                   final ValidatorFactory validatorFactory) {
+                                                                   final ValidatorFactory validatorFactory,
+                                                                   final boolean waitForStart) {
         ServiceSynchronizationManager mgr = ServiceSynchronizationManager.INSTANCE;
         DestinationService globalD = (DestinationService)mgr.getService(globalServiceName);
 
@@ -86,7 +90,7 @@ public class DestinationInstaller {
             // if it exists but we don't know about it, it's container managed
             if (registry.getService(globalServiceName) == null) {
                 globalD = destinationServiceFactory.newService();
-                deployGlobalDestination(serviceTarget, globalD, globalServiceName, destinationName);
+                deployGlobalDestination(serviceTarget, globalD, globalServiceName, destinationName, waitForStart);
             }
         } else {
             ReconfigurationValidator validator = validatorFactory.newValidator(globalD);
@@ -108,7 +112,7 @@ public class DestinationInstaller {
 
                 AtRuntimeInstaller.replaceService(registry, globalServiceName, new Runnable() {
                     public void run() {
-                        deployGlobalDestination(serviceTarget, finalGlobalD, globalServiceName, destinationName);
+                        deployGlobalDestination(serviceTarget, finalGlobalD, globalServiceName, destinationName, waitForStart);
                     }
                 });
             } else if (validator.isReconfigure()){
@@ -127,7 +131,8 @@ public class DestinationInstaller {
                                         final String destinationName,
                                         final ServiceName destinationServiceName,
                                         final DestinationServiceFactory destinationServiceFactory,
-                                        final ValidatorFactory validatorFactory) {
+                                        final ValidatorFactory validatorFactory,
+                                        final boolean waitForStart) {
 
         ServiceName pointerName = DestinationUtils.destinationPointerName(unit, destinationName);
         DestinationPointerService service = new DestinationPointerService(pointerName);
@@ -139,7 +144,8 @@ public class DestinationInstaller {
                                         destinationServiceName,
                                         destinationName,
                                         destinationServiceFactory,
-                                        validatorFactory);
+                                        validatorFactory,
+                                        waitForStart);
 
         if (!mgr.hasService(pointerName)) {
             mgr.addService(pointerName, service, globalQName);
@@ -153,8 +159,10 @@ public class DestinationInstaller {
             log.warn(pointerName + " already started");
         }
 
-        if (!mgr.waitForServiceStart(pointerName, WAIT_TIMEOUT)) {
-            log.warn("Timed out waiting for " + destinationName + " pointer to start");
+        if (waitForStart) {
+            if (!mgr.waitForServiceStart(pointerName, WAIT_TIMEOUT)) {
+                log.warn("Timed out waiting for " + destinationName + " pointer to start");
+            }
         }
 
         return pointerName;

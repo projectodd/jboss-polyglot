@@ -21,10 +21,7 @@ package org.projectodd.polyglot.messaging.destinations.processors;
 
 import org.jboss.as.messaging.MessagingServices;
 import org.jboss.as.messaging.jms.JMSServices;
-import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
-import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
-import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.logging.Logger;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceTarget;
@@ -34,28 +31,11 @@ import org.projectodd.polyglot.messaging.destinations.DestroyableJMSQueueService
 import org.projectodd.polyglot.messaging.destinations.QueueMetaData;
 
 import java.util.Arrays;
-import java.util.List;
 
-public class QueueInstaller extends DestinationInstaller implements DeploymentUnitProcessor {
+public class QueueInstaller extends DestinationInstaller {
 
     public QueueInstaller(ServiceTarget globalTarget) {
         super(globalTarget);
-    }
-
-    @Override
-    public void deploy(DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
-        DeploymentUnit unit = phaseContext.getDeploymentUnit();
-
-        List<QueueMetaData> allMetaData = unit.getAttachmentList( QueueMetaData.ATTACHMENTS_KEY );
-
-        for (QueueMetaData each : allMetaData) {
-            if (!each.isRemote())
-                deploy( phaseContext.getDeploymentUnit(), 
-                        phaseContext.getServiceTarget(), 
-                        this.globalTarget,
-                        each );
-        }
-
     }
 
     public static ServiceName queueServiceName(String name) {
@@ -63,25 +43,49 @@ public class QueueInstaller extends DestinationInstaller implements DeploymentUn
                 .append( name );
     }
 
-    public static synchronized ServiceName deploy(final DeploymentUnit unit,
-                                                  final ServiceTarget serviceTarget,
-                                                  final ServiceTarget globalTarget,
-                                                  final QueueMetaData queue) {
+    public static synchronized ServiceName deploySync(DeploymentUnit unit,
+                                                      ServiceTarget serviceTarget,
+                                                      ServiceTarget globalTarget,
+                                                      String name,
+                                                      String selector,
+                                                      boolean durable,
+                                                      boolean exported) {
+        return deploy(unit, serviceTarget, globalTarget, true, name, selector, durable, exported);
+    }
 
-        final String[] jndis = DestinationUtils.jndiNames(queue.getName(), queue.isExported());
+    public static synchronized ServiceName deployAsync(final DeploymentUnit unit,
+                                                       final ServiceTarget serviceTarget,
+                                                       final ServiceTarget globalTarget,
+                                                       String name,
+                                                       String selector,
+                                                       boolean durable,
+                                                       boolean exported) {
+        return deploy(unit, serviceTarget, globalTarget, false, name, selector, durable, exported);
+    }
 
-        log.debugf("JNDI names to bind the '%s' queue to: %s", queue.getName(), Arrays.toString(jndis));
+    private static synchronized ServiceName deploy(final DeploymentUnit unit,
+                                                   final ServiceTarget serviceTarget,
+                                                   final ServiceTarget globalTarget,
+                                                   boolean waitForStart,
+                                                   final String name,
+                                                   final String selector,
+                                                   final boolean durable,
+                                                   boolean exported) {
+
+        final String[] jndis = DestinationUtils.jndiNames(name, exported);
+
+        log.debugf("JNDI names to bind the '%s' queue to: %s", name, Arrays.toString(jndis));
 
         return deploy(unit,
                       serviceTarget,
                       globalTarget,
-                      queue.getName(),
-                      queueServiceName(queue.getName()),
+                      name,
+                      queueServiceName(name),
                       new DestinationServiceFactory() {
                           public DestinationService newService() {
-                              return new DestroyableJMSQueueService(queue.getName(),
-                                                                    queue.getSelector(),
-                                                                    queue.isDurable(),
+                              return new DestroyableJMSQueueService(name,
+                                                                    selector,
+                                                                    durable,
                                                                     jndis);
                           }
                       },
@@ -89,16 +93,12 @@ public class QueueInstaller extends DestinationInstaller implements DeploymentUn
                           @Override
                           public ReconfigurationValidator newValidator(DestinationService service) {
                               return new QueueReconfigurationValidator((DestroyableJMSQueueService)service,
-                                                                       queue.isDurable(),
-                                                                       queue.getSelector(),
+                                                                       durable,
+                                                                       selector,
                                                                        jndis);
                           }
-                      });
-    }
-
-    @Override
-    public void undeploy(DeploymentUnit context) {
-
+                      },
+                      waitForStart);
     }
 
     static final Logger log = Logger.getLogger( "org.projectodd.polyglot.messaging" );
