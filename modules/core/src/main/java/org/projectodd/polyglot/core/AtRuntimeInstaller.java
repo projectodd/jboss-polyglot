@@ -130,7 +130,7 @@ public class AtRuntimeInstaller<T> implements Service<T>, StartState {
             public void run() {
                 getTarget().addService(mbeanName, mbeanService).
                         addDependency(DependencyType.OPTIONAL, MBeanServerService.SERVICE_NAME, MBeanServer.class, mbeanService.getMBeanServerInjector()).
-                        setInitialMode(Mode.PASSIVE).
+                        setInitialMode(Mode.ON_DEMAND).
                         install();
             }
         });
