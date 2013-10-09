@@ -40,11 +40,12 @@ public class BaseScheduledJob extends BaseJob implements BaseScheduledJobMBean {
     }
     
     @Override
-    public synchronized void start() throws ParseException, SchedulerException {
+    protected void _start() throws ParseException, SchedulerException {
         getScheduler().scheduleJob( buildJobDetail(),
                                     baseTrigger()
-                                    .withSchedule( CronScheduleBuilder.cronSchedule( this.cronExpression ) )
-                                   .build() );
+                                        .withSchedule( CronScheduleBuilder.cronSchedule( this.cronExpression ) )
+                                        .build() );
+
     }
 
     public void reschedule(String spec) throws Exception {

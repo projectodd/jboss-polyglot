@@ -19,10 +19,6 @@
 
 package org.projectodd.polyglot.jobs;
 
-import static org.quartz.TriggerKey.triggerKey;
-
-import java.util.concurrent.TimeUnit;
-
 import org.jboss.logging.Logger;
 import org.jboss.msc.inject.Injector;
 import org.jboss.msc.service.Service;
@@ -40,6 +36,11 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
+import org.quartz.TriggerKey;
+
+import java.util.concurrent.TimeUnit;
+
+import static org.quartz.TriggerKey.triggerKey;
 
 public abstract class BaseJob implements Service<BaseJob>, BaseJobMBean, StartState {
 
@@ -77,7 +78,12 @@ public abstract class BaseJob implements Service<BaseJob>, BaseJobMBean, StartSt
                     if (stoppedAfterDeploy) {
                         log.debugf("Skipping start of '%s' job because it's set to not start on boot", getName());
                     } else {
-                        BaseJob.this.start();
+                        try {
+                            BaseJob.this.start();
+                        } catch (IllegalStateException ignored) {
+                            // Ignore if we try to start a dead job.
+                            // This can happen if it is killed before it even starts.
+                        }
                     }
                     context.complete();
                 } catch (Exception e) {
@@ -92,15 +98,36 @@ public abstract class BaseJob implements Service<BaseJob>, BaseJobMBean, StartSt
         stop();
     }
 
-    public abstract void start() throws Exception;
+    public final void start() throws Exception {
+        synchronized (this) {
+            if (isDead()) {
+                throw new IllegalStateException("Can't start dead job: " + getName());
+            }
+            _start();
+        }
+    }
+
+    protected abstract void _start() throws Exception;
     
     public synchronized void stop() {
         try {
-            getScheduler().unscheduleJob( triggerKey(getTriggerName(), this.group) );
+            Scheduler scheduler = getScheduler();
+            TriggerKey key = triggerKey(getTriggerName(), this.group);
+            if (scheduler != null &&
+                    scheduler.checkExists(key)) {
+                scheduler.unscheduleJob(key);
+            }
         } catch (SchedulerException ex) {
             log.warn( "An error occurred stopping job " + this.name, ex );
         } 
         this.jobDetail = null;  
+    }
+
+    public void kill() {
+        synchronized (this) {
+            this.dead = true;
+            this.stop();
+        }
     }
 
     public void restart() throws Exception {
@@ -131,7 +158,12 @@ public abstract class BaseJob implements Service<BaseJob>, BaseJobMBean, StartSt
     }
     
     public Scheduler getScheduler() {
-        return this.jobSchedulerInjector.getValue().getScheduler();
+        BaseJobScheduler baseScheduler = this.jobSchedulerInjector.getOptionalValue();
+        if (baseScheduler != null) {
+            return baseScheduler.getScheduler();
+        } else {
+            return null;
+        }
     }
 
     protected String getTriggerName() {
@@ -161,6 +193,10 @@ public abstract class BaseJob implements Service<BaseJob>, BaseJobMBean, StartSt
 
     public String getName() {
         return this.name;
+    }
+
+    public boolean isDead() {
+        return this.dead;
     }
 
     public JobKey getKey() {
@@ -208,6 +244,7 @@ public abstract class BaseJob implements Service<BaseJob>, BaseJobMBean, StartSt
     private boolean singleton;
     private boolean hasStarted = false;
     private boolean stoppedAfterDeploy = false;
+    private boolean dead = false;
 
     private InjectedValue<BaseJobScheduler> jobSchedulerInjector = new InjectedValue<BaseJobScheduler>();
     

@@ -61,27 +61,27 @@ public class BaseAtJob extends BaseJob {
     }    
 
     @Override
-    public synchronized void start() throws ParseException, SchedulerException {
+    protected void _start() throws ParseException, SchedulerException {
         Scheduler scheduler = getScheduler();
 
-        if (isSingleton() 
-            && this.clustered) {
+        if (isSingleton()
+                && this.clustered) {
             Map statusMap = statusMap();
 
             if (Status.COMPLETE.equals(statusMap.get(STATUS_KEY))) {
                 log.debug("Job complete, not starting: " + coordinationContext());
                 return;
             }
-            
+
             if (this.repeat > 0) {
                 if (statusMap.containsKey(COUNT_KEY)) {
                     Integer count = (Integer)statusMap.get(COUNT_KEY);
                     this.repeat -= count;
-                    log.debug("Job repeat count updated to " + this.repeat 
-                              + ": " + coordinationContext());
+                    log.debug("Job repeat count updated to " + this.repeat
+                                      + ": " + coordinationContext());
                     if (this.repeat < 0) {
-                        log.debug("Job repeat count less than zero, not starting: " 
-                                  + coordinationContext());
+                        log.debug("Job repeat count less than zero, not starting: "
+                                          + coordinationContext());
                         return;
                     }
                 } else {
@@ -89,9 +89,9 @@ public class BaseAtJob extends BaseJob {
                 }
             }
 
-            scheduler.getListenerManager().      
-                addTriggerListener(new TriggerStatusListener(this),
-                                   KeyMatcher.keyEquals(TriggerKey.triggerKey(getTriggerName(), getGroup())));
+            scheduler.getListenerManager().
+                    addTriggerListener(new TriggerStatusListener(this),
+                                       KeyMatcher.keyEquals(TriggerKey.triggerKey(getTriggerName(), getGroup())));
 
             statusMap.put(STATUS_KEY, Status.STARTED);
 
@@ -99,8 +99,9 @@ public class BaseAtJob extends BaseJob {
         }
 
         initTrigger();
-        
+
         scheduler.scheduleJob(buildJobDetail(), this.trigger);
+
     }
 
     public void updateStatusMap(Map m) {
@@ -108,8 +109,7 @@ public class BaseAtJob extends BaseJob {
     }
                                       
     public Map<String, Object> statusMap() {
-        Map<String, Object> statusMap = 
-            statusMap = (Map<String, Object>)coordinationMap().get(coordinationContext());
+        Map<String, Object> statusMap = (Map<String, Object>)coordinationMap().get(coordinationContext());
 
         if (statusMap == null) {
             statusMap = new HashMap<String, Object>();
