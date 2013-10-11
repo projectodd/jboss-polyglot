@@ -81,7 +81,7 @@ public class CacheService implements Service<CacheService> {
     }
 
     private String infinispanServiceName() {
-        return this.isClustered() ?  "java:jboss/infinispan/container/web" : "java:jboss/infinispan/container/" + cacheContainerName;
+        return "java:jboss/infinispan/container/" + cacheContainerName;
     }
     
     static final Logger log = Logger.getLogger( "org.projectodd.polyglot.cache.as" );
