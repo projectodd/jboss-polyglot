@@ -31,7 +31,6 @@ import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.logging.Logger;
 import org.jboss.msc.inject.Injector;
 import org.jboss.msc.service.AbstractServiceListener;
-import org.jboss.msc.service.DuplicateServiceException;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
@@ -62,10 +61,24 @@ public class AtRuntimeInstaller<T> implements Service<T>, StartState {
         this.globalServiceTarget = globalServiceTarget;
     }
 
-    protected void replaceService(ServiceName name) {
+    protected void removeService(ServiceName name) {
         replaceService(this.unit.getServiceRegistry(),
-                name,
-                null);
+                       name,
+                       null);
+    }
+
+    public static void removeService(ServiceRegistry registry, ServiceName name) {
+        replaceService(registry,
+                       name,
+                       null);
+    }
+
+    protected void removeMBeanFor(ServiceName name) {
+         removeMBeanFor(this.unit.getServiceRegistry(), name);
+    }
+
+    public static void removeMBeanFor(ServiceRegistry registry, ServiceName name) {
+        removeService(registry, mbeanServiceName(name));
     }
 
     protected void replaceService(ServiceName name, Runnable actionOnRemove) {
@@ -79,7 +92,9 @@ public class AtRuntimeInstaller<T> implements Service<T>, StartState {
         final ServiceController service = registry.getService(name);
 
         if (service != null) {
-            service.addListener(new RemovalListener(actionOnRemove));
+            if (actionOnRemove != null) {
+                service.addListener(new RemovalListener(actionOnRemove));
+            }
             service.setMode(Mode.REMOVE);
         } else if (actionOnRemove != null) {
             actionOnRemove.run();
@@ -117,20 +132,24 @@ public class AtRuntimeInstaller<T> implements Service<T>, StartState {
         });
     }
 
-    public ServiceName installMBean(final ServiceName name, final String groupName, Object mbean) {
-        return installMBean(name, new MBeanRegistrationService<Object>(mbeanName(groupName, name),
-                name,
-                new ImmediateValue<Object>(mbean)));
+    protected static ServiceName mbeanServiceName(ServiceName baseName) {
+        return baseName.append("mbean");
     }
 
-    public ServiceName installMBean(final ServiceName name, final MBeanRegistrationService<?> mbeanService) {
-        final ServiceName mbeanName = name.append("mbean");
+    public ServiceName installMBeanFor(final ServiceName name, final String groupName, Object mbean) {
+        return installMBeanFor(name, new MBeanRegistrationService<Object>(mbeanName(groupName, name),
+                                                                          name,
+                                                                          new ImmediateValue<Object>(mbean)));
+    }
+
+    public ServiceName installMBeanFor(final ServiceName name, final MBeanRegistrationService<?> mbeanService) {
+        final ServiceName mbeanName = mbeanServiceName(name);
 
         replaceService(mbeanName, new Runnable() {
             public void run() {
                 getTarget().addService(mbeanName, mbeanService).
                         addDependency(DependencyType.OPTIONAL, MBeanServerService.SERVICE_NAME, MBeanServer.class, mbeanService.getMBeanServerInjector()).
-                        setInitialMode(Mode.ON_DEMAND).
+                        setInitialMode(Mode.PASSIVE).
                         install();
             }
         });
