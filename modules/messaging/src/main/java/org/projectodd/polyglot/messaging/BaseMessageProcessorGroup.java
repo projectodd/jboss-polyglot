@@ -44,6 +44,7 @@ import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.Topic;
 import javax.jms.XAConnection;
+import javax.transaction.TransactionManager;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -364,6 +365,14 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
         return this.destinationInjector;
     }
 
+    public Injector<TransactionManager> getTransactionManagerInjector() {
+        return this.transactionManagerInjector;
+    }
+
+    public TransactionManager getTransactionManager() {
+        return this.transactionManagerInjector.getValue();
+    }
+
     public Connection getConnection() {
         return this.connection;
     }
@@ -416,6 +425,7 @@ public class BaseMessageProcessorGroup implements Service<BaseMessageProcessorGr
     private List<BaseMessageProcessor> messageProcessors = new ArrayList<BaseMessageProcessor>();
     private final InjectedValue<ManagedReferenceFactory> connectionFactoryInjector = new InjectedValue<ManagedReferenceFactory>();
     private final InjectedValue<ManagedReferenceFactory> destinationInjector = new InjectedValue<ManagedReferenceFactory>();
+    private final InjectedValue<TransactionManager> transactionManagerInjector = new InjectedValue<TransactionManager>();
 
     public static final Logger log = Logger.getLogger( "org.projectodd.polyglot.messaging" );
 }

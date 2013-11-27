@@ -89,7 +89,7 @@ public abstract class BaseMessageProcessor implements MessageListener, MessageHa
     }
 
     protected TransactionManager getTransactionManager() {
-        return this.transactionManagerInjector.getValue();
+        return this.group.getTransactionManager();
     }
 
     // No-op method that can be overridden in subclasses to do any work
@@ -165,7 +165,6 @@ public abstract class BaseMessageProcessor implements MessageListener, MessageHa
     private ClientConsumer clientConsumer;
     private Session session;
     private MessageConsumer consumer;
-    private InjectedValue<TransactionManager> transactionManagerInjector = new InjectedValue<TransactionManager>();
     private boolean transactedOrClientAck;
     private final Logger log = Logger.getLogger( this.getClass() );
 }
