@@ -40,7 +40,7 @@ public class HASingletonExtension extends AbstractBootstrappableExtension {
     @Override
     public void initialize(ExtensionContext context) {
         bootstrap();
-        log.info( "Initializing HA-Singleton Subsystem" );
+        log.debug( "Initializing HA-Singleton Subsystem" );
         final SubsystemRegistration registration = context.registerSubsystem( SUBSYSTEM_NAME, 1, 0 );
         final ManagementResourceRegistration subsystem = registration.registerSubsystemModel( HASingletonSubsystemProviders.SUBSYSTEM );
 

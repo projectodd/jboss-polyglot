@@ -36,7 +36,7 @@ public class StompExtension extends AbstractBootstrappableExtension {
     @Override
     public void initialize(ExtensionContext context) {
         bootstrap();
-        log.info( "Initializing Polyglot STOMP Subsystem" );
+        log.debug( "Initializing Polyglot STOMP Subsystem" );
         final SubsystemRegistration registration = context.registerSubsystem( SUBSYSTEM_NAME, 1, 0 );
         final ManagementResourceRegistration subsystem = registration.registerSubsystemModel( StompSubsystemProviders.SUBSYSTEM );
 
