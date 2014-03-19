@@ -157,7 +157,7 @@
         </property>
       </activation>
       <properties>
-        <version.jbossas>7.x.incremental.673</version.jbossas>
+        <version.jbossas>7.2.x.slim.incremental.16</version.jbossas>
       </properties>
     </profile>
     <profile>

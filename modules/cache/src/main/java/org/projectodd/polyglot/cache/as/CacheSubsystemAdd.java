@@ -22,7 +22,6 @@ package org.projectodd.polyglot.cache.as;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
-import static org.projectodd.polyglot.core.processors.RootedDeploymentProcessor.rootSafe;
 
 import java.util.List;
 
@@ -67,7 +66,7 @@ public class CacheSubsystemAdd extends AbstractBoottimeAddStepHandler {
     }
 
     protected void addDeploymentProcessors(final DeploymentProcessorTarget processorTarget) {
-        processorTarget.addDeploymentProcessor( Phase.DEPENDENCIES, 10, rootSafe( new CacheDependenciesProcessor() ) );
+        processorTarget.addDeploymentProcessor( Phase.DEPENDENCIES, 10, new CacheDependenciesProcessor() );
     }
 
     public static ModelNode createOperation(ModelNode address) {

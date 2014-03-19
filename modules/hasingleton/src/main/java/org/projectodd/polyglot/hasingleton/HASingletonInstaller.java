@@ -37,12 +37,17 @@ import org.jboss.msc.service.ServiceTarget;
 import org.jboss.msc.value.InjectedValue;
 import org.jgroups.Channel;
 import org.projectodd.polyglot.core.util.ClusterUtil;
+import org.projectodd.polyglot.core.util.DeploymentUtils;
 
 public class HASingletonInstaller implements DeploymentUnitProcessor {
 
     @Override
     public void deploy(DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
-        deploy(phaseContext.getDeploymentUnit(), phaseContext.getServiceTarget(), "global");
+        DeploymentUnit unit = phaseContext.getDeploymentUnit();
+        if (DeploymentUtils.isUnitRootless(unit)) {
+            return;
+        }
+        deploy(unit, phaseContext.getServiceTarget(), "global");
     }
 
     @Override

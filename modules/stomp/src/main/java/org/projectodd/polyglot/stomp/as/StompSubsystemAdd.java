@@ -20,7 +20,6 @@
 package org.projectodd.polyglot.stomp.as;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
-import static org.projectodd.polyglot.core.processors.RootedDeploymentProcessor.*;
 
 import java.util.List;
 
@@ -163,11 +162,11 @@ public class StompSubsystemAdd extends AbstractBoottimeAddStepHandler {
     }
 
     protected void addDeploymentProcessors(final DeploymentProcessorTarget processorTarget, String socketBindingRef, String secureSocketBindingRef) {
-        processorTarget.addDeploymentProcessor( StompExtension.SUBSYSTEM_NAME, Phase.PARSE, 1031, rootSafe( new StompWebAdjuster() ) );
-        processorTarget.addDeploymentProcessor( StompExtension.SUBSYSTEM_NAME, Phase.DEPENDENCIES, 5, rootSafe( new StompDependenciesProcessor() ) );
-        processorTarget.addDeploymentProcessor( StompExtension.SUBSYSTEM_NAME, Phase.INSTALL, 99, rootSafe( new SessionManagerInstaller( "localhost" ) ) );
-        processorTarget.addDeploymentProcessor( StompExtension.SUBSYSTEM_NAME, Phase.INSTALL, 100, rootSafe( new StompletContainerInstaller( socketBindingRef,
-                secureSocketBindingRef ) ) );
+        processorTarget.addDeploymentProcessor( StompExtension.SUBSYSTEM_NAME, Phase.PARSE, 1031, new StompWebAdjuster() );
+        processorTarget.addDeploymentProcessor( StompExtension.SUBSYSTEM_NAME, Phase.DEPENDENCIES, 5, new StompDependenciesProcessor() );
+        processorTarget.addDeploymentProcessor( StompExtension.SUBSYSTEM_NAME, Phase.INSTALL, 99, new SessionManagerInstaller( "localhost" ) );
+        processorTarget.addDeploymentProcessor( StompExtension.SUBSYSTEM_NAME, Phase.INSTALL, 100, new StompletContainerInstaller( socketBindingRef,
+                secureSocketBindingRef ) );
     }
 
     static ModelNode createOperation(ModelNode address) {
