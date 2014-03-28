@@ -100,6 +100,10 @@ public class BaseJobScheduler implements Service<BaseJobScheduler>, StartState {
         return threadCount;
     }
 
+    public void setThreadCount(int threadCount) {
+        this.threadCount = threadCount;
+    }
+
     public Scheduler getScheduler() {
         return this.scheduler;
     }
